@@ -1,13 +1,17 @@
 # Filadelfia.ai — strona agencji AI
 
-Statyczna strona (HTML + CSS + JS, bez builda). Kierunek wizualny C · Produkt:
-ciemne tło, limonka `#B7FF1B`, Inter + IBM Plex Mono.
+Statyczna strona (HTML + CSS + JS, bez builda i bez zależności).
+
+Kierunek wizualny: aluminium `#E8EAED`, grafit `#0A0B0D`, jeden akcent `#2B2BFF`.
+Kroje: Mona Sans (szeroki, cienki) i Martian Mono. Jedyny element ozdobny to pole
+punktów w WebGL, które przy przewijaniu przechodzi przez pięć form:
+tęczówka → siatka → przepływ → sfera → punkt (po jednej na sekcję).
 
 ## Pliki
 
 - `index.html` — cała treść strony
 - `styles.css` — style i tokeny kolorów
-- `script.js` — animacja przebiegu agenta w hero, rok w stopce
+- `script.js` — pole punktów (WebGL), odczyty na dole ekranu, wejście treści
 - `favicon.svg` — sygnet
 
 ## Podgląd lokalny

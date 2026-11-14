@@ -315,49 +315,34 @@
     var o = new IntersectionObserver(function (en) { if (en[0].isIntersecting) { o.disconnect(); fn(); } }, { threshold: 0.35 });
     o.observe(el);
   }
-  var stampFmt = new Intl.DateTimeFormat('pl-PL', { timeZone: 'Europe/Warsaw', hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-  /* ---------- symulacja procesu: zatrzymuje się i czeka na kliknięcie człowieka ---------- */
-  Array.prototype.forEach.call(document.querySelectorAll('[data-flow]'), function (el) {
-    var log = el.querySelector('.flow__log'), dots = el.querySelectorAll('.flow__bar i'), nowEl = el.querySelector('.flow__now');
-    var ok = el.querySelector('.flow__ok'), again = el.querySelector('.flow__again'), timer = 0;
-    var STEPS = [
-      [0, 'Zapytanie', 'nowe zapytanie · formularz na stronie'],
-      [1, 'Agent czyta', 'agent czyta: „Potrzebuję wyceny strony dla gabinetu”'],
-      [1, 'Agent czyta', 'rozpoznano: wycena · strona firmowa'],
-      [2, 'CRM', 'CRM: utworzono kontakt i szansę sprzedaży'],
-      [3, 'Szkic odpowiedzi', 'szkic odpowiedzi gotowy · trzy zdania i link do kalendarza'],
-      [4, 'Twoja zgoda', 'czeka na zatwierdzenie człowieka']
-    ];
-    function line(text, cls) {
-      var pEl = document.createElement('p'), tm = document.createElement('time');
-      if (cls) pEl.className = cls;
-      tm.textContent = stampFmt.format(new Date());
-      pEl.appendChild(tm); pEl.appendChild(document.createTextNode(text));
-      log.appendChild(pEl);
+  /* ---------- podział pracy: te same kroki dziś i po wdrożeniu ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll('[data-shift]'), function (el) {
+    var tabs = el.querySelectorAll('.shift__tabs button'), modes = el.querySelectorAll('.shift__mode button');
+    var lists = el.querySelectorAll('.shift__list'), sum = el.querySelector('.shift__sum');
+    var WHO = { ai: 'AI', ty: 'Ty', x: 'niepotrzebne' }, cur = 0, mode = 'dzis', touched = false;
+    function plural(n, one, few, many) { return n === 1 ? one : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? few : many); }
+    function draw() {
+      el.setAttribute('data-mode', mode);
+      Array.prototype.forEach.call(tabs, function (b, n) { b.setAttribute('aria-pressed', String(n === cur)); });
+      Array.prototype.forEach.call(modes, function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-mode') === mode)); });
+      var count = { ai: 0, ty: 0, x: 0 }, total = 0;
+      Array.prototype.forEach.call(lists, function (l, n) {
+        l.hidden = n !== cur;
+        if (n !== cur) return;
+        Array.prototype.forEach.call(l.children, function (li) {
+          var who = li.getAttribute('data-who'); count[who]++; total++;
+          li.querySelector('.shift__who').textContent = mode === 'ai' ? WHO[who] : 'Ty';
+        });
+      });
+      if (mode === 'dzis') sum.textContent = 'Dziś: ' + total + ' ' + plural(total, 'krok', 'kroki', 'kroków') + ', wszystkie robisz sam.';
+      else sum.textContent = 'Z nami: u Ciebie ' + plural(count.ty, 'zostaje', 'zostają', 'zostaje') + ' ' + count.ty + ' ' + plural(count.ty, 'krok', 'kroki', 'kroków') + ', ' + count.ai + ' ' + plural(count.ai, 'robi', 'robi', 'robi') + ' AI' + (count.x ? ', a ' + count.x + ' ' + plural(count.x, 'znika', 'znikają', 'znika') : '') + '.';
     }
-    function at(n, name) {
-      Array.prototype.forEach.call(dots, function (d, k) { d.classList.toggle('on', k <= n); });
-      nowEl.textContent = (n + 1) + '/5 ' + name;
-    }
-    function play() {
-      clearTimeout(timer);
-      log.textContent = ''; ok.hidden = true; again.hidden = true;
-      var k = 0;
-      (function next() {
-        var st = STEPS[k++];
-        at(st[0], st[1]); line(st[2]);
-        if (k < STEPS.length) timer = setTimeout(next, reduced ? 0 : 1150); else ok.hidden = false;
-      })();
-    }
-    ok.addEventListener('click', function () {
-      ok.hidden = true; again.hidden = false;
-      line('zatwierdzono · odpowiedź wysłana', 'done');
-      nowEl.textContent = 'Gotowe';
-      pulse = 1;
-    });
-    again.addEventListener('click', play);
-    whenSeen(el, play);
+    Array.prototype.forEach.call(tabs, function (b, n) { b.addEventListener('click', function () { touched = true; cur = n; draw(); }); });
+    Array.prototype.forEach.call(modes, function (b) { b.addEventListener('click', function () { touched = true; mode = b.getAttribute('data-mode'); draw(); if (mode === 'ai') pulse = 1; }); });
+    draw();
+    // pokaz: zaczynamy od „dziś”, a po chwili sami przełączamy, żeby było widać różnicę
+    whenSeen(el, function () { setTimeout(function () { if (!touched) { mode = 'ai'; draw(); } }, reduced ? 0 : 1600); });
   });
 
   /* ---------- sekwencje (przykładowa rozmowa) ---------- */

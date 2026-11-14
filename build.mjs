@@ -137,22 +137,43 @@ ${SERVICES.map((sv) => `        <a href="${sv.file}">${sv.short}</a>`).join('\n'
 
 const foot = '';
 
-// Symulacja jednego procesu. Zatrzymuje się na zatwierdzeniu — klika je odwiedzający.
-const flow = (h, p) => `    <section class="dark" data-flow>
+// Podział pracy: te same kroki dziś i po wdrożeniu. Każdy krok ma wykonawcę po wdrożeniu:
+// 'ai' — przejmuje AI, 'ty' — zostaje u człowieka, 'x' — przestaje być potrzebny.
+const SHIFTS = [
+  ['Klient prosi o wycenę', [
+    ['Przeczytać wiadomość', 'ai'], ['Wpisać dane klienta do CRM', 'ai'], ['Policzyć wycenę z cennika', 'ai'], ['Napisać odpowiedź', 'ai'], ['Sprawdzić i wysłać', 'ty'],
+  ]],
+  ['Trzeba zrobić reklamę produktu', [
+    ['Opisać produkt i cel kampanii', 'ty'], ['Umówić fotografa i studio', 'x'], ['Zrobić zdjęcia i film', 'ai'], ['Przyciąć do Reels, feedu i YouTube', 'ai'], ['Wybrać najlepsze wersje', 'ty'],
+  ]],
+  ['Klient pisze o 23:00', [
+    ['Zauważyć wiadomość', 'ai'], ['Odpowiedzieć na pytanie o cennik i godziny', 'ai'], ['Zebrać dane do rezerwacji', 'ai'], ['Reklamację załatwić osobiście', 'ty'],
+  ]],
+  ['Koniec miesiąca, czas na raport', [
+    ['Zebrać liczby z kilku narzędzi', 'ai'], ['Przekleić je do arkusza', 'x'], ['Napisać podsumowanie', 'ai'], ['Przeczytać i podjąć decyzje', 'ty'],
+  ]],
+];
+const WHO = { ai: 'AI', ty: 'Ty', x: 'niepotrzebne' };
+// Bez JavaScriptu widać pierwszą sytuację w układzie „z nami”.
+const shift = (h, p) => `    <section class="dark" data-shift data-mode="ai">
       <div class="dark__in">
         <div>
-          <p class="tag mono" data-r>Od środka · symulacja</p>
+          <p class="tag mono" data-r>Co się zmienia</p>
           <h2 class="ask" data-r>${h}</h2>
           <p class="lead" data-r>${p}</p>
-        </div>
-        <div class="flow" data-r>
-          <p class="flow__bar" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></p>
-          <p class="flow__now mono" aria-live="polite">1/5 Zapytanie</p>
-          <div class="flow__log" aria-hidden="true"></div>
-          <p class="flow__act">
-            <button class="pill pill--inv flow__ok" type="button" hidden>Zatwierdź i wyślij</button>
-            <button class="more flow__again" type="button" hidden>Puść jeszcze raz</button>
+          <p class="chips shift__tabs" data-r>
+${SHIFTS.map(([name], i) => `            <button type="button" data-s="${i}" aria-pressed="${i === 0}">${name}</button>`).join('\n')}
           </p>
+        </div>
+        <div class="shift" data-r>
+          <p class="shift__mode" role="group" aria-label="Podział pracy">
+            <button type="button" data-mode="dzis" aria-pressed="false">Dziś, bez AI</button>
+            <button type="button" data-mode="ai" aria-pressed="true">Z nami</button>
+          </p>
+${SHIFTS.map(([name, steps], i) => `          <ol class="shift__list" data-s="${i}" aria-label="${name}"${i ? ' hidden' : ''}>
+${steps.map(([text, who]) => `            <li data-who="${who}"><span class="shift__txt">${text}</span><span class="shift__who mono">${WHO[who]}</span></li>`).join('\n')}
+          </ol>`).join('\n')}
+          <p class="shift__sum" aria-live="polite"></p>
         </div>
       </div>
     </section>`;
@@ -246,7 +267,7 @@ ${SERVICES.map((sv) => `        <li data-r>
 
 ${shots('Tych zdjęć nikt nie zrobił.', true)}
 
-${flow('Jedno zapytanie. Zero przeklejania.', 'Tak wygląda proces po wdrożeniu: agent czyta wiadomość, uzupełnia CRM, pisze odpowiedź i czeka na Twoje „tak”. Ostatni krok należy do Ciebie.')}
+${shift('Te same zadania. Inny podział pracy.', 'Wybierz sytuację i przełącz widok. Zobaczysz, które kroki przejmuje AI, które znikają, a które zostają u Ciebie.')}
 
     <section class="scene" id="proces" data-scene="Przepływ">
       <div class="col">
@@ -408,7 +429,7 @@ const automatyzacje = service(1, {
     ['Wdrożenie', 'Podłączamy narzędzia, testujemy i zostawiamy instrukcję dla zespołu.'],
     ['Opieka', 'Monitorujemy działanie i poprawiamy, gdy coś się zmienia.'],
   ],
-  demo: '\n' + flow('Zobacz jeden proces od środka.', 'Agent czyta wiadomość, uzupełnia CRM, pisze odpowiedź i czeka na Twoje „tak”. Ostatni krok należy do Ciebie.') + '\n\n    <div class="gap"></div>\n',
+  demo: '\n' + shift('Te same zadania. Inny podział pracy.', 'Wybierz sytuację i przełącz widok. Zobaczysz, które kroki przejmuje AI, które znikają, a które zostają u Ciebie.') + '\n\n    <div class="gap"></div>\n',
   noteTag: 'Granica',
   note: 'Agent nie działa bez nadzoru tam, gdzie błąd kosztuje. Wysyłka do klienta, płatności i zmiany w danych przechodzą przez zatwierdzenie człowieka.',
 });

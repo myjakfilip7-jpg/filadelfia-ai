@@ -23,7 +23,7 @@
   <link rel="apple-touch-icon" href="icon-180.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="preload" href="fonts/mona-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=0c7f080783">
+  <link rel="stylesheet" href="styles.css?v=f9519e5a66">
 </head>
 <body data-form="2">
   <a class="skip" href="#main">Przejdź do treści</a>
@@ -74,21 +74,51 @@
       </div>
     </section>
 
-    <section class="dark" data-flow>
+    <section class="dark" data-shift data-mode="ai">
       <div class="dark__in">
         <div>
-          <p class="tag mono" data-r>Od środka · symulacja</p>
-          <h2 class="ask" data-r>Zobacz jeden proces od środka.</h2>
-          <p class="lead" data-r>Agent czyta wiadomość, uzupełnia CRM, pisze odpowiedź i czeka na Twoje „tak”. Ostatni krok należy do Ciebie.</p>
-        </div>
-        <div class="flow" data-r>
-          <p class="flow__bar" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></p>
-          <p class="flow__now mono" aria-live="polite">1/5 Zapytanie</p>
-          <div class="flow__log" aria-hidden="true"></div>
-          <p class="flow__act">
-            <button class="pill pill--inv flow__ok" type="button" hidden>Zatwierdź i wyślij</button>
-            <button class="more flow__again" type="button" hidden>Puść jeszcze raz</button>
+          <p class="tag mono" data-r>Co się zmienia</p>
+          <h2 class="ask" data-r>Te same zadania. Inny podział pracy.</h2>
+          <p class="lead" data-r>Wybierz sytuację i przełącz widok. Zobaczysz, które kroki przejmuje AI, które znikają, a które zostają u Ciebie.</p>
+          <p class="chips shift__tabs" data-r>
+            <button type="button" data-s="0" aria-pressed="true">Klient prosi o wycenę</button>
+            <button type="button" data-s="1" aria-pressed="false">Trzeba zrobić reklamę produktu</button>
+            <button type="button" data-s="2" aria-pressed="false">Klient pisze o 23:00</button>
+            <button type="button" data-s="3" aria-pressed="false">Koniec miesiąca, czas na raport</button>
           </p>
+        </div>
+        <div class="shift" data-r>
+          <p class="shift__mode" role="group" aria-label="Podział pracy">
+            <button type="button" data-mode="dzis" aria-pressed="false">Dziś, bez AI</button>
+            <button type="button" data-mode="ai" aria-pressed="true">Z nami</button>
+          </p>
+          <ol class="shift__list" data-s="0" aria-label="Klient prosi o wycenę">
+            <li data-who="ai"><span class="shift__txt">Przeczytać wiadomość</span><span class="shift__who mono">AI</span></li>
+            <li data-who="ai"><span class="shift__txt">Wpisać dane klienta do CRM</span><span class="shift__who mono">AI</span></li>
+            <li data-who="ai"><span class="shift__txt">Policzyć wycenę z cennika</span><span class="shift__who mono">AI</span></li>
+            <li data-who="ai"><span class="shift__txt">Napisać odpowiedź</span><span class="shift__who mono">AI</span></li>
+            <li data-who="ty"><span class="shift__txt">Sprawdzić i wysłać</span><span class="shift__who mono">Ty</span></li>
+          </ol>
+          <ol class="shift__list" data-s="1" aria-label="Trzeba zrobić reklamę produktu" hidden>
+            <li data-who="ty"><span class="shift__txt">Opisać produkt i cel kampanii</span><span class="shift__who mono">Ty</span></li>
+            <li data-who="x"><span class="shift__txt">Umówić fotografa i studio</span><span class="shift__who mono">niepotrzebne</span></li>
+            <li data-who="ai"><span class="shift__txt">Zrobić zdjęcia i film</span><span class="shift__who mono">AI</span></li>
+            <li data-who="ai"><span class="shift__txt">Przyciąć do Reels, feedu i YouTube</span><span class="shift__who mono">AI</span></li>
+            <li data-who="ty"><span class="shift__txt">Wybrać najlepsze wersje</span><span class="shift__who mono">Ty</span></li>
+          </ol>
+          <ol class="shift__list" data-s="2" aria-label="Klient pisze o 23:00" hidden>
+            <li data-who="ai"><span class="shift__txt">Zauważyć wiadomość</span><span class="shift__who mono">AI</span></li>
+            <li data-who="ai"><span class="shift__txt">Odpowiedzieć na pytanie o cennik i godziny</span><span class="shift__who mono">AI</span></li>
+            <li data-who="ai"><span class="shift__txt">Zebrać dane do rezerwacji</span><span class="shift__who mono">AI</span></li>
+            <li data-who="ty"><span class="shift__txt">Reklamację załatwić osobiście</span><span class="shift__who mono">Ty</span></li>
+          </ol>
+          <ol class="shift__list" data-s="3" aria-label="Koniec miesiąca, czas na raport" hidden>
+            <li data-who="ai"><span class="shift__txt">Zebrać liczby z kilku narzędzi</span><span class="shift__who mono">AI</span></li>
+            <li data-who="x"><span class="shift__txt">Przekleić je do arkusza</span><span class="shift__who mono">niepotrzebne</span></li>
+            <li data-who="ai"><span class="shift__txt">Napisać podsumowanie</span><span class="shift__who mono">AI</span></li>
+            <li data-who="ty"><span class="shift__txt">Przeczytać i podjąć decyzje</span><span class="shift__who mono">Ty</span></li>
+          </ol>
+          <p class="shift__sum" aria-live="polite"></p>
         </div>
       </div>
     </section>
@@ -207,6 +237,6 @@
     <form id="cmdForm"><span aria-hidden="true">›</span><input id="cmdIn" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Polecenie" placeholder="pomoc"><button type="button" id="cmdClose" aria-label="Zamknij wiersz poleceń">esc</button></form>
   </div>
 
-  <script src="script.js?v=ac4dcf7d0a" defer></script>
+  <script src="script.js?v=4838f3f773" defer></script>
 </body>
 </html>

@@ -3,12 +3,13 @@
 Statyczna strona (HTML + CSS + JS, bez zależności).
 
 Kierunek wizualny: aluminium `#E8EAED`, grafit `#0A0B0D`, jeden akcent `#2B2BFF`.
-Kroje: Mona Sans (szeroki, cienki) i Martian Mono. Główny element to obiekt 3D:
-aluminiowy żyroskop z pięciu pierścieni i niebieskiego rdzenia, liczony na żywo
-w shaderze (raymarching, bez modeli i bibliotek). Ma pięć układów:
-tęczówka → żyroskop → przepływ → sfera → punkt. Strona główna zmienia je przy
-przewijaniu; każda podstrona ma jeden, stały. Punkty zostały tylko do napisów
-(strona 404, polecenie `napisz`).
+Kroje: Mona Sans (szeroki, cienki) i Martian Mono. Główny element to pole punktów
+w WebGL z pięcioma formami: tęczówka → siatka → przepływ → sfera → punkt. Strona
+główna zmienia je przy przewijaniu; każda podstrona ma jedną, stałą. Punkty
+układają też napisy (strona 404, polecenie `napisz`).
+
+W `script.js` został wyłączony wariant z aluminiowym żyroskopem 3D
+(`USE_OBJECT = false`). Zmiana na `true` przywraca go zamiast punktów.
 
 ## Pliki
 
@@ -17,7 +18,7 @@ przewijaniu; każda podstrona ma jeden, stały. Punkty zostały tylko do napisó
   - `index.html`, `kampanie.html`, `automatyzacje.html`, `chatboty.html`, `strony.html`,
     `kontakt.html`, `marka.html`, `404.html`
 - `styles.css` — style i tokeny kolorów
-- `script.js` — obiekt 3D, punkty do napisów, odczyty, menu, wiersz poleceń, dema, formularz
+- `script.js` — pole punktów, odczyty, menu, wiersz poleceń, dema, formularz
 - `favicon.svg` — znak (tęczówka)
 - `og.png` — obraz do udostępnień (1200 × 630)
 - `media/` — trzy przykładowe kadry reklamowe wygenerowane w Higgsfield (GPT Image 2.6); to przykłady, nie realizacje dla klientów

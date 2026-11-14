@@ -219,7 +219,7 @@ const home = `    <section class="scene scene--hero" id="top" data-scene="Tęcz�
       <p class="fill">Każda firma ma pracę, której nikt nie chce robić. Przepisywanie, odpisywanie, pilnowanie, raportowanie. Tę pracę oddajemy AI, a ludziom zostawiamy to, do czego są potrzebni.</p>
     </section>
 
-    <section class="wide wide--tiles" id="uslugi" data-scene="Żyroskop">
+    <section class="wide wide--tiles" id="uslugi" data-scene="Siatka">
       <div class="head">
         <p class="tag mono" data-r>Co wdrażamy</p>
         <h2 class="ask" data-r>Cztery obszary. Zaczynamy od jednego.</h2>
@@ -575,7 +575,7 @@ const pages = [
   { file: 'kampanie.html', title: 'Kampanie reklamowe AI — Filadelfia.ai', desc: 'Spoty wideo, zdjęcia produktowe i grafiki do kampanii generowane w AI. Bez planu zdjęciowego.', form: 0, formName: 'Tęczówka', current: 'uslugi', body: kampanie },
   { file: 'automatyzacje.html', title: 'Agenci i automatyzacje — Filadelfia.ai', desc: 'Agenci AI i automatyzacje procesów: zapytania, oferty i raporty obsługiwane bez przeklejania.', form: 2, formName: 'Przepływ', current: 'uslugi', body: automatyzacje },
   { file: 'chatboty.html', title: 'Chatboty AI — Filadelfia.ai', desc: 'Chatbot, który odpowiada na podstawie Twoich materiałów i przekazuje trudne sprawy człowiekowi.', form: 3, formName: 'Sfera', current: 'uslugi', body: chatboty },
-  { file: 'strony.html', title: 'Strony, aplikacje, sklepy — Filadelfia.ai', desc: 'Strony firmowe, sklepy internetowe i narzędzia wewnętrzne, którymi zarządzasz sam.', form: 1, formName: 'Żyroskop', current: 'uslugi', body: strony },
+  { file: 'strony.html', title: 'Strony, aplikacje, sklepy — Filadelfia.ai', desc: 'Strony firmowe, sklepy internetowe i narzędzia wewnętrzne, którymi zarządzasz sam.', form: 1, formName: 'Siatka', current: 'uslugi', body: strony },
   { file: 'kontakt.html', title: 'Kontakt — Filadelfia.ai', desc: 'Opowiedz, co zabiera Ci najwięcej czasu. Odpiszemy z propozycją, od czego zacząć.', form: 4, formName: 'Punkt', current: 'kontakt', body: kontakt },
   { file: 'marka.html', title: 'Marka — Filadelfia.ai', desc: 'Znak, kolory i pismo Filadelfia.ai.', form: 0, formName: 'Tęczówka', body: marka },
   { file: '404.html', title: 'Nie ma takiej strony — Filadelfia.ai', desc: 'Pod tym adresem nic nie ma.', form: 4, formName: 'Zgubiony', lost: true, base: true, text: '404', body: lostPage },

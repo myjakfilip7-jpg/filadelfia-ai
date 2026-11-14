@@ -4,7 +4,7 @@
 
   var root = document.documentElement, body = document.body;
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var NAMES = ['Tęczówka', 'Żyroskop', 'Przepływ', 'Sfera', 'Punkt'];
+  var NAMES = ['Tęczówka', 'Siatka', 'Przepływ', 'Sfera', 'Punkt'];
   var scenes = Array.prototype.slice.call(document.querySelectorAll('[data-scene]'));
   // podstrony mają jedną, stałą formację; strona główna zmienia ją przewijaniem
   var pin = body.hasAttribute('data-form') ? +body.getAttribute('data-form') : null;
@@ -623,8 +623,9 @@
     '  gl_FragColor = o * uA;',
     '}'
   ].join('\n');
-  var oprog = gl.createProgram(), objOK = true;
-  try {
+  var USE_OBJECT = false; // true = aluminiowy żyroskop zamiast pola punktów
+  var oprog = gl.createProgram(), objOK = USE_OBJECT;
+  if (USE_OBJECT) try {
     gl.attachShader(oprog, shader(gl.VERTEX_SHADER, OVS));
     gl.attachShader(oprog, shader(gl.FRAGMENT_SHADER, OFS));
     gl.linkProgram(oprog);
@@ -655,7 +656,7 @@
   /* ---------- rozmiar i kadr ---------- */
   var W = 0, H = 0, dpr = 1, narrow = false;
   function resize() {
-    dpr = Math.min(window.devicePixelRatio || 1, 1.5) * quality;
+    dpr = Math.min(window.devicePixelRatio || 1, objOK ? 1.5 : 2) * quality;
     W = canvas.clientWidth; H = canvas.clientHeight;
     gl.useProgram(prog);
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
@@ -790,18 +791,18 @@
     gl.uniform2f(U.uPtr, cx, cy);
     gl.uniform2f(U.uTilt, (reduced ? -0.22 : tiltX) * flat, (reduced ? -0.3 : tiltY) * flat);
     gl.uniform2f(U.uShift, narrow ? 0 : 0.5, narrow ? (0.45 * top + 0.62 * end) * (1 - textW) + 0.4 * textW : 0.02);
-    gl.uniform1f(U.uAlpha, (objOK ? 0 : 0.86) + (objOK ? 0.9 : 0.04) * textW);
+    gl.uniform1f(U.uAlpha, objOK ? 0.9 * textW : (narrow ? Math.max(0.16 + 0.6 * top + 0.5 * end, 0.85 * textW) : 0.86));
     if (!objOK || textW > 0.004) gl.drawArrays(gl.POINTS, 0, N);
 
     label(mix);
     frames++;
     if (now - fpsAt >= 500) {
       var fps = Math.round(frames * 1000 / (now - fpsAt));
-      if (hudStats) hudStats.textContent = ' · ' + fps + ' kl/s · render na żywo';
+      if (hudStats) hudStats.textContent = ' · ' + fps + ' kl/s · ' + (objOK ? 'render na żywo' : N.toLocaleString('pl-PL') + ' pkt');
       frames = 0; fpsAt = now;
       // za wolno przez dłuższą chwilę → mniejsza rozdzielczość renderu
       slow = fps < 36 && fps > 4 && now - t0 > 3000 ? slow + 1 : 0;
-      if (slow >= 3 && quality > 0.5) { quality -= 0.2; slow = 0; resize(); }
+      if (objOK && slow >= 3 && quality > 0.5) { quality -= 0.2; slow = 0; resize(); }
     }
   }
 

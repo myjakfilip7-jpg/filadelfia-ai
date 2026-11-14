@@ -1,20 +1,29 @@
-/* Filadelfia.ai — pole punktów (WebGL), odczyty i wejście treści. Bez zależności. */
+/* Filadelfia.ai — pole punktów (WebGL), odczyty, menu, wiersz poleceń, formularz. Bez zależności. */
 (function () {
   'use strict';
 
-  var root = document.documentElement;
+  var root = document.documentElement, body = document.body;
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var NAMES = ['Tęczówka', 'Siatka', 'Przepływ', 'Sfera', 'Punkt'];
   var scenes = Array.prototype.slice.call(document.querySelectorAll('[data-scene]'));
+  // podstrony mają jedną, stałą formację; strona główna zmienia ją przewijaniem
+  var pin = body.hasAttribute('data-form') ? +body.getAttribute('data-form') : null;
+  var lost = body.hasAttribute('data-lost');
+  function $(id) { return document.getElementById(id); }
+  function read(store, k) { try { return store.getItem(k); } catch (e) { return null; } }
+  function write(store, k, v) { try { store.setItem(k, v); } catch (e) {} }
   root.classList.add('js');
 
-  document.getElementById('year').textContent = new Date().getFullYear();
+  if ($('year')) $('year').textContent = new Date().getFullYear();
 
   /* ---------- zegar (czas w Krynicy-Zdroju) ---------- */
-  var clockEl = document.getElementById('clock');
-  var clockFmt = new Intl.DateTimeFormat('pl-PL', { timeZone: 'Europe/Warsaw', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  function tick() { clockEl.textContent = clockFmt.format(new Date()); }
-  tick();
-  setInterval(tick, 1000);
+  var clockEl = $('clock');
+  if (clockEl) {
+    var clockFmt = new Intl.DateTimeFormat('pl-PL', { timeZone: 'Europe/Warsaw', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    var tick = function () { clockEl.textContent = clockFmt.format(new Date()); };
+    tick();
+    setInterval(tick, 1000);
+  }
 
   /* ---------- wejście treści ---------- */
   var items = document.querySelectorAll('[data-r]');
@@ -27,19 +36,44 @@
         e.target.classList.add('in');
         io.unobserve(e.target);
       });
-    }, { threshold: 0.15, rootMargin: '0px 0px -6% 0px' });
+    }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
     items.forEach(function (el) { io.observe(el); });
   } else {
     items.forEach(function (el) { el.classList.add('in'); });
   }
 
-  /* ---------- przewijanie -> numer formacji (0..4, płynnie) ---------- */
-  var hudIndex = document.getElementById('hudIndex');
-  var hudName = document.getElementById('hudName');
-  var hudStats = document.getElementById('hudStats');
-  var shownScene = -1;
+  /* ---------- motyw (dzień / noc) ---------- */
+  var onTheme = function () {};
+  function setTheme(name) {
+    if (name === 'noc') root.setAttribute('data-theme', 'noc'); else root.removeAttribute('data-theme');
+    write(localStorage, 'fila-theme', name);
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', name === 'noc' ? '#0A0B0D' : '#E8EAED');
+    onTheme();
+  }
+
+  /* ---------- menu (telefon) ---------- */
+  var menu = $('menu'), menuBtn = $('menuBtn');
+  function setMenu(open) {
+    menu.classList.toggle('open', open);
+    menu.inert = !open;
+    menuBtn.setAttribute('aria-expanded', String(open));
+    menuBtn.textContent = open ? 'Zamknij' : 'Menu';
+    body.style.overflow = open ? 'hidden' : '';
+  }
+  if (menu && menuBtn) {
+    menuBtn.addEventListener('click', function () { setMenu(!menu.classList.contains('open')); });
+    menu.addEventListener('click', function (e) { if (e.target.closest('a')) setMenu(false); });
+    window.addEventListener('resize', function () { if (window.innerWidth > 860 && menu.classList.contains('open')) setMenu(false); });
+  }
+
+  /* ---------- formacja: przewijanie albo stała ---------- */
+  var hudIndex = $('hudIndex'), hudName = $('hudName'), hudStats = $('hudStats');
+  var shownScene = -1, pulse = 0;
 
   function scrollMix() {
+    if (pin !== null) return pin;
+    if (!scenes.length) return 0;
     var yc = window.scrollY + window.innerHeight / 2;
     var c = scenes.map(function (s) { return s.offsetTop + s.offsetHeight / 2; });
     if (yc <= c[0]) return 0;
@@ -54,26 +88,120 @@
   }
   function label(mix) {
     var i = Math.round(mix);
-    if (i === shownScene) return;
+    if (i === shownScene || lost) return;
     shownScene = i;
-    hudIndex.textContent = (i + 1) + '/' + scenes.length;
-    hudName.textContent = scenes[i].getAttribute('data-scene');
+    hudIndex.textContent = (i + 1) + '/' + NAMES.length;
+    hudName.textContent = NAMES[i];
+  }
+  var mixTarget = scrollMix();
+  function setForm(n) {
+    if (scenes.length > 1) scenes[n].scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
+    else { pin = n; lost = false; mixTarget = n; }
   }
 
+  /* ---------- wiersz poleceń ---------- */
+  var cmd = $('cmd'), cmdIn = $('cmdIn'), cmdOut = $('cmdOut');
+  var GO = {
+    start: './', uslugi: './#uslugi', proces: './#proces', zasady: './#zasady',
+    kampanie: 'kampanie.html', higgsfield: 'kampanie.html', reklamy: 'kampanie.html',
+    agenci: 'automatyzacje.html', automatyzacje: 'automatyzacje.html',
+    chatboty: 'chatboty.html', chatbot: 'chatboty.html',
+    strony: 'strony.html', sklepy: 'strony.html', aplikacje: 'strony.html',
+    kontakt: 'kontakt.html', marka: 'marka.html'
+  };
+  function say(text) { cmdOut.textContent = text; }
+  function openCmd() {
+    if (!cmd) return;
+    cmd.hidden = false;
+    say('Wpisz „pomoc”.');
+    cmdIn.value = '';
+    cmdIn.focus();
+  }
+  function closeCmd() { if (cmd) cmd.hidden = true; }
+  function run(raw) {
+    var text = raw.trim().toLowerCase().replace(/^\//, '');
+    var parts = text.split(/\s+/), c = parts[0];
+    if (!c) return;
+    if (c === 'pomoc' || c === 'help' || c === '?') return say('kampanie · agenci · chatboty · strony · kontakt · marka\nnoc · dzien · forma 1–5 · puls · filadelfia');
+    if (GO[c]) { say('Otwieram: ' + c); window.location.href = GO[c]; return; }
+    if (c === 'noc') { setTheme('noc'); return say('Tryb nocny. Wróć poleceniem „dzien”.'); }
+    if (c === 'dzien' || c === 'dzień') { setTheme('dzien'); return say('Tryb dzienny.'); }
+    if (c === 'forma') {
+      var n = parseInt(parts[1], 10);
+      if (!(n >= 1 && n <= 5)) return say('Podaj numer od 1 do 5, np. „forma 3”.');
+      setForm(n - 1);
+      return say(n + '/5 ' + NAMES[n - 1]);
+    }
+    if (c === 'puls') { pulse = 1; return say('Puls.'); }
+    if (c === 'filadelfia') return say('φιλαδέλφεια — braterska miłość. Stąd nazwa.');
+    if (c === 'fps' || c === 'punkty') return say(hudStats && hudStats.textContent ? hudStats.textContent.replace(/^ · /, '') : 'Brak odczytu.');
+    say('Nie znam polecenia „' + c + '”. Wpisz „pomoc”.');
+  }
+  if (cmd) {
+    $('cmdForm').addEventListener('submit', function (e) { e.preventDefault(); run(cmdIn.value); cmdIn.value = ''; });
+    $('cmdClose').addEventListener('click', closeCmd);
+    $('hudBtn').addEventListener('click', function () { if (cmd.hidden) openCmd(); else closeCmd(); });
+  }
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { closeCmd(); if (menu && menu.classList.contains('open')) setMenu(false); return; }
+    if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return;
+    var t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+    e.preventDefault();
+    openCmd();
+  });
+
+  /* ---------- formularz kontaktowy: składa wiadomość i otwiera pocztę ---------- */
+  var brief = $('brief');
+  if (brief) {
+    var status = $('briefStatus');
+    var want = new URLSearchParams(window.location.search).get('temat');
+    var pre = want && brief.querySelector('input[name="temat"][value="' + want.replace(/[^a-z]/g, '') + '"]');
+    if (pre) pre.checked = true;
+    var compose = function () {
+      var topic = brief.querySelector('input[name="temat"]:checked');
+      var lines = ['Temat: ' + topic.getAttribute('data-label'), 'Imię: ' + brief.imie.value.trim()];
+      if (brief.firma.value.trim()) lines.push('Firma / strona: ' + brief.firma.value.trim());
+      lines.push('', brief.opis.value.trim());
+      return { subject: 'Rozmowa o AI — ' + topic.getAttribute('data-label'), text: lines.join('\n') };
+    };
+    brief.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var m = compose();
+      status.textContent = 'Otwieram pocztę. Wystarczy kliknąć „Wyślij”.';
+      window.location.href = 'mailto:' + brief.getAttribute('data-mail') + '?subject=' + encodeURIComponent(m.subject) + '&body=' + encodeURIComponent(m.text);
+    });
+    $('briefCopy').addEventListener('click', function () {
+      if (!brief.reportValidity()) return;
+      var m = compose();
+      if (!navigator.clipboard) { status.textContent = 'Ta przeglądarka nie pozwala kopiować. Użyj „Otwórz w poczcie”.'; return; }
+      navigator.clipboard.writeText(m.text).then(
+        function () { status.textContent = 'Skopiowano. Wklej do wiadomości na ' + brief.getAttribute('data-mail') + '.'; },
+        function () { status.textContent = 'Nie udało się skopiować. Użyj „Otwórz w poczcie”.'; }
+      );
+    });
+  }
+
+  /* ---------- podpis w konsoli ---------- */
+  try {
+    console.log('%cfiladelfia%c.%cai', 'font: 300 26px Mona Sans, sans-serif; color: #0A0B0D; background: #E8EAED; padding: 10px 0 10px 14px', 'font: 700 26px sans-serif; color: #2B2BFF; background: #E8EAED; padding: 10px 0', 'font: 300 26px Mona Sans, sans-serif; color: #0A0B0D; background: #E8EAED; padding: 10px 14px 10px 0');
+    console.log('Zaglądasz pod maskę. Naciśnij / na stronie i wpisz „pomoc”.');
+  } catch (e) {}
+
   /* ---------- WebGL ---------- */
-  var canvas = document.getElementById('field');
+  var canvas = $('field');
   var gl = canvas.getContext('webgl', { antialias: false, alpha: true, premultipliedAlpha: true });
   if (!gl) {
     canvas.remove();
     window.addEventListener('scroll', function () { label(scrollMix()); }, { passive: true });
-    label(0);
+    label(mixTarget);
     return;
   }
 
   var VS = [
     'attribute vec3 aA; attribute vec2 aB; attribute vec2 aC; attribute vec3 aE;',
     'attribute float aD; attribute float aSeed; attribute float aKind;',
-    'uniform float uT, uMix, uAspect, uDpr, uScale, uSize, uIntro;',
+    'uniform float uT, uMix, uAspect, uDpr, uScale, uSize, uIntro, uPulse;',
     'uniform vec2 uTilt, uShift;',
     'varying float vAlpha; varying float vKind;',
     'mat2 rot(float a){ float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }',
@@ -103,6 +231,8 @@
     // wejście: z rozproszenia do formy
     '  float it = clamp(uIntro * 1.6 - aSeed * .6, 0., 1.); it = 1. - pow(1. - it, 3.);',
     '  p = mix(aE * (2.2 + aSeed * 1.6), p, it); al *= it;',
+    // puls: dotknięcie tła rozsuwa punkty na chwilę
+    '  p *= 1. + uPulse * (.1 + aSeed * .55);',
     '  p.yz = rot(uTilt.x) * p.yz; p.xz = rot(uTilt.y) * p.xz;',
     '  p *= uScale;',
     '  float d = 3.2; float k = d / (p.z + d);',
@@ -155,7 +285,7 @@
   var seed = 20261113;
   function rnd() { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }
 
-  // tęczówka: źrenica + pierścienie (część przerywana, jak łuki sygnetu)
+  // tęczówka: źrenica + pierścienie (część przerywana, jak łuki znaku)
   var RINGS = 15, pupilN = Math.round(N * 0.03);
   var rings = [], total = 0;
   for (var r = 0; r < RINGS; r++) {
@@ -206,9 +336,15 @@
   });
 
   var U = {};
-  ['uT', 'uMix', 'uAspect', 'uDpr', 'uScale', 'uSize', 'uIntro', 'uTilt', 'uShift', 'uInk', 'uSignal', 'uAlpha'].forEach(function (n) { U[n] = gl.getUniformLocation(prog, n); });
-  gl.uniform3f(U.uInk, 10 / 255, 11 / 255, 13 / 255);
-  gl.uniform3f(U.uSignal, 43 / 255, 43 / 255, 1);
+  ['uT', 'uMix', 'uAspect', 'uDpr', 'uScale', 'uSize', 'uIntro', 'uPulse', 'uTilt', 'uShift', 'uInk', 'uSignal', 'uAlpha'].forEach(function (n) { U[n] = gl.getUniformLocation(prog, n); });
+  var needs = true;
+  onTheme = function () {
+    var night = root.getAttribute('data-theme') === 'noc';
+    if (night) { gl.uniform3f(U.uInk, 232 / 255, 234 / 255, 237 / 255); gl.uniform3f(U.uSignal, 112 / 255, 112 / 255, 1); }
+    else { gl.uniform3f(U.uInk, 10 / 255, 11 / 255, 13 / 255); gl.uniform3f(U.uSignal, 43 / 255, 43 / 255, 1); }
+    needs = true;
+  };
+  onTheme();
   gl.disable(gl.DEPTH_TEST);
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
@@ -232,15 +368,22 @@
   }
 
   /* ---------- pętla ---------- */
-  var mix = scrollMix(), mixTarget = mix;
+  var mix = mixTarget;
   var tiltX = 0, tiltY = 0, ptrX = 0, ptrY = 0;
-  var t0 = performance.now(), last = t0, needs = true;
+  var t0 = performance.now(), last = t0;
   var frames = 0, fpsAt = t0, visible = true;
+  // pierwsze wejście składa formę powoli; kolejne podstrony — szybciej
+  var introTime = read(sessionStorage, 'fila-seen') ? 1.3 : 2.6;
+  write(sessionStorage, 'fila-seen', '1');
 
   window.addEventListener('pointermove', function (e) {
     if (e.pointerType === 'touch') return;
     ptrX = e.clientX / window.innerWidth - 0.5;
     ptrY = e.clientY / window.innerHeight - 0.5;
+  }, { passive: true });
+  window.addEventListener('pointerdown', function (e) {
+    if (reduced || (e.target.closest && e.target.closest('a, button, input, textarea, label, .cmd'))) return;
+    pulse = 1;
   }, { passive: true });
   window.addEventListener('scroll', function () { mixTarget = scrollMix(); needs = true; }, { passive: true });
   window.addEventListener('resize', function () { resize(); mixTarget = scrollMix(); });
@@ -255,6 +398,7 @@
     var t = reduced ? 0 : (now - t0) / 1000;
 
     mix += (mixTarget - mix) * (reduced ? 1 : Math.min(1, dt * 5));
+    pulse *= Math.exp(-dt * 3.2);
     // tęczówka patrzy za kursorem; pozostałe formy tylko lekko się przechylają
     var look = 0.35 + 0.65 * wgt(mix, 0);
     var tx = -0.22 + ptrY * 0.7 * look, ty = -0.3 + ptrX * 0.9 * look;
@@ -264,15 +408,20 @@
     if (reduced && !needs) return;
     needs = false;
 
-    var intro = reduced ? 1 : Math.min(1, t / 2.6);
-    var hero = wgt(mix, 0), end = wgt(mix, 4);
+    var intro = reduced ? 1 : Math.min(1, t / introTime);
+    if (lost) intro = Math.min(intro, 0.34); // 404: forma nigdy się nie składa
     gl.uniform1f(U.uT, t);
     gl.uniform1f(U.uMix, mix);
     gl.uniform1f(U.uIntro, intro);
+    gl.uniform1f(U.uPulse, pulse);
     gl.uniform2f(U.uTilt, reduced ? -0.22 : tiltX, reduced ? -0.3 : tiltY);
     if (narrow) {
-      gl.uniform2f(U.uShift, 0, 0.45 * hero + 0.62 * end);
-      gl.uniform1f(U.uAlpha, 0.16 + 0.6 * hero + 0.5 * end);
+      // na telefonie forma jest wyraźna tylko tam, gdzie ma miejsce: u góry strony i przy kontakcie
+      var top, end;
+      if (pin !== null) { top = Math.max(0, 1 - window.scrollY / (H * 0.55)); end = 0; }
+      else { top = wgt(mix, 0); end = wgt(mix, 4); }
+      gl.uniform2f(U.uShift, 0, 0.45 * top + 0.62 * end);
+      gl.uniform1f(U.uAlpha, 0.16 + 0.6 * top + 0.5 * end);
     } else {
       gl.uniform2f(U.uShift, 0.5, 0.02);
       gl.uniform1f(U.uAlpha, 0.86);
@@ -284,7 +433,7 @@
     frames++;
     if (now - fpsAt >= 500) {
       var fps = Math.round(frames * 1000 / (now - fpsAt));
-      hudStats.textContent = ' · ' + fps + ' kl/s · ' + N.toLocaleString('pl-PL') + ' pkt';
+      if (hudStats) hudStats.textContent = ' · ' + fps + ' kl/s · ' + N.toLocaleString('pl-PL') + ' pkt';
       frames = 0; fpsAt = now;
     }
   }

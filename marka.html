@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Marka — Filadelfia.ai</title>
+  <meta name="description" content="Znak, kolory i pismo Filadelfia.ai.">
+  <!-- Domena tymczasowa: bez indeksowania. Usuń tę linię (w build.mjs) przy przejściu na docelową domenę. -->
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#E8EAED">
+  <meta property="og:title" content="Marka — Filadelfia.ai">
+  <meta property="og:description" content="Znak, kolory i pismo Filadelfia.ai.">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="pl_PL">
+  <script>try { if (localStorage.getItem('fila-theme') === 'noc') document.documentElement.setAttribute('data-theme', 'noc'); } catch (e) {}</script>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mona+Sans:wdth,wght@75..125,200..900&family=Martian+Mono:wght@300..500&display=swap">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-form="0">
+  <a class="skip" href="#main">Przejdź do treści</a>
+
+  <canvas id="field" aria-hidden="true"></canvas>
+
+  <header class="bar">
+    <a class="logo" href="./" aria-label="Filadelfia.ai — strona główna"><svg class="mark" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9.6" stroke-dasharray="46.3 14" transform="rotate(-38 12 12)"/><circle cx="12" cy="12" r="5.5" stroke-dasharray="21.5 13.06" transform="rotate(148 12 12)"/></g><circle class="mark__p" cx="12" cy="12" r="2.1"/></svg><span class="word">filadelfia<span class="word__dot">.</span>ai</span></a>
+    <nav class="bar__nav mono" aria-label="Główna">
+      <a href="./#uslugi">Usługi</a>
+      <a href="./#proces">Proces</a>
+      <a href="./#zasady">Zasady</a>
+      <a href="kontakt.html">Kontakt</a>
+    </nav>
+    <p class="bar__clock mono" aria-hidden="true">Krynica-Zdrój <span id="clock">--:--:--</span></p>
+    <button class="bar__menu mono" type="button" id="menuBtn" aria-expanded="false" aria-controls="menu">Menu</button>
+  </header>
+
+  <nav class="menu" id="menu" aria-label="Menu" inert>
+    <p class="mono">Usługi</p>
+    <a class="menu__big" href="kampanie.html">Kampanie AI</a>
+    <a class="menu__big" href="automatyzacje.html">Agenci i automatyzacje</a>
+    <a class="menu__big" href="chatboty.html">Chatboty</a>
+    <a class="menu__big" href="strony.html">Strony i sklepy</a>
+    <p class="mono">Firma</p>
+    <a class="menu__big" href="./#proces">Proces</a>
+    <a class="menu__big" href="./#zasady">Zasady</a>
+    <a class="menu__big" href="kontakt.html">Kontakt</a>
+    <a class="menu__mail mono" href="mailto:kontakt@filadelfia.io">kontakt@filadelfia.io</a>
+  </nav>
+
+  <main id="main">
+    <section class="scene scene--hero scene--page">
+      <div class="col">
+        <p class="tag mono" data-r>Marka</p>
+        <h1 class="h1--page" data-r>Jeden punkt. Reszta to porządek.</h1>
+        <p class="lead" data-r>Znak, kolory i pismo Filadelfia.ai w jednym miejscu.</p>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="col">
+        <p class="tag mono" data-r>Znak</p>
+        <div class="brand" data-r>
+          <div class="brand__tile"><svg class="mark" width="96" height="96" viewBox="0 0 24 24" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9.6" stroke-dasharray="46.3 14" transform="rotate(-38 12 12)"/><circle cx="12" cy="12" r="5.5" stroke-dasharray="21.5 13.06" transform="rotate(148 12 12)"/></g><circle class="mark__p" cx="12" cy="12" r="2.1"/></svg></div>
+          <div class="brand__tile brand__tile--dark"><svg class="mark" width="96" height="96" viewBox="0 0 24 24" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9.6" stroke-dasharray="46.3 14" transform="rotate(-38 12 12)"/><circle cx="12" cy="12" r="5.5" stroke-dasharray="21.5 13.06" transform="rotate(148 12 12)"/></g><circle class="mark__p" cx="12" cy="12" r="2.1"/></svg></div>
+          <div class="brand__tile brand__tile--wide"><svg class="mark" width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9.6" stroke-dasharray="46.3 14" transform="rotate(-38 12 12)"/><circle cx="12" cy="12" r="5.5" stroke-dasharray="21.5 13.06" transform="rotate(148 12 12)"/></g><circle class="mark__p" cx="12" cy="12" r="2.1"/></svg><span class="word">filadelfia<span class="word__dot">.</span>ai</span></div>
+          <div class="brand__tile brand__tile--wide brand__tile--dark"><svg class="mark" width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9.6" stroke-dasharray="46.3 14" transform="rotate(-38 12 12)"/><circle cx="12" cy="12" r="5.5" stroke-dasharray="21.5 13.06" transform="rotate(148 12 12)"/></g><circle class="mark__p" cx="12" cy="12" r="2.1"/></svg><span class="word">filadelfia<span class="word__dot">.</span>ai</span></div>
+        </div>
+        <p class="lead" data-r>Tęczówka: dwa przerwane pierścienie i punkt. Ten sam kształt układa się z punktów na stronie głównej. W logotypie kropka przed „ai” jest tym samym punktem.</p>
+        <p class="brand__sizes" data-r><svg class="mark" width="48" height="48" viewBox="0 0 24 24" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9.6" stroke-dasharray="46.3 14" transform="rotate(-38 12 12)"/><circle cx="12" cy="12" r="5.5" stroke-dasharray="21.5 13.06" transform="rotate(148 12 12)"/></g><circle class="mark__p" cx="12" cy="12" r="2.1"/></svg><svg class="mark" width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9.6" stroke-dasharray="46.3 14" transform="rotate(-38 12 12)"/><circle cx="12" cy="12" r="5.5" stroke-dasharray="21.5 13.06" transform="rotate(148 12 12)"/></g><circle class="mark__p" cx="12" cy="12" r="2.1"/></svg><svg class="mark" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9.6" stroke-dasharray="46.3 14" transform="rotate(-38 12 12)"/><circle cx="12" cy="12" r="5.5" stroke-dasharray="21.5 13.06" transform="rotate(148 12 12)"/></g><circle class="mark__p" cx="12" cy="12" r="2.1"/></svg><svg class="mark" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9.6" stroke-dasharray="46.3 14" transform="rotate(-38 12 12)"/><circle cx="12" cy="12" r="5.5" stroke-dasharray="21.5 13.06" transform="rotate(148 12 12)"/></g><circle class="mark__p" cx="12" cy="12" r="2.1"/></svg><span class="mono">Czytelny od 14 px</span></p>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="col">
+        <p class="tag mono" data-r>Kolory</p>
+        <ul class="swatches">
+          <li data-r><span class="swatch" style="background:#E8EAED"></span><h2>Aluminium</h2><p class="mono">#E8EAED</p><p>Tło.</p></li>
+          <li data-r><span class="swatch swatch--dark" style="background:#0A0B0D"></span><h2>Grafit</h2><p class="mono">#0A0B0D</p><p>Tekst i znak.</p></li>
+          <li data-r><span class="swatch swatch--dark" style="background:#565B63"></span><h2>Łupek</h2><p class="mono">#565B63</p><p>Tekst pomocniczy.</p></li>
+          <li data-r><span class="swatch" style="background:#C9CDD3"></span><h2>Włos</h2><p class="mono">#C9CDD3</p><p>Linie.</p></li>
+          <li data-r><span class="swatch swatch--dark" style="background:#2B2BFF"></span><h2>Sygnał</h2><p class="mono">#2B2BFF</p><p>Jeden punkt na ekran. Nigdy tło, nigdy cały nagłówek.</p></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="col">
+        <p class="tag mono" data-r>Pismo</p>
+        <p class="type-a" data-r>Mona Sans</p>
+        <p class="lead" data-r>Szeroka i cienka w nagłówkach, zwykła w tekście. Jedna rodzina na wszystko, co się czyta.</p>
+        <p class="type-b mono" data-r>Martian Mono — 49.4217° N · 120 kl/s</p>
+        <p class="lead" data-r>Tylko do odczytów, etykiet i numerów kroków.</p>
+      </div>
+    </section>
+
+    <section class="block block--end">
+      <div class="col">
+        <p class="tag mono" data-r>Nazwa</p>
+        <p class="note" data-r>Filadelfia, z greckiego <span lang="el">φιλαδέλφεια</span>: braterska miłość. U nas znaczy to jedno: AI pracuje dla ludzi, nie zamiast nich.</p>
+        <footer class="foot mono">
+          <span>© <span id="year">2026</span> Filadelfia.ai</span>
+          <a href="marka.html">Marka</a>
+          <a href="https://filadelfia.io" target="_blank" rel="noopener">Filadelfia.io</a>
+          <a href="https://www.youtube.com/@filadroid" target="_blank" rel="noopener">YouTube</a>
+        </footer>
+      </div>
+    </section>
+  </main>
+
+  <aside class="hud mono">
+    <button class="hud__form" type="button" id="hudBtn" aria-label="Otwórz wiersz poleceń"><span class="hud__dot"></span><span id="hudIndex">1/5</span> <span id="hudName">Tęczówka</span></button>
+    <p class="hud__data" aria-hidden="true">49.4217° N 20.9594° E<span id="hudStats"></span> · <span class="hud__key">/</span> polecenia</p>
+  </aside>
+
+  <div class="cmd" id="cmd" hidden>
+    <p class="cmd__out" id="cmdOut" role="status"></p>
+    <form id="cmdForm"><span aria-hidden="true">›</span><input id="cmdIn" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Polecenie" placeholder="pomoc"><button type="button" id="cmdClose" aria-label="Zamknij wiersz poleceń">esc</button></form>
+  </div>
+
+  <script src="script.js" defer></script>
+</body>
+</html>

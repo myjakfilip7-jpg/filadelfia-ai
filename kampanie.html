@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kampanie reklamowe AI — Filadelfia.ai</title>
+  <meta name="description" content="Spoty wideo, zdjęcia produktowe i grafiki do kampanii generowane w AI. Bez planu zdjęciowego.">
+  <!-- Domena tymczasowa: bez indeksowania. Usuń tę linię (w build.mjs) przy przejściu na docelową domenę. -->
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#E8EAED">
+  <meta property="og:title" content="Kampanie reklamowe AI — Filadelfia.ai">
+  <meta property="og:description" content="Spoty wideo, zdjęcia produktowe i grafiki do kampanii generowane w AI. Bez planu zdjęciowego.">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="pl_PL">
+  <script>try { if (localStorage.getItem('fila-theme') === 'noc') document.documentElement.setAttribute('data-theme', 'noc'); } catch (e) {}</script>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mona+Sans:wdth,wght@75..125,200..900&family=Martian+Mono:wght@300..500&display=swap">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-form="0">
+  <a class="skip" href="#main">Przejdź do treści</a>
+
+  <canvas id="field" aria-hidden="true"></canvas>
+
+  <header class="bar">
+    <a class="logo" href="./" aria-label="Filadelfia.ai — strona główna"><svg class="mark" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9.6" stroke-dasharray="46.3 14" transform="rotate(-38 12 12)"/><circle cx="12" cy="12" r="5.5" stroke-dasharray="21.5 13.06" transform="rotate(148 12 12)"/></g><circle class="mark__p" cx="12" cy="12" r="2.1"/></svg><span class="word">filadelfia<span class="word__dot">.</span>ai</span></a>
+    <nav class="bar__nav mono" aria-label="Główna">
+      <a href="./#uslugi" aria-current="page">Usługi</a>
+      <a href="./#proces">Proces</a>
+      <a href="./#zasady">Zasady</a>
+      <a href="kontakt.html">Kontakt</a>
+    </nav>
+    <p class="bar__clock mono" aria-hidden="true">Krynica-Zdrój <span id="clock">--:--:--</span></p>
+    <button class="bar__menu mono" type="button" id="menuBtn" aria-expanded="false" aria-controls="menu">Menu</button>
+  </header>
+
+  <nav class="menu" id="menu" aria-label="Menu" inert>
+    <p class="mono">Usługi</p>
+    <a class="menu__big" href="kampanie.html">Kampanie AI</a>
+    <a class="menu__big" href="automatyzacje.html">Agenci i automatyzacje</a>
+    <a class="menu__big" href="chatboty.html">Chatboty</a>
+    <a class="menu__big" href="strony.html">Strony i sklepy</a>
+    <p class="mono">Firma</p>
+    <a class="menu__big" href="./#proces">Proces</a>
+    <a class="menu__big" href="./#zasady">Zasady</a>
+    <a class="menu__big" href="kontakt.html">Kontakt</a>
+    <a class="menu__mail mono" href="mailto:kontakt@filadelfia.io">kontakt@filadelfia.io</a>
+  </nav>
+
+  <main id="main">
+    <section class="scene scene--hero scene--page">
+      <div class="col">
+        <p class="tag mono" data-r><a href="./#uslugi">Usługi</a> <span aria-hidden="true">/</span> 1 z 4</p>
+        <h1 class="h1--page" data-r>Reklama bez planu zdjęciowego.</h1>
+        <p class="lead" data-r>Spoty wideo, zdjęcia produktowe i grafiki do kampanii powstają w AI: bez ekipy, studia i tygodni czekania. Ty zatwierdzasz kierunek i gotowe materiały.</p>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="col">
+        <p class="tag mono" data-r>Co powstaje</p>
+        <ul class="index">
+          <li data-r>
+            <h2>Spoty wideo</h2>
+            <p>Krótkie reklamy na Reels, TikTok i YouTube, generowane między innymi w Higgsfield i dopracowane w montażu.</p>
+          </li>
+          <li data-r>
+            <h2>Zdjęcia produktowe</h2>
+            <p>Twój produkt w scenach, których nie trzeba budować ani fotografować.</p>
+          </li>
+          <li data-r>
+            <h2>Formaty do kampanii</h2>
+            <p>Każdy materiał w wersjach pod Meta Ads, TikTok Ads i YouTube: pion, kwadrat, poziom.</p>
+          </li>
+          <li data-r>
+            <h2>Warianty do testów</h2>
+            <p>Kilka wersji tego samego pomysłu, żeby sprawdzić, która reklama działa najlepiej.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="col">
+        <p class="tag mono" data-r>Jak to przebiega</p>
+        <ol class="steps">
+          <li data-r>
+            <span class="steps__n mono">01</span>
+            <h2>Brief</h2>
+            <p>Produkt, odbiorca, cel kampanii. Jedna rozmowa.</p>
+          </li>
+          <li data-r>
+            <span class="steps__n mono">02</span>
+            <h2>Kierunek</h2>
+            <p>Pokazujemy kilka kadrów próbnych. Wybierasz styl, zanim powstanie całość.</p>
+          </li>
+          <li data-r>
+            <span class="steps__n mono">03</span>
+            <h2>Produkcja</h2>
+            <p>Generujemy ujęcia, montujemy, dodajemy dźwięk i napisy.</p>
+          </li>
+          <li data-r>
+            <span class="steps__n mono">04</span>
+            <h2>Formaty</h2>
+            <p>Dostajesz pliki gotowe do wgrania w panel reklamowy.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="col">
+        <p class="tag mono" data-r>Uczciwie</p>
+        <p class="note" data-r>AI nie zastąpi wszystkiego. Jeśli w reklamie ma wystąpić konkretna osoba albo dokładny detal produktu, powiemy wprost, co da się wygenerować, a co lepiej sfilmować.</p>
+      </div>
+    </section>
+
+    <section class="block block--end">
+      <div class="col">
+        <h2 class="ask" data-r>Sprawdźmy, czy to ma sens u&nbsp;Ciebie.</h2>
+        <p class="actions" data-r>
+          <a class="pill" href="kontakt.html?temat=kampanie">Napisz w tej sprawie</a>
+          <a class="more" href="automatyzacje.html">Dalej: Agenci i automatyzacje <span aria-hidden="true">→</span></a>
+        </p>
+        <footer class="foot mono">
+          <span>© <span id="year">2026</span> Filadelfia.ai</span>
+          <a href="marka.html">Marka</a>
+          <a href="https://filadelfia.io" target="_blank" rel="noopener">Filadelfia.io</a>
+          <a href="https://www.youtube.com/@filadroid" target="_blank" rel="noopener">YouTube</a>
+        </footer>
+      </div>
+    </section>
+  </main>
+
+  <aside class="hud mono">
+    <button class="hud__form" type="button" id="hudBtn" aria-label="Otwórz wiersz poleceń"><span class="hud__dot"></span><span id="hudIndex">1/5</span> <span id="hudName">Tęczówka</span></button>
+    <p class="hud__data" aria-hidden="true">49.4217° N 20.9594° E<span id="hudStats"></span> · <span class="hud__key">/</span> polecenia</p>
+  </aside>
+
+  <div class="cmd" id="cmd" hidden>
+    <p class="cmd__out" id="cmdOut" role="status"></p>
+    <form id="cmdForm"><span aria-hidden="true">›</span><input id="cmdIn" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Polecenie" placeholder="pomoc"><button type="button" id="cmdClose" aria-label="Zamknij wiersz poleceń">esc</button></form>
+  </div>
+
+  <script src="script.js" defer></script>
+</body>
+</html>

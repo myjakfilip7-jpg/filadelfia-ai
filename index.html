@@ -4,14 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Filadelfia.ai — agencja AI</title>
-  <meta name="description" content="Filadelfia.ai projektuje i wdraża automatyzacje oraz agentów AI dla firm. Powtarzalna praca robi się sama, decyzje zostają u Ciebie.">
-  <!-- Domena tymczasowa: bez indeksowania. Usuń tę linię przy przejściu na docelową domenę. -->
+  <meta name="description" content="Kampanie reklamowe AI, agenci i automatyzacje, chatboty oraz strony dla firm. Powtarzalna praca dzieje się sama, decyzje zostają u Ciebie.">
+  <!-- Domena tymczasowa: bez indeksowania. Usuń tę linię (w build.mjs) przy przejściu na docelową domenę. -->
   <meta name="robots" content="noindex, nofollow">
   <meta name="theme-color" content="#E8EAED">
   <meta property="og:title" content="Filadelfia.ai — agencja AI">
-  <meta property="og:description" content="Automatyzacje i agenci AI dla firm. Decyzje zostają u Ciebie.">
+  <meta property="og:description" content="Kampanie reklamowe AI, agenci i automatyzacje, chatboty oraz strony dla firm. Powtarzalna praca dzieje się sama, decyzje zostają u Ciebie.">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="pl_PL">
+  <script>try { if (localStorage.getItem('fila-theme') === 'noc') document.documentElement.setAttribute('data-theme', 'noc'); } catch (e) {}</script>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,27 +25,38 @@
   <canvas id="field" aria-hidden="true"></canvas>
 
   <header class="bar">
-    <a class="logo" href="#top" aria-label="Filadelfia.ai — początek strony">
-      <svg width="27" height="20" viewBox="0 0 30 22" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="21" cy="11" r="2.2"/><path d="M21 4.2a6.8 6.8 0 000 13.6"/><path d="M21 0.8a10.2 10.2 0 000 20.4"/><path d="M2 20.2a5.6 5.6 0 005.6-5.6"/><path d="M2 14.2a5.6 5.6 0 005.6-5.6"/><path d="M7.6 14.6a5.6 5.6 0 015.6-5.6 4.4 4.4 0 004.4-4.4"/></g></svg>
-      <span>filadelfia.ai</span>
-    </a>
+    <a class="logo" href="./" aria-label="Filadelfia.ai — strona główna"><svg class="mark" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9.6" stroke-dasharray="46.3 14" transform="rotate(-38 12 12)"/><circle cx="12" cy="12" r="5.5" stroke-dasharray="21.5 13.06" transform="rotate(148 12 12)"/></g><circle class="mark__p" cx="12" cy="12" r="2.1"/></svg><span class="word">filadelfia<span class="word__dot">.</span>ai</span></a>
     <nav class="bar__nav mono" aria-label="Główna">
-      <a href="#uslugi">Usługi</a>
-      <a href="#proces">Proces</a>
-      <a href="#zasady">Zasady</a>
-      <a href="#kontakt">Kontakt</a>
+      <a href="./#uslugi">Usługi</a>
+      <a href="./#proces">Proces</a>
+      <a href="./#zasady">Zasady</a>
+      <a href="kontakt.html">Kontakt</a>
     </nav>
     <p class="bar__clock mono" aria-hidden="true">Krynica-Zdrój <span id="clock">--:--:--</span></p>
+    <button class="bar__menu mono" type="button" id="menuBtn" aria-expanded="false" aria-controls="menu">Menu</button>
   </header>
+
+  <nav class="menu" id="menu" aria-label="Menu" inert>
+    <p class="mono">Usługi</p>
+    <a class="menu__big" href="kampanie.html">Kampanie AI</a>
+    <a class="menu__big" href="automatyzacje.html">Agenci i automatyzacje</a>
+    <a class="menu__big" href="chatboty.html">Chatboty</a>
+    <a class="menu__big" href="strony.html">Strony i sklepy</a>
+    <p class="mono">Firma</p>
+    <a class="menu__big" href="./#proces">Proces</a>
+    <a class="menu__big" href="./#zasady">Zasady</a>
+    <a class="menu__big" href="kontakt.html">Kontakt</a>
+    <a class="menu__mail mono" href="mailto:kontakt@filadelfia.io">kontakt@filadelfia.io</a>
+  </nav>
 
   <main id="main">
     <section class="scene scene--hero" id="top" data-scene="Tęczówka">
       <div class="col">
         <p class="tag mono" data-r>Agencja AI</p>
         <h1 data-r>Praca, którą wykona&nbsp;AI.</h1>
-        <p class="lead" data-r>Projektujemy i wdrażamy automatyzacje oraz agentów AI dla firm. Zapytania, oferty, raporty i treści powstają same. Decyzje zostają u&nbsp;Ciebie.</p>
+        <p class="lead" data-r>Kampanie reklamowe, agenci, chatboty i strony. Projektujemy i wdrażamy AI w firmach: powtarzalna praca dzieje się sama, decyzje zostają u&nbsp;Ciebie.</p>
         <p class="actions" data-r>
-          <a class="pill" href="#kontakt">Umów rozmowę</a>
+          <a class="pill" href="kontakt.html">Umów rozmowę</a>
           <a class="more" href="#uslugi">Co wdrażamy <span aria-hidden="true">↓</span></a>
         </p>
       </div>
@@ -53,30 +65,30 @@
     <section class="scene" id="uslugi" data-scene="Siatka">
       <div class="col">
         <p class="tag mono" data-r>Co wdrażamy</p>
-        <ul class="index">
+        <ul class="index index--links">
           <li data-r>
-            <h2>Automatyzacje procesów</h2>
-            <p>Poczta, arkusze, CRM i formularze połączone tak, żeby powtarzalna praca działa się sama.</p>
+            <a href="kampanie.html">
+              <h2>Kampanie reklamowe AI</h2>
+              <p>Spoty wideo, zdjęcia produktowe i grafiki do reklam, generowane w AI. Bez planu zdjęciowego.</p>
+            </a>
           </li>
           <li data-r>
-            <h2>Agenci AI</h2>
-            <p>Asystenci do konkretnych zadań: oferty, zgłoszenia, zbieranie danych, raporty.</p>
+            <a href="automatyzacje.html">
+              <h2>Agenci i automatyzacje</h2>
+              <p>Zapytania, oferty i raporty obsługiwane przez agentów AI połączonych z Twoimi narzędziami.</p>
+            </a>
           </li>
           <li data-r>
-            <h2>Obsługa klienta</h2>
-            <p>Chatbot, który odpowiada na podstawie Twoich materiałów, a trudne sprawy przekazuje człowiekowi.</p>
+            <a href="chatboty.html">
+              <h2>Chatboty AI</h2>
+              <p>Bot, który odpowiada na podstawie Twoich materiałów, a trudne sprawy przekazuje człowiekowi.</p>
+            </a>
           </li>
           <li data-r>
-            <h2>Treści i wideo</h2>
-            <p>Produkcja grafik, filmów i tekstów wspierana przez AI, sprawdzana przed publikacją.</p>
-          </li>
-          <li data-r>
-            <h2>Strony i aplikacje</h2>
-            <p>Strony i narzędzia wewnętrzne z panelem, w którym sam zmieniasz treści.</p>
-          </li>
-          <li data-r>
-            <h2>Szkolenia</h2>
-            <p>Warsztaty na Twoich przykładach. Zespół wychodzi z gotowymi sposobami pracy.</p>
+            <a href="strony.html">
+              <h2>Strony, aplikacje, sklepy</h2>
+              <p>Strony firmowe, sklepy i narzędzia wewnętrzne z panelem, w którym sam zmieniasz treści.</p>
+            </a>
           </li>
         </ul>
       </div>
@@ -135,9 +147,13 @@
         <p class="tag mono" data-r>Kontakt</p>
         <h2 class="ask" data-r>Opowiedz, co zabiera Ci najwięcej czasu.</h2>
         <p class="lead" data-r>Napisz kilka zdań o swojej firmie. Odpiszemy z propozycją, od czego zacząć.</p>
-        <p data-r><a class="mail" href="mailto:kontakt@filadelfia.io?subject=Rozmowa%20o%20AI%20w%20mojej%20firmie">kontakt@filadelfia.io</a></p>
+        <p class="actions" data-r>
+          <a class="pill" href="kontakt.html">Napisz do nas</a>
+          <a class="more" href="mailto:kontakt@filadelfia.io">kontakt@filadelfia.io</a>
+        </p>
         <footer class="foot mono">
           <span>© <span id="year">2026</span> Filadelfia.ai</span>
+          <a href="marka.html">Marka</a>
           <a href="https://filadelfia.io" target="_blank" rel="noopener">Filadelfia.io</a>
           <a href="https://www.youtube.com/@filadroid" target="_blank" rel="noopener">YouTube</a>
         </footer>
@@ -145,10 +161,15 @@
     </section>
   </main>
 
-  <aside class="hud mono" aria-hidden="true">
-    <p><span class="hud__dot"></span><span id="hudIndex">1/5</span> <span id="hudName">Tęczówka</span></p>
-    <p class="hud__data">49.4217° N 20.9594° E<span id="hudStats"></span></p>
+  <aside class="hud mono">
+    <button class="hud__form" type="button" id="hudBtn" aria-label="Otwórz wiersz poleceń"><span class="hud__dot"></span><span id="hudIndex">1/5</span> <span id="hudName">Tęczówka</span></button>
+    <p class="hud__data" aria-hidden="true">49.4217° N 20.9594° E<span id="hudStats"></span> · <span class="hud__key">/</span> polecenia</p>
   </aside>
+
+  <div class="cmd" id="cmd" hidden>
+    <p class="cmd__out" id="cmdOut" role="status"></p>
+    <form id="cmdForm"><span aria-hidden="true">›</span><input id="cmdIn" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Polecenie" placeholder="pomoc"><button type="button" id="cmdClose" aria-label="Zamknij wiersz poleceń">esc</button></form>
+  </div>
 
   <script src="script.js" defer></script>
 </body>

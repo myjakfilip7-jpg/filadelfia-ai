@@ -382,6 +382,23 @@
     img.addEventListener('load', ok); img.addEventListener('error', bad);
   });
 
+  /* ---------- nawigacja: podkreślona sekcja, w której jesteś (tylko strona główna) ---------- */
+  var navLinks = Array.prototype.slice.call(document.querySelectorAll('.bar__nav > a, .nav__has > a')).map(function (a) {
+    var hash = a.getAttribute('href').split('#')[1], target = hash && document.getElementById(hash);
+    return target ? { a: a, target: target } : null;
+  }).filter(Boolean);
+  if (navLinks.length) {
+    var navQueued = false;
+    var navSpy = function () {
+      navQueued = false;
+      var mid = window.innerHeight * 0.4, here = null;
+      navLinks.forEach(function (n) { var r = n.target.getBoundingClientRect(); if (r.top <= mid && r.bottom > mid) here = n; });
+      navLinks.forEach(function (n) { n.a.classList.toggle('is-here', n === here); });
+    };
+    window.addEventListener('scroll', function () { if (!navQueued) { navQueued = true; requestAnimationFrame(navSpy); } }, { passive: true });
+    navSpy();
+  }
+
   /* ---------- podpis w konsoli ---------- */
   try {
     console.log('%cfiladelfia%c.%cai', 'font: 300 26px Mona Sans, sans-serif; color: #0A0B0D; background: #E8EAED; padding: 10px 0 10px 14px', 'font: 700 26px sans-serif; color: #2B2BFF; background: #E8EAED; padding: 10px 0', 'font: 300 26px Mona Sans, sans-serif; color: #0A0B0D; background: #E8EAED; padding: 10px 14px 10px 0');

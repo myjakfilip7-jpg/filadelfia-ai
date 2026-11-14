@@ -570,7 +570,8 @@ const legal = `    <section class="scene scene--hero scene--page">
       <div class="col">
         <ul class="legal">
           <li data-r><h2>Kto odpowiada za dane</h2><p>${TODO('nazwa firmy, adres, NIP')}. Kontakt: <a href="mailto:${MAIL}">${MAIL}</a>.</p></li>
-          <li data-r><h2>Pliki cookie i śledzenie</h2><p>Strona nie zapisuje plików cookie i nie ma analityki ani pikseli reklamowych.</p></li>
+          <li data-r><h2>Pliki cookie i śledzenie</h2><p>Strona nie zapisuje plików cookie i nie ma pikseli reklamowych ani zewnętrznej analityki.</p></li>
+          <li data-r><h2>Licznik odsłon</h2><p>Liczymy, ile razy otwarto każdą podstronę i z jakiej strony przyszli odwiedzający. Zapisujemy tylko sumy na dzień. Nie zapisujemy adresu IP ani niczego, co pozwala rozpoznać osobę, a jeśli przeglądarka wysyła prośbę „nie śledź”, wizyta nie jest liczona.</p></li>
           <li data-r><h2>Co zostaje w Twojej przeglądarce</h2><p>Wybór trybu dziennego lub nocnego oraz informacja, że animacja wejścia już się odtworzyła. Te dane nie opuszczają Twojego urządzenia.</p></li>
           <li data-r><h2>Formularz kontaktowy</h2><p>Formularz niczego nie wysyła na nasz serwer. Składa wiadomość i otwiera Twój program pocztowy; to, co wyślesz, trafia do nas jak zwykły e-mail. Używamy tych danych tylko po to, żeby odpowiedzieć. ${TODO('jak długo przechowujemy korespondencję')}</p></li>
           <li data-r><h2>Usługi zewnętrzne</h2><p>Strona jest hostowana na GitHub Pages, które widzi Twój adres IP, tak jak każdy serwer, z którym łączy się przeglądarka. Kroje pisma i wszystkie pozostałe pliki ładują się z tego samego adresu; strona nie łączy się z żadną inną usługą.</p></li>
@@ -599,10 +600,15 @@ const panelPage = `<!doctype html>
 <body class="app">
   <header class="app__bar">
     <a class="logo" href="./" aria-label="Filadelfia.ai — strona główna">${mark()}${word}</a>
-    <span class="app__name mono">Panel</span>
+    <nav class="app__nav mono" id="nav" aria-label="Panel" hidden>
+      <button type="button" data-view="zgloszenia" aria-current="page">Zgłoszenia</button>
+      <button type="button" data-view="statystyki">Statystyki</button>
+      <button type="button" data-view="uzytkownicy" id="navUsers" hidden>Użytkownicy</button>
+    </nav>
     <div class="app__user" id="user" hidden>
       <img class="app__avatar" id="avatar" alt="" width="28" height="28" hidden>
       <span class="mono" id="login"></span>
+      <span class="app__role mono" id="role"></span>
       <button class="more" type="button" id="themeBtn">Tryb nocny</button>
       <button class="more" type="button" id="logout">Wyloguj</button>
     </div>
@@ -628,6 +634,36 @@ const panelPage = `<!doctype html>
         <ol class="inbox" id="inbox" aria-label="Lista zgłoszeń"></ol>
         <article class="detail" id="detail" aria-live="polite"></article>
       </div>
+    </section>
+
+    <section class="page" id="stats" hidden>
+      <div class="page__head">
+        <h1>Statystyki</h1>
+        <div class="seg" id="range" role="group" aria-label="Zakres dni"></div>
+      </div>
+      <div class="kpis" id="kpis"></div>
+      <figure class="chart" id="chart"></figure>
+      <div class="tops">
+        <section><h2 class="mono">Najczęściej oglądane strony</h2><ol class="bars" id="topPages"></ol></section>
+        <section><h2 class="mono">Skąd przychodzą</h2><ol class="bars" id="topSources"></ol></section>
+      </div>
+      <p class="page__note">Licznik nie używa plików cookie i nie zapisuje adresów IP. „Unikalni” to suma unikalnych odwiedzających z każdego dnia, więc ta sama osoba w dwóch różnych dniach liczy się dwa razy. Nie liczymy botów, wizyt z prośbą „nie śledź” ani wejść zalogowanych użytkowników panelu.</p>
+    </section>
+
+    <section class="page" id="people" hidden>
+      <div class="page__head"><h1>Użytkownicy</h1></div>
+      <ul class="people" id="peopleList"></ul>
+      <form class="addform" id="addUser">
+        <label><span class="mono">Login GitHub</span><input type="text" id="newLogin" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="np. jan-kowalski" required></label>
+        <label><span class="mono">Rola</span><select id="newRole"></select></label>
+        <button class="pill" type="submit">Dodaj użytkownika</button>
+      </form>
+      <p class="page__err mono" id="peopleErr" role="alert"></p>
+      <dl class="roles">
+        <div><dt>Właściciel</dt><dd>Wszystko: zgłoszenia, usuwanie, eksport, statystyki, użytkownicy.</dd></div>
+        <div><dt>Pracownik</dt><dd>Czyta zgłoszenia, zmienia status, dodaje notatki, widzi statystyki. Nie usuwa i nie eksportuje.</dd></div>
+        <div><dt>Podgląd</dt><dd>Tylko czyta zgłoszenia i statystyki. Niczego nie zmienia.</dd></div>
+      </dl>
     </section>
   </main>
 

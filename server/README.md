@@ -1,16 +1,21 @@
 # Backend Filadelfia.ai
 
-Jeden plik w Node, bez zależności. Robi trzy rzeczy:
+Jeden plik w Node, bez zależności. Robi cztery rzeczy:
 
-1. **Logowanie przez GitHub** — tylko loginy z `ADMIN_GITHUB_LOGINS` dostają sesję.
+1. **Logowanie przez GitHub z rolami.**
+   - Właściciele z `ADMIN_GITHUB_LOGINS` są stali; kolejnych użytkowników dodaje właściciel w panelu.
+   - Role: **właściciel** (wszystko), **pracownik** (czyta, zmienia status, dodaje notatki),
+     **podgląd** (tylko czyta). Zmiana roli albo odebranie dostępu działa od razu, także na trwające sesje.
 2. **Zgłoszenia** — formularz kontaktowy zapisuje je w `server/data/zgloszenia.json`.
-3. **Panel właściciela** (`/panel.html`) — skrzynka zgłoszeń na pełny ekran:
-   - liczniki i zakładki: nowe, w toku, zamknięte, wszystkie,
-   - wyszukiwanie po imieniu, firmie, kontakcie i treści; filtr tematu,
-   - szczegóły zgłoszenia z przyciskiem „Odpisz e-mailem” albo „Zadzwoń”,
-   - status, prywatne notatki, historia zmian z loginem i datą,
-   - oznaczanie przeczytanych, eksport CSV, usuwanie z potwierdzeniem,
-   - odświeżanie co 30 sekund; skróty: `/` szukaj, `j`/`k` lub strzałki, `Esc`.
+3. **Licznik odsłon** — bez plików cookie i bez zapisywania adresów IP. W `server/data/odslony.json`
+   są tylko sumy na dzień: odsłony, unikalni, strony, źródła. Nie liczy botów, wizyt z prośbą
+   „nie śledź” (DNT / GPC) ani zalogowanych użytkowników panelu.
+4. **Panel** (`/panel.html`) — trzy widoki:
+   - **Zgłoszenia:** liczniki i zakładki, wyszukiwanie, filtr tematu, szczegóły z „Odpisz e-mailem”
+     albo „Zadzwoń”, status, notatki, historia zmian, eksport CSV, skróty `/`, `j`/`k`, `Esc`.
+   - **Statystyki:** odsłony dziś / 7 / 30 / 90 dni, wykres dzienny z tabelą, najczęściej oglądane
+     strony, źródła wejść.
+   - **Użytkownicy** (tylko właściciel): dodawanie, zmiana roli, odbieranie dostępu, ostatnie logowanie.
 
 Serwer podaje też pliki strony, więc lokalnie wszystko działa pod jednym adresem.
 
@@ -45,7 +50,7 @@ podrobiony `state` i sesję, ochronę zapisu, limit zgłoszeń, pliki, których 
 
 - Sesja to ciasteczko `HttpOnly`, `SameSite=Lax` (i `Secure` pod https), podpisane HMAC-SHA256; ważne 7 dni.
 - Token GitHuba służy tylko do odczytania loginu i nie jest nigdzie zapisywany. Zakres: `read:user`.
-- Lista dopuszczonych loginów jest sprawdzana przy każdym żądaniu.
+- Rola jest ustalana przy każdym żądaniu, a uprawnienia sprawdza serwer, nie tylko interfejs.
 - Zmiany danych wymagają tego samego źródła (`Origin`) i nagłówka `x-fila`.
 - Formularz: limit 5 zgłoszeń na 10 minut z adresu, limit rozmiaru, pole-pułapka na boty.
 - Treść zgłoszeń panel wstawia jako tekst, nigdy jako HTML.
@@ -58,4 +63,5 @@ podrobiony `state` i sesję, ochronę zapisu, limit zgłoszeń, pliki, których 
 - Plik JSON wystarcza lokalnie i na jednym serwerze z dyskiem. Na platformach bez trwałego dysku
   (Cloudflare Workers, Vercel) trzeba go zamienić na bazę — to jedna funkcja `load` i jedna `mutate`.
 - Limit zgłoszeń liczy adres połączenia. Za proxy trzeba czytać adres z nagłówka, któremu ufasz.
-- Dopisz przechowywanie zgłoszeń do strony Prywatność.
+- Dopisz przechowywanie zgłoszeń do strony Prywatność (licznik odsłon jest już opisany).
+- „Unikalni” liczą się od zera po restarcie serwera w danym dniu (skróty żyją tylko w pamięci).

@@ -13,7 +13,7 @@ const check = (name, ok, extra = '') => { ok ? passed++ : failed++; console.log(
 const port = (srv) => new Promise((r) => srv.listen(0, () => r(srv.address().port)));
 
 // atrapa GitHuba: kod → token → użytkownik
-const USERS = { 'kod-wlasciciel': 'Wlasciciel', 'kod-obcy': 'ktos-inny' };
+const USERS = { 'kod-wlasciciel': 'Wlasciciel', 'kod-obcy': 'ktos-inny', 'kod-pracownik': 'Pracownik1', 'kod-widz': 'Widz' };
 const mock = http.createServer((req, res) => {
   let body = '';
   req.on('data', (c) => (body += c));
@@ -115,6 +115,56 @@ try {
   check('panel ma ścisłą politykę CSP i nie jest buforowany', /script-src 'self'/.test(panelRes.headers.get('content-security-policy') || '') && panelRes.headers.get('cache-control') === 'no-store');
   check('błędny status → 422', (await get('/api/zgloszenia/' + row.id, { method: 'PATCH', headers: auth, body: '{"status":"hack"}' })).status === 422);
   check('zmiana bez nagłówka x-fila → 403', (await get('/api/zgloszenia/' + row.id, { method: 'PATCH', headers: { cookie: a.cookie, 'Content-Type': 'application/json' }, body: '{"status":"zamknięte"}' })).status === 403);
+  // role
+  const usersApi = (method, pth, body, cookie = a.cookie) => get('/api/uzytkownicy' + pth, { method, headers: { cookie, 'Content-Type': 'application/json', 'x-fila': '1' }, body: body ? JSON.stringify(body) : undefined });
+  check('pracownik przed dodaniem nie ma dostępu', (await login('kod-pracownik')).cb.headers.get('location') === '/panel.html?blad=brak-dostepu');
+  check('api/me właściciela zwraca rolę i uprawnienia', await (async () => { const d = await (await get('/api/me', { headers: { cookie: a.cookie } })).json(); return d.rola === 'wlasciciel' && d.moze.includes('uzytkownicy'); })());
+  check('dodanie pracownika → 201', (await usersApi('POST', '', { login: 'Pracownik1', rola: 'pracownik' })).status === 201);
+  check('dodanie widza → 201', (await usersApi('POST', '', { login: '@Widz', rola: 'podglad' })).status === 201);
+  check('duplikat → 409', (await usersApi('POST', '', { login: 'pracownik1', rola: 'podglad' })).status === 409);
+  check('zły login → 422', (await usersApi('POST', '', { login: 'zły login!', rola: 'podglad' })).status === 422);
+  check('nieznana rola → 422', (await usersApi('POST', '', { login: 'ktos', rola: 'admin' })).status === 422);
+  check('stałego właściciela nie da się zmienić → 409', (await usersApi('PATCH', '/wlasciciel', { rola: 'podglad' })).status === 409);
+  check('dodanie użytkownika z obcego źródła → 403', (await get('/api/uzytkownicy', { method: 'POST', headers: { cookie: a.cookie, 'Content-Type': 'application/json', 'x-fila': '1', Origin: 'https://zla-strona.example' }, body: '{"login":"x","rola":"podglad"}' })).status === 403);
+  const prac = await login('kod-pracownik'), widz = await login('kod-widz');
+  const as = (c) => ({ cookie: c, 'Content-Type': 'application/json', 'x-fila': '1' });
+  check('pracownik loguje się i ma rolę pracownik', (await (await get('/api/me', { headers: { cookie: prac.cookie } })).json()).rola === 'pracownik');
+  check('pracownik zmienia status', (await get('/api/zgloszenia/' + row.id, { method: 'PATCH', headers: as(prac.cookie), body: '{"status":"zamknięte"}' })).status === 200);
+  check('pracownik nie usuwa → 403', (await get('/api/zgloszenia/' + row.id, { method: 'DELETE', headers: as(prac.cookie) })).status === 403);
+  check('pracownik nie eksportuje → 403', (await get('/api/zgloszenia.csv', { headers: { cookie: prac.cookie } })).status === 403);
+  check('pracownik nie widzi użytkowników → 403', (await usersApi('GET', '', null, prac.cookie)).status === 403);
+  check('pracownik nie doda użytkownika → 403', (await usersApi('POST', '', { login: 'kolega', rola: 'wlasciciel' }, prac.cookie)).status === 403);
+  check('widz czyta listę', (await get('/api/zgloszenia', { headers: { cookie: widz.cookie } })).status === 200);
+  check('widz nie zmienia statusu → 403', (await get('/api/zgloszenia/' + row.id, { method: 'PATCH', headers: as(widz.cookie), body: '{"status":"nowe"}' })).status === 403);
+  check('widz nie doda notatki → 403', (await get('/api/zgloszenia/' + row.id + '/notatki', { method: 'POST', headers: as(widz.cookie), body: '{"tekst":"x"}' })).status === 403);
+  check('zmiana roli pracownika na podgląd', (await usersApi('PATCH', '/pracownik1', { rola: 'podglad' })).status === 200);
+  check('zmiana roli działa od razu na trwającą sesję', (await get('/api/zgloszenia/' + row.id, { method: 'PATCH', headers: as(prac.cookie), body: '{"status":"nowe"}' })).status === 403);
+  check('usunięcie widza', (await usersApi('DELETE', '/widz')).status === 200);
+  check('usunięty użytkownik traci sesję od razu → 401', (await get('/api/me', { headers: { cookie: widz.cookie } })).status === 401);
+  const ul = await (await usersApi('GET', '')).json();
+  check('lista użytkowników: stały właściciel i ostatnie logowanie', ul.uzytkownicy.length === 2 && ul.uzytkownicy[0].staly === true && Boolean(ul.uzytkownicy[0].ostatnie) && ul.uzytkownicy[1].login === 'Pracownik1');
+
+  // odsłony
+  const UA1 = 'Mozilla/5.0 (Macintosh) Safari/605', UA2 = 'Mozilla/5.0 (Windows NT 10.0) Chrome/130';
+  const view = (body, headers = {}) => get('/api/odslona', { method: 'POST', headers: { 'User-Agent': UA1, ...headers }, body: JSON.stringify(body) });
+  const todayStats = async () => { const d = await (await get('/api/statystyki?dni=7', { headers: { cookie: a.cookie } })).json(); return { ...d.dni[d.dni.length - 1], strony: d.strony, zrodla: d.zrodla, n: d.dni.length }; };
+  check('statystyki bez sesji → 401', (await get('/api/statystyki')).status === 401);
+  check('odsłona przyjęta → 204', (await view({ sciezka: '/', ref: 'https://www.google.com/search?q=x' })).status === 204);
+  await view({ sciezka: '/kampanie.html', ref: '' });
+  await view({ sciezka: '/', ref: '' }, { 'User-Agent': UA2 });
+  await view({ sciezka: '/', ref: '' }, { 'User-Agent': 'Googlebot/2.1' });
+  await view({ sciezka: '/', ref: '' }, { DNT: '1' });
+  await view({ sciezka: '/', ref: '' }, { cookie: a.cookie });
+  await view({ sciezka: '/<script>', ref: '' });
+  await view({ sciezka: '/panel.html', ref: '' });
+  await view({ sciezka: '/', ref: '' }, { Origin: 'https://zla-strona.example' });
+  const t = await todayStats();
+  check('liczone 3 odsłony i 2 unikalnych (bot, DNT, panel, zła ścieżka, obce źródło pominięte)', t.odslony === 3 && t.unikalni === 2 && t.n === 7, JSON.stringify(t));
+  check('strony i źródła zsumowane', t.strony[0].nazwa === '/' && t.strony[0].liczba === 2 && t.zrodla.some((z) => z.nazwa === 'google.com' && z.liczba === 1) && t.zrodla.some((z) => z.nazwa === 'bezpośrednio'), JSON.stringify(t));
+  check('widok statystyk dostępny dla każdej roli', (await get('/api/statystyki', { headers: { cookie: prac.cookie } })).status === 200);
+  const home = await (await get('/')).text();
+  check('strona z serwera ma znacznik API, panel nie', home.includes('name="fila-api"') && !(await (await get('/panel.html')).text()).includes('fila-api'));
+
   check('usunięcie z obcego źródła → 403', (await get('/api/zgloszenia/' + row.id, { method: 'DELETE', headers: { ...auth, Origin: 'https://zla-strona.example' } })).status === 403);
   check('usunięcie bez sesji → 401', (await get('/api/zgloszenia/' + row.id, { method: 'DELETE', headers: { 'x-fila': '1' } })).status === 401);
   check('usunięcie przez właściciela', (await get('/api/zgloszenia/' + row.id, { method: 'DELETE', headers: auth })).status === 200);

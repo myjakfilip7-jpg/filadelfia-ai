@@ -13,6 +13,12 @@
   function read(store, k) { try { return store.getItem(k); } catch (e) { return null; } }
   function write(store, k, v) { try { store.setItem(k, v); } catch (e) {} }
   root.classList.add('js');
+  // Serwer z backendem dopisuje do strony znacznik; kopia statyczna (np. GitHub Pages) go nie ma i nie wysyła żadnych żądań do API.
+  var HAS_API = !!document.querySelector('meta[name="fila-api"]');
+  // anonimowa odsłona: sama ścieżka i adres strony odsyłającej, bez plików cookie
+  if (HAS_API && navigator.sendBeacon) {
+    try { navigator.sendBeacon('/api/odslona', JSON.stringify({ sciezka: body.hasAttribute('data-lost') ? '/404' : location.pathname, ref: document.referrer })); } catch (e) {}
+  }
 
   if ($('year')) $('year').textContent = new Date().getFullYear();
 
@@ -207,17 +213,12 @@
       window.location.href = 'mailto:' + brief.getAttribute('data-mail') + '?subject=' + encodeURIComponent(m.subject) + '&body=' + encodeURIComponent(m.text);
     };
     // jeśli strona działa z backendem, formularz zapisuje zgłoszenie w panelu; bez niego otwiera pocztę
-    var backend = false, sendBtn = $('briefSend'), contact = $('briefContact');
-    fetch('api/health', { headers: { Accept: 'application/json' } })
-      .then(function (r) { return r.ok && /json/.test(r.headers.get('content-type') || '') ? r.json() : null; })
-      .then(function (d) {
-        if (!d || !d.ok) return;
-        backend = true;
-        contact.hidden = false; brief.kontakt.required = true;
-        sendBtn.textContent = 'Wyślij';
-        $('briefHint').textContent = 'Wiadomość trafi prosto do nas. Odpiszemy na podany kontakt.';
-      })
-      .catch(function () {});
+    var backend = HAS_API, sendBtn = $('briefSend'), contact = $('briefContact');
+    if (backend) {
+      contact.hidden = false; brief.kontakt.required = true;
+      sendBtn.textContent = 'Wyślij';
+      $('briefHint').textContent = 'Wiadomość trafi prosto do nas. Odpiszemy na podany kontakt.';
+    }
     brief.addEventListener('submit', function (e) {
       e.preventDefault();
       if (!backend) { status.textContent = 'Otwieram pocztę. Wystarczy kliknąć „Wyślij”.'; return openMail(); }

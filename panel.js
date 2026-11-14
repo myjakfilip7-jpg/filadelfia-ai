@@ -12,7 +12,8 @@
     github: 'GitHub nie potwierdził logowania. Spróbuj jeszcze raz.',
     konfiguracja: 'Logowanie nie jest jeszcze skonfigurowane na serwerze.'
   };
-  var state = { me: null, items: [], tematy: {}, statusy: [], tab: 'wszystkie', topic: '', q: '', sel: null };
+  var state = { me: null, items: [], tematy: {}, statusy: [], tab: 'wszystkie', topic: '', q: '', sel: null, view: 'zgloszenia', days: 30 };
+  function can(what) { return !!state.me && state.me.moze.indexOf(what) >= 0; }
 
   /* ---------- narzędzia ---------- */
   // Wszystko, co pochodzi od obcych osób, trafia na stronę jako tekst (textContent), nigdy jako HTML.
@@ -145,9 +146,11 @@
       });
       act.appendChild(copy);
     }
-    var unread = el('button', 'more', 'Oznacz jako nieprzeczytane'); unread.type = 'button';
-    unread.addEventListener('click', function () { patch(z.id, { przeczytane: false }).then(function () { state.sel = null; $('deskBody').classList.remove('is-open'); render(); }); });
-    act.appendChild(unread);
+    if (can('zmieniac')) {
+      var unread = el('button', 'more', 'Oznacz jako nieprzeczytane'); unread.type = 'button';
+      unread.addEventListener('click', function () { patch(z.id, { przeczytane: false }).then(function () { state.sel = null; $('deskBody').classList.remove('is-open'); render(); }); });
+      act.appendChild(unread);
+    }
     box.appendChild(act);
 
     box.appendChild(el('p', 'detail__text', z.opis));
@@ -155,22 +158,25 @@
     var st = section('Status'), seg = el('div', 'seg');
     seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'Status zgłoszenia');
     state.statusy.forEach(function (s) {
-      var b = el('button', null, s); b.type = 'button'; b.setAttribute('aria-pressed', String(s === z.status));
+      var b = el('button', null, s); b.type = 'button'; b.setAttribute('aria-pressed', String(s === z.status)); b.disabled = !can('zmieniac');
       b.addEventListener('click', function () { if (s !== z.status) patch(z.id, { status: s }).then(function () { toast('Status: ' + s); render(); }); });
       seg.appendChild(b);
     });
     st.appendChild(seg); box.appendChild(st);
 
-    var notes = section('Notatki — widzisz je tylko Ty');
+    var notes = section('Notatki — widoczne tylko w panelu');
     z.notatki.forEach(function (n) {
       var item = el('div', 'note'), m = el('div', 'note__meta mono');
       item.appendChild(el('p', null, n.tekst));
       m.appendChild(el('span', null, fmtFull.format(new Date(n.at)) + ' · @' + n.kto));
-      var del = el('button', null, 'Usuń'); del.type = 'button';
-      del.addEventListener('click', function () {
-        api('api/zgloszenia/' + z.id + '/notatki/' + n.id, { method: 'DELETE' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (row) { if (row) { replace(row); render(); } });
-      });
-      m.appendChild(del); item.appendChild(m); notes.appendChild(item);
+      if (can('zmieniac')) {
+        var del = el('button', null, 'Usuń'); del.type = 'button';
+        del.addEventListener('click', function () {
+          api('api/zgloszenia/' + z.id + '/notatki/' + n.id, { method: 'DELETE' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (row) { if (row) { replace(row); render(); } });
+        });
+        m.appendChild(del);
+      }
+      item.appendChild(m); notes.appendChild(item);
     });
     var form = el('form', 'noteform'), ta = el('textarea'), add = el('button', 'more', 'Dodaj notatkę');
     ta.rows = 1; ta.maxLength = 2000; ta.placeholder = 'Np. oddzwonić w piątek'; ta.setAttribute('aria-label', 'Nowa notatka');
@@ -185,7 +191,9 @@
       });
     });
     ta.addEventListener('keydown', function (e) { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) form.requestSubmit(); });
-    form.appendChild(ta); form.appendChild(add); notes.appendChild(form);
+    form.appendChild(ta); form.appendChild(add);
+    if (can('zmieniac')) notes.appendChild(form);
+    else if (!z.notatki.length) notes.appendChild(el('p', 'detail__empty', 'Brak notatek.'));
     box.appendChild(notes);
 
     var hist = section('Historia'), ul = el('ul', 'hist');
@@ -204,7 +212,7 @@
         });
       });
     });
-    danger.appendChild(del); box.appendChild(danger);
+    danger.appendChild(del); if (can('usuwac')) box.appendChild(danger);
     box.scrollTop = 0;
   }
 
@@ -228,7 +236,7 @@
     history.replaceState(null, '', id ? '#' + id : location.pathname);
     var z = find(id);
     render();
-    if (z && !z.przeczytane) patch(id, { przeczytane: true }).then(function () { renderTabs(); renderList(); });
+    if (z && !z.przeczytane && can('zmieniac')) patch(id, { przeczytane: true }).then(function () { renderTabs(); renderList(); });
   }
   function render() { renderTabs(); renderList(); renderDetail(); }
 
@@ -254,11 +262,136 @@
     });
   }
 
+  /* ---------- widoki ---------- */
+  function show(view) {
+    state.view = view;
+    desk.hidden = view !== 'zgloszenia'; $('stats').hidden = view !== 'statystyki'; $('people').hidden = view !== 'uzytkownicy';
+    Array.prototype.forEach.call(document.querySelectorAll('#nav button'), function (b) { if (b.getAttribute('data-view') === view) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+    if (view === 'statystyki') loadStats();
+    if (view === 'uzytkownicy') loadPeople();
+  }
+
+  /* ---------- statystyki ---------- */
+  var nf = new Intl.NumberFormat('pl-PL');
+  var fmtBar = new Intl.DateTimeFormat('pl-PL', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+  function dayLabel(key) { return fmtBar.format(new Date(key + 'T12:00:00Z')); }
+  function kpi(label, value, sub) { var d = el('div', 'kpi'); d.appendChild(el('span', 'mono', label)); d.appendChild(el('b', null, nf.format(value))); if (sub) d.appendChild(el('span', 'kpi__sub', sub)); return d; }
+  function bars(list, target, none) {
+    empty(target);
+    if (!list.length) { target.appendChild(el('li', 'bars__none', none)); return; }
+    var max = list[0].liczba || 1;
+    list.forEach(function (it) {
+      var li = el('li'), track = el('span', 'bars__track'), fill = el('span', 'bars__fill');
+      fill.style.width = Math.max(1.5, it.liczba / max * 100) + '%';
+      track.appendChild(fill);
+      li.appendChild(el('span', 'bars__name', it.nazwa)); li.appendChild(el('span', 'bars__val mono', nf.format(it.liczba))); li.appendChild(track);
+      target.appendChild(li);
+    });
+  }
+  function loadStats() {
+    var range = $('range');
+    if (!range.firstChild) [7, 30, 90].forEach(function (n) {
+      var b = el('button', null, n + ' dni'); b.type = 'button'; b.setAttribute('data-n', n);
+      b.addEventListener('click', function () { state.days = n; loadStats(); });
+      range.appendChild(b);
+    });
+    Array.prototype.forEach.call(range.children, function (b) { b.setAttribute('aria-pressed', String(+b.getAttribute('data-n') === state.days)); });
+    api('api/statystyki?dni=' + state.days).then(function (r) { return r.json(); }).then(function (d) {
+      var days = d.dni, last = days[days.length - 1], week = days.slice(-7).reduce(function (a, x) { return a + x.odslony; }, 0);
+      var k = $('kpis'); empty(k);
+      k.appendChild(kpi('Odsłony dziś', last.odslony, nf.format(last.unikalni) + ' unikalnych'));
+      k.appendChild(kpi('Odsłony, 7 dni', week));
+      k.appendChild(kpi('Odsłony, ' + state.days + ' dni', d.razem.odslony));
+      k.appendChild(kpi('Unikalni, ' + state.days + ' dni', d.razem.unikalni, 'suma dzienna'));
+
+      // wykres: jedna seria (odsłony dziennie), słupki od linii zera, podpowiedź pod kursorem i z klawiatury
+      var fig = $('chart'); empty(fig);
+      var cap = el('figcaption', 'mono', 'Odsłony dziennie'); fig.appendChild(cap);
+      var max = Math.max.apply(null, days.map(function (x) { return x.odslony; }));
+      if (!max) { fig.appendChild(el('p', 'chart__none', 'Brak odsłon w tym okresie. Licznik działa od chwili uruchomienia serwera.')); }
+      else {
+        var top = Math.max(4, Math.ceil(max / 4) * 4), plot = el('div', 'chart__plot'), tip = el('div', 'chart__tip');
+        plot.setAttribute('role', 'list');
+        [1, 0.5].forEach(function (f) { var g = el('span', 'chart__grid'); g.style.bottom = f * 100 + '%'; g.appendChild(el('span', 'mono', nf.format(top * f))); plot.appendChild(g); });
+        days.forEach(function (x) {
+          var col = el('div', 'chart__col'), bar = el('span', 'chart__bar');
+          bar.style.height = (x.odslony / top * 100) + '%';
+          col.tabIndex = 0; col.setAttribute('role', 'listitem');
+          col.setAttribute('aria-label', dayLabel(x.dzien) + ': ' + x.odslony + ' odsłon, ' + x.unikalni + ' unikalnych');
+          var showTip = function () {
+            empty(tip); tip.appendChild(el('span', 'mono', dayLabel(x.dzien))); tip.appendChild(el('b', null, nf.format(x.odslony) + ' odsłon')); tip.appendChild(el('span', null, nf.format(x.unikalni) + ' unikalnych'));
+            var r = col.getBoundingClientRect(), pr = plot.getBoundingClientRect(), mid = r.left + r.width / 2 - pr.left;
+            tip.style.left = Math.max(70, Math.min(pr.width - 70, mid)) + 'px'; tip.classList.add('on');
+          };
+          col.addEventListener('pointerenter', showTip); col.addEventListener('focus', showTip);
+          col.addEventListener('pointerleave', function () { tip.classList.remove('on'); }); col.addEventListener('blur', function () { tip.classList.remove('on'); });
+          col.appendChild(bar); plot.appendChild(col);
+        });
+        plot.appendChild(tip); fig.appendChild(plot);
+        var axis = el('div', 'chart__axis mono');
+        axis.appendChild(el('span', null, dayLabel(days[0].dzien))); axis.appendChild(el('span', null, dayLabel(last.dzien)));
+        fig.appendChild(axis);
+      }
+      // ta sama seria jako tabela
+      var det = el('details', 'chart__table'), sum = el('summary', 'mono', 'Pokaż jako tabelę'), table = el('table'), head = el('tr');
+      ['Dzień', 'Odsłony', 'Unikalni'].forEach(function (h) { head.appendChild(el('th', null, h)); });
+      table.appendChild(head);
+      days.slice().reverse().forEach(function (x) { var tr = el('tr'); tr.appendChild(el('td', null, dayLabel(x.dzien))); tr.appendChild(el('td', null, nf.format(x.odslony))); tr.appendChild(el('td', null, nf.format(x.unikalni))); table.appendChild(tr); });
+      det.appendChild(sum); det.appendChild(table); fig.appendChild(det);
+
+      bars(d.strony, $('topPages'), 'Brak danych.');
+      bars(d.zrodla, $('topSources'), 'Brak danych.');
+    }).catch(function () { toast('Nie udało się wczytać statystyk'); });
+  }
+
+  /* ---------- użytkownicy i role ---------- */
+  var PEOPLE_ERR = { 'zly-login': 'To nie wygląda na login GitHub.', 'juz-jest': 'Ten użytkownik ma już dostęp.', 'za-duzo': 'Osiągnięto limit 50 użytkowników.', 'staly-wlasciciel': 'Stałego właściciela zmienia się tylko w pliku server/.env.' };
+  function renderPeople(d) {
+    var list = $('peopleList'), sel = $('newRole'); empty(list);
+    if (!sel.firstChild) Object.keys(d.role).forEach(function (k) { var o = el('option', null, d.role[k]); o.value = k; o.selected = k === 'pracownik'; sel.appendChild(o); });
+    d.uzytkownicy.forEach(function (u) {
+      var li = el('li'), who = el('div', 'people__who');
+      who.appendChild(el('strong', null, '@' + u.login));
+      who.appendChild(el('span', 'mono', u.ostatnie ? 'ostatnie logowanie: ' + fmtFull.format(new Date(u.ostatnie)) : 'jeszcze się nie logował'));
+      li.appendChild(who);
+      if (u.staly) { li.appendChild(el('span', 'people__fixed mono', d.role[u.rola] + ' · stały, z pliku .env')); list.appendChild(li); return; }
+      var role = el('select', 'desk__sel'); role.setAttribute('aria-label', 'Rola użytkownika @' + u.login);
+      Object.keys(d.role).forEach(function (k) { var o = el('option', null, d.role[k]); o.value = k; o.selected = k === u.rola; role.appendChild(o); });
+      role.addEventListener('change', function () {
+        api('api/uzytkownicy/' + encodeURIComponent(u.login), { method: 'PATCH', body: JSON.stringify({ rola: role.value }) }).then(function (r) { return r.json().then(function (b) { if (r.ok) { renderPeople(b); toast('@' + u.login + ': ' + d.role[role.value]); } else { role.value = u.rola; toast('Nie udało się zmienić roli'); } }); });
+      });
+      var del = el('button', 'more', 'Odbierz dostęp'); del.type = 'button';
+      del.addEventListener('click', function () {
+        confirmBox('Odebrać dostęp użytkownikowi @' + u.login + '? Zostanie wylogowany od razu.').then(function (yes) {
+          if (!yes) return;
+          api('api/uzytkownicy/' + encodeURIComponent(u.login), { method: 'DELETE' }).then(function (r) { return r.json().then(function (b) { if (r.ok) { renderPeople(b); toast('Odebrano dostęp'); } }); });
+        });
+      });
+      li.appendChild(role); li.appendChild(del); list.appendChild(li);
+    });
+  }
+  function loadPeople() { api('api/uzytkownicy').then(function (r) { return r.json(); }).then(renderPeople).catch(function () { toast('Nie udało się wczytać użytkowników'); }); }
+  $('addUser').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var err = $('peopleErr'); err.textContent = '';
+    api('api/uzytkownicy', { method: 'POST', body: JSON.stringify({ login: $('newLogin').value, rola: $('newRole').value }) }).then(function (r) {
+      return r.json().then(function (b) {
+        if (!r.ok) { err.textContent = PEOPLE_ERR[b.blad] || 'Nie udało się dodać użytkownika.'; return; }
+        $('newLogin').value = ''; renderPeople(b); toast('Dodano użytkownika');
+      });
+    });
+  });
+
   function start(me) {
     state.me = me;
     gate.hidden = true; desk.hidden = false;
     $('user').hidden = false;
     $('login').textContent = '@' + me.login;
+    $('role').textContent = (me.role && me.role[me.rola]) || me.rola;
+    $('csv').hidden = !can('eksport');
+    $('nav').hidden = false;
+    $('navUsers').hidden = !can('uzytkownicy');
+    Array.prototype.forEach.call(document.querySelectorAll('#nav button'), function (b) { b.addEventListener('click', function () { show(b.getAttribute('data-view')); }); });
     if (/^https:\/\/avatars\.githubusercontent\.com\//.test(me.avatar || '')) { $('avatar').src = me.avatar; $('avatar').hidden = false; }
     $('logout').addEventListener('click', function () { api('auth/logout', { method: 'POST' }).then(function () { location.href = 'panel.html'; }); });
     $('q').addEventListener('input', function (e) { state.q = e.target.value; renderList(); });
@@ -277,7 +410,7 @@
     document.addEventListener('keydown', function (e) {
       var t = e.target, typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT');
       if (e.key === 'Escape') { if (typing) t.blur(); else $('deskBody').classList.remove('is-open'); return; }
-      if (typing || e.metaKey || e.ctrlKey || e.altKey || $('confirm').open) return;
+      if (typing || e.metaKey || e.ctrlKey || e.altKey || $('confirm').open || state.view !== 'zgloszenia') return;
       if (e.key === '/') { e.preventDefault(); $('q').focus(); return; }
       var dir = e.key === 'j' || e.key === 'ArrowDown' ? 1 : e.key === 'k' || e.key === 'ArrowUp' ? -1 : 0;
       if (!dir) return;

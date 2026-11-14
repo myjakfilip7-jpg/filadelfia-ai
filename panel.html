@@ -16,10 +16,15 @@
 <body class="app">
   <header class="app__bar">
     <a class="logo" href="./" aria-label="Filadelfia.ai — strona główna"><svg class="mark" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9.6" stroke-dasharray="46.3 14" transform="rotate(-38 12 12)"/><circle cx="12" cy="12" r="5.5" stroke-dasharray="21.5 13.06" transform="rotate(148 12 12)"/></g><circle class="mark__p" cx="12" cy="12" r="2.1"/></svg><span class="word">filadelfia<span class="word__dot">.</span>ai</span></a>
-    <span class="app__name mono">Panel</span>
+    <nav class="app__nav mono" id="nav" aria-label="Panel" hidden>
+      <button type="button" data-view="zgloszenia" aria-current="page">Zgłoszenia</button>
+      <button type="button" data-view="statystyki">Statystyki</button>
+      <button type="button" data-view="uzytkownicy" id="navUsers" hidden>Użytkownicy</button>
+    </nav>
     <div class="app__user" id="user" hidden>
       <img class="app__avatar" id="avatar" alt="" width="28" height="28" hidden>
       <span class="mono" id="login"></span>
+      <span class="app__role mono" id="role"></span>
       <button class="more" type="button" id="themeBtn">Tryb nocny</button>
       <button class="more" type="button" id="logout">Wyloguj</button>
     </div>
@@ -45,6 +50,36 @@
         <ol class="inbox" id="inbox" aria-label="Lista zgłoszeń"></ol>
         <article class="detail" id="detail" aria-live="polite"></article>
       </div>
+    </section>
+
+    <section class="page" id="stats" hidden>
+      <div class="page__head">
+        <h1>Statystyki</h1>
+        <div class="seg" id="range" role="group" aria-label="Zakres dni"></div>
+      </div>
+      <div class="kpis" id="kpis"></div>
+      <figure class="chart" id="chart"></figure>
+      <div class="tops">
+        <section><h2 class="mono">Najczęściej oglądane strony</h2><ol class="bars" id="topPages"></ol></section>
+        <section><h2 class="mono">Skąd przychodzą</h2><ol class="bars" id="topSources"></ol></section>
+      </div>
+      <p class="page__note">Licznik nie używa plików cookie i nie zapisuje adresów IP. „Unikalni” to suma unikalnych odwiedzających z każdego dnia, więc ta sama osoba w dwóch różnych dniach liczy się dwa razy. Nie liczymy botów, wizyt z prośbą „nie śledź” ani wejść zalogowanych użytkowników panelu.</p>
+    </section>
+
+    <section class="page" id="people" hidden>
+      <div class="page__head"><h1>Użytkownicy</h1></div>
+      <ul class="people" id="peopleList"></ul>
+      <form class="addform" id="addUser">
+        <label><span class="mono">Login GitHub</span><input type="text" id="newLogin" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="np. jan-kowalski" required></label>
+        <label><span class="mono">Rola</span><select id="newRole"></select></label>
+        <button class="pill" type="submit">Dodaj użytkownika</button>
+      </form>
+      <p class="page__err mono" id="peopleErr" role="alert"></p>
+      <dl class="roles">
+        <div><dt>Właściciel</dt><dd>Wszystko: zgłoszenia, usuwanie, eksport, statystyki, użytkownicy.</dd></div>
+        <div><dt>Pracownik</dt><dd>Czyta zgłoszenia, zmienia status, dodaje notatki, widzi statystyki. Nie usuwa i nie eksportuje.</dd></div>
+        <div><dt>Podgląd</dt><dd>Tylko czyta zgłoszenia i statystyki. Niczego nie zmienia.</dd></div>
+      </dl>
     </section>
   </main>
 

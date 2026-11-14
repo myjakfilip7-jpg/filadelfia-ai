@@ -1,8 +1,9 @@
-// Backend Filadelfia.ai — logowanie przez GitHub, panel właściciela, zgłoszenia z formularza.
+// Backend Filadelfia.ai — logowanie przez GitHub, role, panel, zgłoszenia z formularza, anonimowy licznik odsłon.
 // Bez zależności: `node server/server.mjs`. Konfiguracja w server/.env (wzór: .env.example).
 import http from 'node:http';
 import { readFile, writeFile, rename, mkdir } from 'node:fs/promises';
-import { createHmac, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
+import { writeFileSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
@@ -22,6 +23,8 @@ const ADMINS = (env.ADMIN_GITHUB_LOGINS || '').split(',').map((s) => s.trim().to
 const GH_WEB = (env.GITHUB_WEB_BASE || 'https://github.com').replace(/\/$/, '');
 const GH_API = (env.GITHUB_API_BASE || 'https://api.github.com').replace(/\/$/, '');
 const DATA_FILE = env.DATA_FILE || path.join(HERE, 'data', 'zgloszenia.json');
+const USERS_FILE = env.USERS_FILE || path.join(path.dirname(DATA_FILE), 'uzytkownicy.json');
+const VIEWS_FILE = env.VIEWS_FILE || path.join(path.dirname(DATA_FILE), 'odslony.json');
 const SESSION_DAYS = 7;
 
 if (SECRET.length < 32) {
@@ -58,10 +61,29 @@ function cookies(req) {
 }
 const cookie = (name, value, maxAge) => `${name}=${encodeURIComponent(value)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${SECURE ? '; Secure' : ''}`;
 
+/* ---------- role ---------- */
+// Właściciele z .env są stali (nie da się ich usunąć z panelu). Pozostałych dodaje właściciel w panelu.
+const ROLES = { wlasciciel: 'Właściciel', pracownik: 'Pracownik', podglad: 'Podgląd' };
+const CAN = {
+  wlasciciel: ['czytac', 'zmieniac', 'usuwac', 'eksport', 'uzytkownicy'],
+  pracownik: ['czytac', 'zmieniac'],
+  podglad: ['czytac'],
+};
+let people = { uzytkownicy: [], logowania: {} }; // kopia pliku w pamięci, odświeżana przy każdym zapisie
+const lower = (v) => String(v || '').toLowerCase();
+function roleOf(login) {
+  const l = lower(login);
+  if (!l) return null;
+  if (ADMINS.includes(l)) return 'wlasciciel';
+  const u = people.uzytkownicy.find((x) => lower(x.login) === l);
+  return u && ROLES[u.rola] ? u.rola : null;
+}
 function session(req) {
   const s = open(cookies(req).fila_session);
-  // lista dopuszczonych jest sprawdzana przy każdym żądaniu: usunięcie loginu z .env od razu odbiera dostęp
-  return s && ADMINS.includes(String(s.login).toLowerCase()) ? s : null;
+  if (!s) return null;
+  // rola jest ustalana przy każdym żądaniu: zmiana albo odebranie dostępu działa od razu, bez czekania na koniec sesji
+  const rola = roleOf(s.login);
+  return rola ? { ...s, rola, moze: CAN[rola] } : null;
 }
 
 /* ---------- odpowiedzi ---------- */
@@ -89,23 +111,30 @@ const sameOrigin = (req) => !req.headers.origin || req.headers.origin === ORIGIN
 /* ---------- zgłoszenia: plik JSON, zapisy po kolei ---------- */
 const TOPICS = { kampanie: 'Kampanie reklamowe AI', automatyzacje: 'Agenci i automatyzacje', chatboty: 'Chatboty AI', strony: 'Strony, aplikacje, sklepy', inne: 'Jeszcze nie wiem' };
 const STATUSES = ['nowe', 'w toku', 'zamknięte'];
-let queue = Promise.resolve();
-async function load() {
-  try { return JSON.parse(await readFile(DATA_FILE, 'utf8')); } catch (e) { if (e.code === 'ENOENT') return []; throw e; }
+// Mały magazyn na pliku JSON: odczyt, a zmiany jedna po drugiej, zapisywane przez plik tymczasowy.
+function store(file, blank) {
+  let queue = Promise.resolve();
+  const load = async () => { try { return JSON.parse(await readFile(file, 'utf8')); } catch (e) { if (e.code === 'ENOENT') return blank(); throw e; } };
+  const mutate = (fn) => {
+    const run = queue.then(async () => {
+      const data = await load();
+      const result = await fn(data);
+      await mkdir(path.dirname(file), { recursive: true });
+      const tmp = `${file}.${process.pid}.tmp`;
+      await writeFile(tmp, JSON.stringify(data, null, 2));
+      await rename(tmp, file);
+      return { result, data };
+    });
+    queue = run.catch(() => {});
+    return run;
+  };
+  return { load, mutate };
 }
-function mutate(fn) {
-  const run = queue.then(async () => {
-    const list = await load();
-    const result = await fn(list);
-    await mkdir(path.dirname(DATA_FILE), { recursive: true });
-    const tmp = `${DATA_FILE}.${process.pid}.tmp`;
-    await writeFile(tmp, JSON.stringify(list, null, 2));
-    await rename(tmp, DATA_FILE);
-    return result;
-  });
-  queue = run.catch(() => {});
-  return run;
-}
+const leads = store(DATA_FILE, () => []);
+const load = leads.load;
+const mutate = (fn) => leads.mutate(fn).then((r) => r.result);
+const users = store(USERS_FILE, () => ({ uzytkownicy: [], logowania: {} }));
+const saveUsers = (fn) => users.mutate(fn).then((r) => { people = r.data; return r.result; });
 // starsze wpisy mogą nie mieć nowszych pól
 const full = (r) => ({ ...r, kontakt: r.kontakt || '', przeczytane: Boolean(r.przeczytane), notatki: r.notatki || [], historia: r.historia || [] });
 // komórka CSV: cudzysłowy podwojone, a treść zaczynająca się od = + - @ nie może stać się formułą w arkuszu
@@ -121,9 +150,70 @@ function limited(ip) {
   return false;
 }
 
+/* ---------- licznik odsłon: bez plików cookie, bez zapisywania adresu IP ---------- */
+// Zapisujemy tylko sumy na dzień. „Unikalni” to liczba różnych skrótów (adres + przeglądarka + sól dnia);
+// sól i skróty żyją tylko w pamięci i znikają o północy albo przy restarcie.
+let viewsData = { dni: {} }, viewsDirty = false;
+let today = { day: '', salt: '', seen: new Set() };
+const dayFmt = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Warsaw' });
+const dayKey = (d = new Date()) => dayFmt.format(d);
+const BOTS = /bot|crawl|spider|slurp|preview|headless|lighthouse|monitor|curl|wget|python|node-fetch|^node$|undici/i;
+const beacons = new Map();
+function flushViews() {
+  if (!viewsDirty) return;
+  viewsDirty = false;
+  try { mkdirSync(path.dirname(VIEWS_FILE), { recursive: true }); writeFileSync(VIEWS_FILE, JSON.stringify(viewsData)); } catch (e) { console.error('Odsłony:', e.message); }
+}
+setInterval(flushViews, 5000).unref();
+for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { flushViews(); process.exit(0); });
+
+function countView(req, body) {
+  const ua = String(req.headers['user-agent'] || '');
+  if (!ua || BOTS.test(ua)) return 'bot';
+  if (req.headers.dnt === '1' || req.headers['sec-gpc'] === '1') return 'dnt'; // prośba „nie śledź” jest szanowana
+  if (session(req)) return 'panel'; // własnych wejść nie liczymy
+  let page = clean(body.sciezka, 120).replace(/index\.html$/, '');
+  if (!/^\/[a-z0-9\-_.\/]*$/i.test(page) || page === '/panel.html') return 'sciezka';
+  const ip = req.socket.remoteAddress || '?', now = Date.now();
+  const recent = (beacons.get(ip) || []).filter((t) => now - t < 60000);
+  if (recent.length >= 120) return 'limit';
+  recent.push(now); beacons.set(ip, recent);
+
+  const day = dayKey();
+  if (today.day !== day) today = { day, salt: randomBytes(16).toString('hex'), seen: new Set() };
+  const d = viewsData.dni[day] || (viewsData.dni[day] = { odslony: 0, unikalni: 0, strony: {}, zrodla: {} });
+  d.odslony++;
+  if (page in d.strony || Object.keys(d.strony).length < 200) d.strony[page] = (d.strony[page] || 0) + 1;
+  const who = createHash('sha256').update(today.salt + ip + ua).digest('base64url');
+  if (!today.seen.has(who)) {
+    today.seen.add(who); d.unikalni++;
+    let src = 'bezpośrednio';
+    try { const h = new URL(String(body.ref || '')).host.toLowerCase().replace(/^www\./, ''); if (h && h !== new URL(BASE_URL).host) src = h.slice(0, 80); } catch { /* brak albo zły adres: wejście bezpośrednie */ }
+    if (src in d.zrodla || Object.keys(d.zrodla).length < 200) d.zrodla[src] = (d.zrodla[src] || 0) + 1;
+  }
+  const keys = Object.keys(viewsData.dni).sort();
+  while (keys.length > 400) delete viewsData.dni[keys.shift()];
+  viewsDirty = true;
+  return 'ok';
+}
+function stats(days) {
+  const out = [], pages = {}, sources = {};
+  let views = 0, uniq = 0;
+  for (let i = days - 1; i >= 0; i--) {
+    const key = dayKey(new Date(Date.now() - i * 86400000)), d = viewsData.dni[key] || { odslony: 0, unikalni: 0, strony: {}, zrodla: {} };
+    out.push({ dzien: key, odslony: d.odslony, unikalni: d.unikalni });
+    views += d.odslony; uniq += d.unikalni;
+    for (const [k, v] of Object.entries(d.strony)) pages[k] = (pages[k] || 0) + v;
+    for (const [k, v] of Object.entries(d.zrodla)) sources[k] = (sources[k] || 0) + v;
+  }
+  const top = (o) => Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([nazwa, liczba]) => ({ nazwa, liczba }));
+  return { dni: out, razem: { odslony: views, unikalni: uniq }, strony: top(pages), zrodla: top(sources) };
+}
+
 /* ---------- pliki strony ---------- */
 // panel nie ma skryptów ani stylów w treści strony, więc może mieć ścisłą politykę: tylko własne pliki i awatar z GitHuba
 const PANEL_CSP = "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; connect-src 'self'; img-src 'self' https://avatars.githubusercontent.com; form-action 'self'; base-uri 'none'; frame-ancestors 'none'";
+const API_MARK = '<meta name="fila-api" content="1">';
 const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.woff2': 'font/woff2', '.json': 'application/json' };
 async function serveStatic(res, pathname) {
   let rel;
@@ -134,12 +224,14 @@ async function serveStatic(res, pathname) {
   const hidden = rel.split('/').some((seg) => seg.startsWith('.')) || rel.startsWith('/server/') || rel === '/build.mjs' || rel === '/README.md';
   if (inside && !hidden) {
     try {
-      const data = await readFile(file);
+      let data = await readFile(file);
       const extra = rel === '/panel.html' ? { 'Cache-Control': 'no-store', 'Content-Security-Policy': PANEL_CSP } : {};
+      // strony podawane przez ten serwer dostają znacznik, po którym skrypt wie, że może korzystać z API
+      if (rel.endsWith('.html') && rel !== '/panel.html') data = data.toString().replace('</head>', API_MARK + '</head>');
       return send(res, 200, data, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream', ...extra });
     } catch { /* niżej 404 */ }
   }
-  const notFound = await readFile(path.join(ROOT, '404.html')).catch(() => 'Nie znaleziono');
+  const notFound = (await readFile(path.join(ROOT, '404.html'), 'utf8').catch(() => 'Nie znaleziono')).replace('</head>', API_MARK + '</head>');
   send(res, 404, notFound, { 'Content-Type': 'text/html; charset=utf-8' });
 }
 
@@ -177,7 +269,8 @@ async function handle(req, res) {
       if (!userRes.ok) return fail('github');
       const user = await userRes.json();
       // token GitHuba służy tylko do sprawdzenia, kim jesteś — nigdzie go nie zapisujemy
-      if (!user.login || !ADMINS.includes(String(user.login).toLowerCase())) return fail('brak-dostepu');
+      if (!user.login || !roleOf(user.login)) return fail('brak-dostepu');
+      await saveUsers((d) => { d.logowania[lower(user.login)] = new Date().toISOString(); });
       const sess = seal({ login: user.login, name: clean(user.name || user.login, 80), avatar: clean(user.avatar_url, 300) }, SESSION_DAYS * 86400);
       res.writeHead(302, { ...BASE_HEADERS, Location: '/panel.html', 'Cache-Control': 'no-store', 'Set-Cookie': [cookie('fila_session', sess, SESSION_DAYS * 86400), cookie('fila_state', '', 0)] });
       return res.end();
@@ -194,7 +287,7 @@ async function handle(req, res) {
 
   if (p === '/api/me' && m === 'GET') {
     const s = session(req);
-    return s ? json(res, 200, { login: s.login, name: s.name, avatar: s.avatar }) : json(res, 401, { blad: 'niezalogowany', logowanie: configured });
+    return s ? json(res, 200, { login: s.login, name: s.name, avatar: s.avatar, rola: s.rola, moze: s.moze, role: ROLES }) : json(res, 401, { blad: 'niezalogowany', logowanie: configured });
   }
 
   /* --- zgłoszenia --- */
@@ -211,7 +304,57 @@ async function handle(req, res) {
     return json(res, 201, { ok: true, id: saved.id });
   }
 
-  if (p.startsWith('/api/zgloszenia')) { // reszta tylko dla zalogowanego właściciela
+  /* --- licznik odsłon (publiczny) i statystyki (dla zalogowanych) --- */
+  if (p === '/api/odslona' && m === 'POST') {
+    if (sameOrigin(req)) { try { countView(req, await readJson(req, 2000)); } catch { /* zły albo za duży pakiet: pomijamy */ } }
+    return send(res, 204, '');
+  }
+  if (p === '/api/statystyki' && m === 'GET') {
+    if (!session(req)) return json(res, 401, { blad: 'niezalogowany' });
+    const days = [7, 30, 90].includes(Number(url.searchParams.get('dni'))) ? Number(url.searchParams.get('dni')) : 30;
+    return json(res, 200, stats(days));
+  }
+
+  /* --- użytkownicy i role (tylko właściciel) --- */
+  if (p === '/api/uzytkownicy' || p.startsWith('/api/uzytkownicy/')) {
+    const me = session(req);
+    if (!me) return json(res, 401, { blad: 'niezalogowany' });
+    if (!me.moze.includes('uzytkownicy')) return json(res, 403, { blad: 'brak-uprawnien' });
+    const listing = () => ({
+      role: ROLES,
+      uzytkownicy: [
+        ...ADMINS.map((login) => ({ login, rola: 'wlasciciel', staly: true, ostatnie: people.logowania[login] || null })),
+        ...people.uzytkownicy.filter((u) => !ADMINS.includes(lower(u.login))).map((u) => ({ login: u.login, rola: u.rola, staly: false, dodal: u.dodal, at: u.at, ostatnie: people.logowania[lower(u.login)] || null })),
+      ],
+    });
+    if (p === '/api/uzytkownicy' && m === 'GET') return json(res, 200, listing());
+    if (!sameOrigin(req) || req.headers['x-fila'] !== '1') return json(res, 403, { blad: 'obce-zrodlo' });
+    const target = lower(decodeURIComponent(p.slice('/api/uzytkownicy/'.length)));
+    let body = {};
+    if (m === 'POST' || m === 'PATCH') { try { body = await readJson(req, 2000); } catch { return json(res, 400, { blad: 'zly-json' }); } }
+    if (p === '/api/uzytkownicy' && m === 'POST') {
+      const login = clean(body.login, 40).replace(/^@/, '');
+      if (!/^[a-z\d](?:[a-z\d-]{0,38})$/i.test(login)) return json(res, 422, { blad: 'zly-login' });
+      if (!ROLES[body.rola]) return json(res, 422, { blad: 'zla-rola' });
+      if (roleOf(login)) return json(res, 409, { blad: 'juz-jest' });
+      if (people.uzytkownicy.length >= 50) return json(res, 422, { blad: 'za-duzo' });
+      await saveUsers((d) => { d.uzytkownicy.push({ login, rola: body.rola, dodal: me.login, at: new Date().toISOString() }); });
+      return json(res, 201, listing());
+    }
+    if (target && (m === 'PATCH' || m === 'DELETE')) {
+      if (ADMINS.includes(target)) return json(res, 409, { blad: 'staly-wlasciciel' }); // tych zmienia się tylko w .env
+      if (!people.uzytkownicy.some((u) => lower(u.login) === target)) return json(res, 404, { blad: 'nie-ma' });
+      if (m === 'PATCH' && !ROLES[body.rola]) return json(res, 422, { blad: 'zla-rola' });
+      await saveUsers((d) => {
+        if (m === 'DELETE') d.uzytkownicy = d.uzytkownicy.filter((u) => lower(u.login) !== target);
+        else d.uzytkownicy.find((u) => lower(u.login) === target).rola = body.rola;
+      });
+      return json(res, 200, listing());
+    }
+    return json(res, 405, { blad: 'metoda' });
+  }
+
+  if (p.startsWith('/api/zgloszenia')) { // zgłoszenia: każda rola czyta, zmiany według uprawnień
     const me = session(req);
     if (!me) return json(res, 401, { blad: 'niezalogowany' });
 
@@ -220,6 +363,7 @@ async function handle(req, res) {
       return json(res, 200, { tematy: TOPICS, statusy: STATUSES, zgloszenia: list.reverse() });
     }
     if (p === '/api/zgloszenia.csv' && m === 'GET') {
+      if (!me.moze.includes('eksport')) return json(res, 403, { blad: 'brak-uprawnien' });
       const cols = ['data', 'status', 'temat', 'imie', 'firma', 'kontakt', 'opis', 'notatki'];
       const lines = (await load()).map(full).reverse().map((r) => [r.at, r.status, TOPICS[r.temat] || r.temat, r.imie, r.firma, r.kontakt, r.opis, r.notatki.map((n) => n.tekst).join(' | ')].map(csvCell).join(';'));
       return send(res, 200, '\uFEFF' + [cols.join(';'), ...lines].join('\r\n') + '\r\n', { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="zgloszenia-${new Date().toISOString().slice(0, 10)}.csv"`, 'Cache-Control': 'no-store' });
@@ -236,7 +380,9 @@ async function handle(req, res) {
       return out.blad ? json(res, out.kod || 422, { blad: out.blad }) : json(res, 200, out);
     };
 
+    if (!me.moze.includes('zmieniac')) return json(res, 403, { blad: 'brak-uprawnien' });
     if (!sub && m === 'DELETE') {
+      if (!me.moze.includes('usuwac')) return json(res, 403, { blad: 'brak-uprawnien' });
       const gone = await mutate((list) => { const i = list.findIndex((r) => r.id === id); if (i < 0) return false; list.splice(i, 1); return true; });
       return gone ? json(res, 200, { ok: true }) : json(res, 404, { blad: 'nie-ma' });
     }
@@ -268,6 +414,9 @@ async function handle(req, res) {
   if (m !== 'GET' && m !== 'HEAD') return send(res, 405, 'Method not allowed');
   return serveStatic(res, p);
 }
+
+people = await users.load();
+try { viewsData = JSON.parse(await readFile(VIEWS_FILE, 'utf8')); } catch { /* pierwszy start: brak pliku */ }
 
 http.createServer((req, res) => {
   handle(req, res).catch((e) => { console.error(e); if (!res.headersSent) json(res, 500, { blad: 'serwer' }); else res.end(); });

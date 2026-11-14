@@ -19,6 +19,7 @@ W `script.js` został wyłączony wariant z aluminiowym żyroskopem 3D
     `kontakt.html`, `prywatnosc.html`, `marka.html`, `404.html`
 - `styles.css` — style i tokeny kolorów
 - `script.js` — pole punktów, odczyty, menu, wiersz poleceń, dema, formularz
+- `fonts/` — Mona Sans i Martian Mono (licencja SIL OFL), hostowane lokalnie
 - `favicon.svg` — znak (tęczówka)
 - `og.png` — obraz do udostępnień (1200 × 630)
 - `media/` — trzy przykładowe kadry reklamowe wygenerowane w Higgsfield (GPT Image 2.6); to przykłady, nie realizacje dla klientów

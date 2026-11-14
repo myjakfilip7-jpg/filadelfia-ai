@@ -42,9 +42,7 @@ function shell({ file, title, desc, form, formName, lost, current, body, base, t
   <script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'ProfessionalService', name: 'Filadelfia.ai', url: SITE, email: MAIL, description: 'Agencja AI: kampanie reklamowe AI, agenci i automatyzacje, chatboty, strony i sklepy.', address: { '@type': 'PostalAddress', addressLocality: 'Krynica-Zdrój', addressCountry: 'PL' }, sameAs: ['https://www.youtube.com/@filadroid'] })}</script>
   <script>try { if (localStorage.getItem('fila-theme') === 'noc') document.documentElement.setAttribute('data-theme', 'noc'); } catch (e) {}</script>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mona+Sans:wdth,wght@75..125,200..900&family=Martian+Mono:wght@300..500&display=swap">
+  <link rel="preload" href="fonts/mona-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body${form != null ? ` data-form="${form}"` : ''}${lost ? ' data-lost' : ''}${text ? ` data-text="${text}"` : ''}>
@@ -573,7 +571,7 @@ const legal = `    <section class="scene scene--hero scene--page">
           <li data-r><h2>Pliki cookie i śledzenie</h2><p>Strona nie zapisuje plików cookie i nie ma analityki ani pikseli reklamowych.</p></li>
           <li data-r><h2>Co zostaje w Twojej przeglądarce</h2><p>Wybór trybu dziennego lub nocnego oraz informacja, że animacja wejścia już się odtworzyła. Te dane nie opuszczają Twojego urządzenia.</p></li>
           <li data-r><h2>Formularz kontaktowy</h2><p>Formularz niczego nie wysyła na nasz serwer. Składa wiadomość i otwiera Twój program pocztowy; to, co wyślesz, trafia do nas jak zwykły e-mail. Używamy tych danych tylko po to, żeby odpowiedzieć. ${TODO('jak długo przechowujemy korespondencję')}</p></li>
-          <li data-r><h2>Usługi zewnętrzne</h2><p>Kroje pisma ładują się z Google Fonts, a strona jest hostowana na GitHub Pages. Obie usługi widzą Twój adres IP, tak jak każdy serwer, z którym łączy się przeglądarka.</p></li>
+          <li data-r><h2>Usługi zewnętrzne</h2><p>Strona jest hostowana na GitHub Pages, które widzi Twój adres IP, tak jak każdy serwer, z którym łączy się przeglądarka. Kroje pisma i wszystkie pozostałe pliki ładują się z tego samego adresu; strona nie łączy się z żadną inną usługą.</p></li>
           <li data-r><h2>Twoje prawa</h2><p>Możesz poprosić o wgląd w swoje dane, ich poprawienie lub usunięcie, pisząc na adres powyżej. Masz też prawo złożyć skargę do Prezesa Urzędu Ochrony Danych Osobowych.</p></li>
         </ul>
       </div>

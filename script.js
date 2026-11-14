@@ -4,7 +4,7 @@
 
   var root = document.documentElement, body = document.body;
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var NAMES = ['Tęczówka', 'Siatka', 'Przepływ', 'Sfera', 'Punkt'];
+  var NAMES = ['Tęczówka', 'Żyroskop', 'Przepływ', 'Sfera', 'Punkt'];
   var scenes = Array.prototype.slice.call(document.querySelectorAll('[data-scene]'));
   // podstrony mają jedną, stałą formację; strona główna zmienia ją przewijaniem
   var pin = body.hasAttribute('data-form') ? +body.getAttribute('data-form') : null;
@@ -495,18 +495,21 @@
   var buf = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buf);
   gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
-  [['aA', 3, 0], ['aB', 2, 3], ['aC', 2, 5], ['aE', 3, 7], ['aD', 1, 10], ['aSeed', 1, 11], ['aKind', 1, 12]].forEach(function (a) {
-    var loc = gl.getAttribLocation(prog, a[0]);
-    if (loc < 0) return;
-    gl.enableVertexAttribArray(loc);
-    gl.vertexAttribPointer(loc, a[1], gl.FLOAT, false, STRIDE * 4, a[2] * 4);
-  });
+  var ATTR = [['aA', 3, 0], ['aB', 2, 3], ['aC', 2, 5], ['aE', 3, 7], ['aD', 1, 10], ['aSeed', 1, 11], ['aKind', 1, 12]].map(function (a) { return [gl.getAttribLocation(prog, a[0]), a[1], a[2]]; });
+  function bindParticles() {
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    ATTR.forEach(function (a) {
+      if (a[0] < 0) return;
+      gl.enableVertexAttribArray(a[0]);
+      gl.vertexAttribPointer(a[0], a[1], gl.FLOAT, false, STRIDE * 4, a[2] * 4);
+    });
+    if (locF >= 0) { gl.bindBuffer(gl.ARRAY_BUFFER, tbuf); gl.enableVertexAttribArray(locF); gl.vertexAttribPointer(locF, 2, gl.FLOAT, false, 0, 0); }
+  }
 
   // osobny bufor na cele napisu — podmieniany przy każdym nowym słowie
   var tbuf = gl.createBuffer(), tdata = new Float32Array(N * 2), locF = gl.getAttribLocation(prog, 'aF');
   gl.bindBuffer(gl.ARRAY_BUFFER, tbuf);
   gl.bufferData(gl.ARRAY_BUFFER, tdata, gl.DYNAMIC_DRAW);
-  if (locF >= 0) { gl.enableVertexAttribArray(locF); gl.vertexAttribPointer(locF, 2, gl.FLOAT, false, 0, 0); }
   var textW = 0, textTarget = 0, textTimer = 0;
   function makeText(str) {
     var cw = 1024, ch = 512, c2 = document.createElement('canvas');
@@ -544,8 +547,10 @@
 
   var U = {};
   ['uT', 'uMix', 'uAspect', 'uDpr', 'uScale', 'uSize', 'uIntro', 'uPulse', 'uText', 'uPtrOn', 'uPtr', 'uTilt', 'uShift', 'uInk', 'uSignal', 'uAlpha'].forEach(function (n) { U[n] = gl.getUniformLocation(prog, n); });
+  var night = false;
   onTheme = function () {
-    var night = root.getAttribute('data-theme') === 'noc';
+    night = root.getAttribute('data-theme') === 'noc';
+    gl.useProgram(prog);
     if (night) { gl.uniform3f(U.uInk, 232 / 255, 234 / 255, 237 / 255); gl.uniform3f(U.uSignal, 112 / 255, 112 / 255, 1); }
     else { gl.uniform3f(U.uInk, 10 / 255, 11 / 255, 13 / 255); gl.uniform3f(U.uSignal, 43 / 255, 43 / 255, 1); }
     needs = true;
@@ -556,11 +561,103 @@
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
   gl.clearColor(0, 0, 0, 0);
 
+  /* ---------- obiekt: aluminiowy żyroskop, liczony promień po promieniu (raymarching) ---------- */
+  var hp = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT);
+  var OVS = 'attribute vec2 aP; uniform vec2 uC, uE; void main(){ gl_Position = vec4(uC + aP * uE, 0., 1.); }';
+  var OFS = [
+    'precision ' + (hp && hp.precision > 0 ? 'highp' : 'mediump') + ' float;',
+    'uniform vec2 uRes, uC; uniform float uS, uAspect, uA, uNight, uPup, uGr, uShd;',
+    'uniform mat3 uM[5]; uniform float uRad[5]; uniform mat3 uV;',
+    // pierścień: płaska, toczona obręcz z fazą
+    'float ring(vec3 p, mat3 m, float r){ p = m * p; vec2 q = vec2(length(p.xy) - r, p.z); vec2 d = abs(q) - vec2(.027, .015); return length(max(d, 0.)) + min(max(d.x, d.y), 0.) - .009; }',
+    'float map(vec3 p){',
+    '  float d = ring(p, uM[0], uRad[0]);',
+    '  d = min(d, ring(p, uM[1], uRad[1])); d = min(d, ring(p, uM[2], uRad[2]));',
+    '  d = min(d, ring(p, uM[3], uRad[3])); d = min(d, ring(p, uM[4], uRad[4]));',
+    '  return min(d, length(p) - uPup);',
+    '}',
+    'vec3 nrm(vec3 p){ vec2 e = vec2(.0016, -.0016); return normalize(e.xyy * map(p + e.xyy) + e.yyx * map(p + e.yyx) + e.yxy * map(p + e.yxy) + e.xxx * map(p + e.xxx)); }',
+    // studio: ciemna podłoga, jasny sufit, jeden softbox — to one robią z szarości metal
+    'vec3 env(vec3 r){',
+    '  vec3 c = mix(vec3(.16, .17, .20), vec3(.60, .62, .66), smoothstep(-.55, .05, r.y));',
+    '  c = mix(c, vec3(.97, .975, .99), smoothstep(.05, .65, r.y));',
+    '  c += smoothstep(.15, .95, r.z) * .30;', // miękkie światło od strony kamery
+    '  c += smoothstep(.86, .985, dot(r, normalize(vec3(.35, .75, .55)))) * .6;',
+    '  c *= 1. - .6 * smoothstep(.88, .985, dot(r, normalize(vec3(-.8, -.05, .6))));', // czarna flaga: daje metalowi kontrast
+    '  return c * mix(1., .6, uNight);',
+    '}',
+    'void main(){',
+    '  vec2 uv = gl_FragCoord.xy / uRes * 2. - 1.;',
+    '  vec2 pxy = (uv - uC) * vec2(uAspect, 1.) / uS;',
+    '  vec3 blue = mix(vec3(.17, .17, 1.), vec3(.46, .46, 1.), uNight);',
+    // miękki cień pod obiektem
+    '  vec2 sp = (pxy - vec2(0., -(uGr + .34))) / (vec2(.62, .075) * (.35 + .65 * uGr));',
+    '  vec4 o = vec4(0., 0., 0., exp(-dot(sp, sp)) * mix(.14, .5, uNight) * uShd);',
+    '  if (length(pxy) < 1.2) {',
+    '    vec3 ro = uV * vec3(0., 0., 4.4); vec3 rd = uV * normalize(vec3(pxy, -4.4));',
+    '    float t = 3.1, md = 1e3, tm = 3.1, d = 0.; float hit = 0.;',
+    '    for (int i = 0; i < 72; i++) {',
+    '      d = map(ro + rd * t);',
+    '      if (d < md) { md = d; tm = t; }',
+    '      if (d < .0012) { hit = 1.; break; }',
+    '      t += d; if (t > 5.8) break;',
+    '    }',
+    '    float px = 2.2 / (uS * uRes.y);',
+    '    float cov = max(hit, 1. - smoothstep(0., px * 1.6, md));',
+    '    if (cov > 0.) {',
+    '      vec3 p = ro + rd * tm; vec3 n = nrm(p); vec3 r = reflect(rd, n);',
+    '      float core = length(p); float nv = max(dot(n, -rd), 0.); vec3 col;',
+    '      if (core < uPup + .012) {',
+    '        col = blue * (.78 + .3 * n.y) + env(r) * (.1 + .6 * pow(1. - nv, 3.));',
+    '      } else {',
+    '        float ao = clamp(.3 + .7 * map(p + n * .1) / .1, 0., 1.);',
+    '        col = env(r) * mix(vec3(.80, .81, .835), vec3(1.), pow(1. - nv, 5.)) * ao;',
+    '        vec3 l = -p / core;',
+    '        col += blue * (max(dot(n, l), 0.) * .6 + pow(max(dot(r, l), 0.), 22.) * .9) / (1. + 5. * core * core);',
+    '      }',
+    '      o = vec4(col * cov, cov) + o * (1. - cov);',
+    '    }',
+    '    float g = exp(-dot(pxy, pxy) * 70.) * .32;',
+    '    o += vec4(blue * g, g * .35) * (1. - o.a * .5);',
+    '  }',
+    '  gl_FragColor = o * uA;',
+    '}'
+  ].join('\n');
+  var oprog = gl.createProgram(), objOK = true;
+  try {
+    gl.attachShader(oprog, shader(gl.VERTEX_SHADER, OVS));
+    gl.attachShader(oprog, shader(gl.FRAGMENT_SHADER, OFS));
+    gl.linkProgram(oprog);
+    if (!gl.getProgramParameter(oprog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(oprog));
+  } catch (err) { console.error(err); objOK = false; }
+  var OU = {}, qbuf = gl.createBuffer(), locP = objOK ? gl.getAttribLocation(oprog, 'aP') : -1;
+  if (objOK) ['uC', 'uE', 'uRes', 'uS', 'uAspect', 'uA', 'uNight', 'uPup', 'uGr', 'uShd', 'uM', 'uRad', 'uV'].forEach(function (n) { OU[n] = gl.getUniformLocation(oprog, n === 'uM' || n === 'uRad' ? n + '[0]' : n); });
+  gl.bindBuffer(gl.ARRAY_BUFFER, qbuf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]), gl.STATIC_DRAW);
+  var R0 = [0.30, 0.47, 0.64, 0.81, 0.98], mats = new Float32Array(45), rads = new Float32Array(5), view = new Float32Array(9);
+  // kąty i promień pierścienia i w stanie k
+  function ringState(k, i, t) {
+    var dir = i % 2 ? -1 : 1;
+    if (k === 0) return [0.10 * Math.sin(t * 0.4 + i * 1.3), 0.10 * Math.cos(t * 0.33 + i * 1.7), R0[i]];
+    if (k === 1) return [i * 1.1 + t * (0.22 + 0.04 * i) * dir, i * 0.7 - t * 0.17 * dir, R0[i]];
+    if (k === 2) return [1.2 + 0.06 * Math.sin(t * 0.5 + i), (i - 2) * 0.4 + 0.14 * Math.sin(t * 0.6 + i * 0.9), 0.5 + 0.11 * i];
+    if (k === 3) return [0, i * Math.PI / 5 + t * 0.22, 0.84];
+    return [0.05 * Math.sin(t * 0.5 + i), 0.05 * Math.cos(t * 0.4 + i), 0.42];
+  }
+  function rotXY(out, off, a, b) { // RotX(a) * RotY(b), kolumnami
+    var ca = Math.cos(a), sa = Math.sin(a), cb = Math.cos(b), sb = Math.sin(b);
+    out[off] = cb; out[off + 1] = sa * sb; out[off + 2] = -ca * sb;
+    out[off + 3] = 0; out[off + 4] = ca; out[off + 5] = sa;
+    out[off + 6] = sb; out[off + 7] = -sa * cb; out[off + 8] = ca * cb;
+  }
+  var quality = 1, slow = 0;
+
   /* ---------- rozmiar i kadr ---------- */
   var W = 0, H = 0, dpr = 1, narrow = false;
   function resize() {
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    dpr = Math.min(window.devicePixelRatio || 1, 1.5) * quality;
     W = canvas.clientWidth; H = canvas.clientHeight;
+    gl.useProgram(prog);
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
     gl.viewport(0, 0, canvas.width, canvas.height);
     narrow = W < 860;
@@ -636,6 +733,53 @@
     needs = false;
 
     var intro = reduced ? 1 : Math.min(1, t / introTime);
+    var top = 1, end = 0;
+    if (narrow) {
+      // na telefonie obiekt jest widoczny tylko tam, gdzie ma miejsce: u góry strony i przy kontakcie
+      if (pin !== null) { top = Math.max(0, 1 - window.scrollY / (H * 0.55)); end = 0; }
+      else { top = wgt(mix, 0); end = wgt(mix, 4); }
+    }
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    if (objOK) {
+      var aspect = W / H, ie = 1 - Math.pow(1 - intro, 3);
+      var k0 = Math.min(3, Math.floor(mix)), fm = mix - k0; fm = fm * fm * (3 - 2 * fm);
+      for (var ri2 = 0; ri2 < 5; ri2++) {
+        var s0 = ringState(k0, ri2, t), s1 = ringState(k0 + 1, ri2, t);
+        var ra = s0[0] + (s1[0] - s0[0]) * fm + (1 - ie) * (2 + ri2);
+        var rb = s0[1] + (s1[1] - s0[1]) * fm + (1 - ie) * (1.5 - ri2);
+        rotXY(mats, ri2 * 9, ra, rb);
+        rads[ri2] = (s0[2] + (s1[2] - s0[2]) * fm) * (0.35 + 0.65 * ie) * (1 + pulse * (0.04 + 0.03 * ri2));
+      }
+      rotXY(view, 0, (reduced ? -0.22 : tiltX) * 0.9, (reduced ? -0.3 : tiltY) * 0.9);
+      var oS = narrow ? Math.min(0.36, aspect * 0.74) : Math.min(0.64, aspect * 0.35);
+      var oX = narrow ? 0 : 0.5, oY = narrow ? 0.5 * top + 0.62 * end : 0.03;
+      var oA = (narrow ? Math.min(1, top + end) : 1) * ie * (1 - textW);
+      if (oA > 0.004) {
+        gl.useProgram(oprog);
+        gl.bindBuffer(gl.ARRAY_BUFFER, qbuf);
+        gl.enableVertexAttribArray(locP);
+        gl.vertexAttribPointer(locP, 2, gl.FLOAT, false, 0, 0);
+        gl.uniform2f(OU.uC, oX, oY);
+        gl.uniform2f(OU.uE, oS * 1.7 / aspect, oS * 1.62);
+        gl.uniform2f(OU.uRes, canvas.width, canvas.height);
+        gl.uniform1f(OU.uS, oS);
+        gl.uniform1f(OU.uAspect, aspect);
+        gl.uniform1f(OU.uA, oA);
+        gl.uniform1f(OU.uNight, night ? 1 : 0);
+        gl.uniform1f(OU.uGr, Math.max(rads[0], rads[1], rads[2], rads[3], rads[4]));
+        gl.uniform1f(OU.uShd, narrow ? 0 : 1); // na telefonie cień wchodziłby na nagłówek
+        gl.uniform1f(OU.uPup, (0.105 + 0.03 * wgt(mix, 4)) * (0.35 + 0.65 * ie));
+        gl.uniformMatrix3fv(OU.uM, false, mats);
+        gl.uniform1fv(OU.uRad, rads);
+        gl.uniformMatrix3fv(OU.uV, false, view);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+      }
+    }
+
+    // punkty zostają do jednego: układają napisy (404, polecenie „napisz”)
+    gl.useProgram(prog);
+    bindParticles();
     gl.uniform1f(U.uT, t);
     gl.uniform1f(U.uMix, mix);
     gl.uniform1f(U.uIntro, intro);
@@ -645,26 +789,19 @@
     gl.uniform1f(U.uPtrOn, ptrOn);
     gl.uniform2f(U.uPtr, cx, cy);
     gl.uniform2f(U.uTilt, (reduced ? -0.22 : tiltX) * flat, (reduced ? -0.3 : tiltY) * flat);
-    if (narrow) {
-      // na telefonie forma jest wyraźna tylko tam, gdzie ma miejsce: u góry strony i przy kontakcie
-      var top, end;
-      if (pin !== null) { top = Math.max(0, 1 - window.scrollY / (H * 0.55)); end = 0; }
-      else { top = wgt(mix, 0); end = wgt(mix, 4); }
-      gl.uniform2f(U.uShift, 0, (0.45 * top + 0.62 * end) * (1 - textW) + 0.4 * textW);
-      gl.uniform1f(U.uAlpha, Math.max(0.16 + 0.6 * top + 0.5 * end, 0.85 * textW));
-    } else {
-      gl.uniform2f(U.uShift, 0.5, 0.02);
-      gl.uniform1f(U.uAlpha, 0.86);
-    }
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.drawArrays(gl.POINTS, 0, N);
+    gl.uniform2f(U.uShift, narrow ? 0 : 0.5, narrow ? (0.45 * top + 0.62 * end) * (1 - textW) + 0.4 * textW : 0.02);
+    gl.uniform1f(U.uAlpha, (objOK ? 0 : 0.86) + (objOK ? 0.9 : 0.04) * textW);
+    if (!objOK || textW > 0.004) gl.drawArrays(gl.POINTS, 0, N);
 
     label(mix);
     frames++;
     if (now - fpsAt >= 500) {
       var fps = Math.round(frames * 1000 / (now - fpsAt));
-      if (hudStats) hudStats.textContent = ' · ' + fps + ' kl/s · ' + N.toLocaleString('pl-PL') + ' pkt';
+      if (hudStats) hudStats.textContent = ' · ' + fps + ' kl/s · render na żywo';
       frames = 0; fpsAt = now;
+      // za wolno przez dłuższą chwilę → mniejsza rozdzielczość renderu
+      slow = fps < 36 && fps > 4 && now - t0 > 3000 ? slow + 1 : 0;
+      if (slow >= 3 && quality > 0.5) { quality -= 0.2; slow = 0; resize(); }
     }
   }
 

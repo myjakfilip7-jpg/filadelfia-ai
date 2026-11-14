@@ -422,3 +422,7 @@ h1 { font-size: clamp(46px, 6.6vw, 112px); font-weight: 300; font-stretch: 125%;
   .v-ad__f, .v-flow b, .v-chat i, .v-chat span, .v-web b::after { animation: none; }
   .v-flow b { left: calc(100% - 11px); }
 }
+
+/* ===== wersja 5: materiał — drobne ziarno na całej stronie ===== */
+body::after { content: ''; position: fixed; inset: 0; z-index: 40; pointer-events: none; opacity: .055; mix-blend-mode: multiply; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+:root[data-theme="noc"] body::after { mix-blend-mode: screen; opacity: .05; filter: invert(1); }

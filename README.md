@@ -3,9 +3,12 @@
 Statyczna strona (HTML + CSS + JS, bez zależności).
 
 Kierunek wizualny: aluminium `#E8EAED`, grafit `#0A0B0D`, jeden akcent `#2B2BFF`.
-Kroje: Mona Sans (szeroki, cienki) i Martian Mono. Jedyny element ozdobny to pole
-punktów w WebGL. Na stronie głównej przechodzi przy przewijaniu przez pięć form
-(tęczówka → siatka → przepływ → sfera → punkt); każda podstrona ma jedną, stałą.
+Kroje: Mona Sans (szeroki, cienki) i Martian Mono. Główny element to obiekt 3D:
+aluminiowy żyroskop z pięciu pierścieni i niebieskiego rdzenia, liczony na żywo
+w shaderze (raymarching, bez modeli i bibliotek). Ma pięć układów:
+tęczówka → żyroskop → przepływ → sfera → punkt. Strona główna zmienia je przy
+przewijaniu; każda podstrona ma jeden, stały. Punkty zostały tylko do napisów
+(strona 404, polecenie `napisz`).
 
 ## Pliki
 
@@ -14,7 +17,7 @@ punktów w WebGL. Na stronie głównej przechodzi przy przewijaniu przez pięć 
   - `index.html`, `kampanie.html`, `automatyzacje.html`, `chatboty.html`, `strony.html`,
     `kontakt.html`, `marka.html`, `404.html`
 - `styles.css` — style i tokeny kolorów
-- `script.js` — pole punktów, odczyty, menu mobilne, wiersz poleceń, formularz
+- `script.js` — obiekt 3D, punkty do napisów, odczyty, menu, wiersz poleceń, dema, formularz
 - `favicon.svg` — znak (tęczówka)
 - `og.png` — obraz do udostępnień (1200 × 630)
 

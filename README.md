@@ -21,7 +21,7 @@ W `script.js` został wyłączony wariant z aluminiowym żyroskopem 3D
 - `script.js` — pole punktów, odczyty, menu, wiersz poleceń, dema, formularz
 - `fonts/` — Mona Sans i Martian Mono (licencja SIL OFL), hostowane lokalnie
 - `server/` — backend: logowanie przez GitHub, zgłoszenia, panel (opis w `server/README.md`)
-- `panel.html`, `panel.js` — panel właściciela; działa tylko z uruchomionym backendem
+- `panel.html`, `panel.js`, `panel.css`, `theme.js` — panel właściciela; działa tylko z uruchomionym backendem
 - `favicon.svg` — znak (tęczówka)
 - `og.png` — obraz do udostępnień (1200 × 630)
 - `media/` — trzy przykładowe kadry reklamowe wygenerowane w Higgsfield (GPT Image 2.6); to przykłady, nie realizacje dla klientów

@@ -4,7 +4,13 @@ Jeden plik w Node, bez zależności. Robi trzy rzeczy:
 
 1. **Logowanie przez GitHub** — tylko loginy z `ADMIN_GITHUB_LOGINS` dostają sesję.
 2. **Zgłoszenia** — formularz kontaktowy zapisuje je w `server/data/zgloszenia.json`.
-3. **Panel właściciela** (`/panel.html`) — lista zgłoszeń, zmiana statusu, usuwanie.
+3. **Panel właściciela** (`/panel.html`) — skrzynka zgłoszeń na pełny ekran:
+   - liczniki i zakładki: nowe, w toku, zamknięte, wszystkie,
+   - wyszukiwanie po imieniu, firmie, kontakcie i treści; filtr tematu,
+   - szczegóły zgłoszenia z przyciskiem „Odpisz e-mailem” albo „Zadzwoń”,
+   - status, prywatne notatki, historia zmian z loginem i datą,
+   - oznaczanie przeczytanych, eksport CSV, usuwanie z potwierdzeniem,
+   - odświeżanie co 30 sekund; skróty: `/` szukaj, `j`/`k` lub strzałki, `Esc`.
 
 Serwer podaje też pliki strony, więc lokalnie wszystko działa pod jednym adresem.
 
@@ -43,6 +49,8 @@ podrobiony `state` i sesję, ochronę zapisu, limit zgłoszeń, pliki, których 
 - Zmiany danych wymagają tego samego źródła (`Origin`) i nagłówka `x-fila`.
 - Formularz: limit 5 zgłoszeń na 10 minut z adresu, limit rozmiaru, pole-pułapka na boty.
 - Treść zgłoszeń panel wstawia jako tekst, nigdy jako HTML.
+- `panel.html` jest podawany ze ścisłą polityką CSP (tylko własne pliki, żadnych skryptów w treści strony) i bez buforowania.
+- Eksport CSV zabezpiecza komórki zaczynające się od `=`, `+`, `-`, `@`, żeby arkusz nie potraktował ich jak formuł.
 
 ## Zanim trafi na hosting
 

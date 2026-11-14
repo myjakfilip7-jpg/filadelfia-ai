@@ -579,14 +579,66 @@ const legal = `    <section class="scene scene--hero scene--page">
       </div>
     </section>`;
 
-/* ---------- panel właściciela (działa tylko z backendem: server/server.mjs) ---------- */
-const panel = `    <section class="scene scene--form">
-      <div class="col col--panel">
-        <p class="tag mono" data-r>Panel</p>
-        <h1 class="h1--page" data-r>Zgłoszenia</h1>
-        <div class="panel" id="panel" aria-live="polite"><p class="lead">Sprawdzam…</p></div>
+/* ---------- panel właściciela: osobna aplikacja, bez pola punktów i stopki (wymaga server/server.mjs) ---------- */
+// Bez skryptów i stylów w treści strony — serwer podaje ten plik ze ścisłą polityką CSP.
+const panelPage = `<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel — Filadelfia.ai</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#E8EAED">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="fonts/mona-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="panel.css">
+  <script src="theme.js"></script>
+  <script src="panel.js" defer></script>
+</head>
+<body class="app">
+  <header class="app__bar">
+    <a class="logo" href="./" aria-label="Filadelfia.ai — strona główna">${mark()}${word}</a>
+    <span class="app__name mono">Panel</span>
+    <div class="app__user" id="user" hidden>
+      <img class="app__avatar" id="avatar" alt="" width="28" height="28" hidden>
+      <span class="mono" id="login"></span>
+      <button class="more" type="button" id="themeBtn">Tryb nocny</button>
+      <button class="more" type="button" id="logout">Wyloguj</button>
+    </div>
+  </header>
+
+  <main class="app__main">
+    <section class="gate" id="gate">
+      <p class="tag mono">Panel właściciela</p>
+      <h1 class="h1--page">Zgłoszenia</h1>
+      <div id="gateBody" aria-live="polite"><p class="lead">Sprawdzam…</p></div>
+    </section>
+
+    <section class="desk" id="desk" hidden>
+      <div class="desk__top">
+        <div class="tabs" id="tabs" role="tablist" aria-label="Status"></div>
+        <div class="desk__tools">
+          <input class="desk__q" type="search" id="q" placeholder="Szukaj: imię, firma, treść" aria-label="Szukaj w zgłoszeniach" autocomplete="off">
+          <select class="desk__sel" id="topic" aria-label="Temat"></select>
+          <a class="more" id="csv" href="api/zgloszenia.csv" download>Eksport CSV</a>
+        </div>
       </div>
-    </section>`;
+      <div class="desk__body" id="deskBody">
+        <ol class="inbox" id="inbox" aria-label="Lista zgłoszeń"></ol>
+        <article class="detail" id="detail" aria-live="polite"></article>
+      </div>
+    </section>
+  </main>
+
+  <dialog class="confirm" id="confirm">
+    <p id="confirmText"></p>
+    <form method="dialog"><button class="more" value="nie">Anuluj</button><button class="pill" value="tak">Usuń</button></form>
+  </dialog>
+  <p class="toast mono" id="toast" role="status"></p>
+</body>
+</html>
+`;
 
 /* ---------- 404 ---------- */
 const lostPage = `    <section class="scene scene--hero">
@@ -609,10 +661,10 @@ const pages = [
   { file: 'strony.html', title: 'Strony, aplikacje, sklepy — Filadelfia.ai', desc: 'Strony firmowe, sklepy internetowe i narzędzia wewnętrzne, którymi zarządzasz sam.', form: 1, formName: 'Siatka', current: 'uslugi', body: strony },
   { file: 'kontakt.html', title: 'Kontakt — Filadelfia.ai', desc: 'Opowiedz, co zabiera Ci najwięcej czasu. Odpiszemy z propozycją, od czego zacząć.', form: 4, formName: 'Punkt', current: 'kontakt', body: kontakt },
   { file: 'prywatnosc.html', title: 'Prywatność — Filadelfia.ai', desc: 'Jakie dane zbiera strona Filadelfia.ai: bez plików cookie i bez śledzenia.', form: 3, formName: 'Sfera', body: legal },
-  { file: 'panel.html', title: 'Panel — Filadelfia.ai', desc: 'Panel właściciela.', form: 4, formName: 'Punkt', body: panel, scripts: ['panel.js'] },
   { file: 'marka.html', title: 'Marka — Filadelfia.ai', desc: 'Znak, kolory i pismo Filadelfia.ai.', form: 0, formName: 'Tęczówka', body: marka },
   { file: '404.html', title: 'Nie ma takiej strony — Filadelfia.ai', desc: 'Pod tym adresem nic nie ma.', form: 4, formName: 'Zgubiony', lost: true, base: true, text: '404', body: lostPage },
 ];
 
 for (const p of pages) writeFileSync(new URL(p.file, import.meta.url), shell(p));
+writeFileSync(new URL('panel.html', import.meta.url), panelPage);
 console.log('Zbudowano: ' + pages.map((p) => p.file).join(', '));

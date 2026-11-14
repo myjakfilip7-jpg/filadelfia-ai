@@ -106,6 +106,10 @@ function mutate(fn) {
   queue = run.catch(() => {});
   return run;
 }
+// starsze wpisy mogą nie mieć nowszych pól
+const full = (r) => ({ ...r, kontakt: r.kontakt || '', przeczytane: Boolean(r.przeczytane), notatki: r.notatki || [], historia: r.historia || [] });
+// komórka CSV: cudzysłowy podwojone, a treść zaczynająca się od = + - @ nie może stać się formułą w arkuszu
+const csvCell = (v) => { let t = String(v ?? ''); if (/^[=+\-@\t\r]/.test(t)) t = "'" + t; return '"' + t.replace(/"/g, '""') + '"'; };
 const clean = (v, max) => String(v ?? '').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').trim().slice(0, max);
 
 // najwyżej 5 zgłoszeń na 10 minut z jednego adresu
@@ -118,6 +122,8 @@ function limited(ip) {
 }
 
 /* ---------- pliki strony ---------- */
+// panel nie ma skryptów ani stylów w treści strony, więc może mieć ścisłą politykę: tylko własne pliki i awatar z GitHuba
+const PANEL_CSP = "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; connect-src 'self'; img-src 'self' https://avatars.githubusercontent.com; form-action 'self'; base-uri 'none'; frame-ancestors 'none'";
 const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.woff2': 'font/woff2', '.json': 'application/json' };
 async function serveStatic(res, pathname) {
   let rel;
@@ -129,7 +135,8 @@ async function serveStatic(res, pathname) {
   if (inside && !hidden) {
     try {
       const data = await readFile(file);
-      return send(res, 200, data, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream' });
+      const extra = rel === '/panel.html' ? { 'Cache-Control': 'no-store', 'Content-Security-Policy': PANEL_CSP } : {};
+      return send(res, 200, data, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream', ...extra });
     } catch { /* niżej 404 */ }
   }
   const notFound = await readFile(path.join(ROOT, '404.html')).catch(() => 'Nie znaleziono');
@@ -200,28 +207,59 @@ async function handle(req, res) {
     const item = { temat: TOPICS[body.temat] ? body.temat : 'inne', imie: clean(body.imie, 80), firma: clean(body.firma, 120), kontakt: clean(body.kontakt, 160), opis: clean(body.opis, 4000) };
     if (!item.imie || !item.opis || !item.kontakt) return json(res, 422, { blad: 'brak-pol' });
     if (limited(ip)) return json(res, 429, { blad: 'za-czesto' });
-    const saved = await mutate((list) => { const row = { id: randomUUID(), at: new Date().toISOString(), status: 'nowe', ...item }; list.push(row); return row; });
+    const saved = await mutate((list) => { const row = { id: randomUUID(), at: new Date().toISOString(), status: 'nowe', przeczytane: false, ...item, notatki: [], historia: [] }; list.push(row); return row; });
     return json(res, 201, { ok: true, id: saved.id });
   }
 
   if (p.startsWith('/api/zgloszenia')) { // reszta tylko dla zalogowanego właściciela
-    if (!session(req)) return json(res, 401, { blad: 'niezalogowany' });
+    const me = session(req);
+    if (!me) return json(res, 401, { blad: 'niezalogowany' });
+
     if (p === '/api/zgloszenia' && m === 'GET') {
-      const list = await load();
-      return json(res, 200, { tematy: TOPICS, statusy: STATUSES, zgloszenia: list.slice().reverse() });
+      const list = (await load()).map(full);
+      return json(res, 200, { tematy: TOPICS, statusy: STATUSES, zgloszenia: list.reverse() });
     }
-    const id = p.slice('/api/zgloszenia/'.length);
-    if (id && (m === 'PATCH' || m === 'DELETE')) {
-      if (!sameOrigin(req) || req.headers['x-fila'] !== '1') return json(res, 403, { blad: 'obce-zrodlo' });
-      if (m === 'DELETE') {
-        const gone = await mutate((list) => { const i = list.findIndex((r) => r.id === id); if (i < 0) return false; list.splice(i, 1); return true; });
-        return gone ? json(res, 200, { ok: true }) : json(res, 404, { blad: 'nie-ma' });
-      }
+    if (p === '/api/zgloszenia.csv' && m === 'GET') {
+      const cols = ['data', 'status', 'temat', 'imie', 'firma', 'kontakt', 'opis', 'notatki'];
+      const lines = (await load()).map(full).reverse().map((r) => [r.at, r.status, TOPICS[r.temat] || r.temat, r.imie, r.firma, r.kontakt, r.opis, r.notatki.map((n) => n.tekst).join(' | ')].map(csvCell).join(';'));
+      return send(res, 200, '\uFEFF' + [cols.join(';'), ...lines].join('\r\n') + '\r\n', { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="zgloszenia-${new Date().toISOString().slice(0, 10)}.csv"`, 'Cache-Control': 'no-store' });
+    }
+
+    const [id, sub, subId] = p.slice('/api/zgloszenia/'.length).split('/');
+    if (!id || !p.startsWith('/api/zgloszenia/')) return json(res, 405, { blad: 'metoda' });
+    // każda zmiana musi przyjść z naszej strony i z nagłówkiem, którego obca strona nie doda
+    if (!sameOrigin(req) || req.headers['x-fila'] !== '1') return json(res, 403, { blad: 'obce-zrodlo' });
+    const stamp = (co) => ({ at: new Date().toISOString(), kto: me.login, co });
+    const change = async (fn) => {
+      const out = await mutate((list) => { const r = list.find((x) => x.id === id); if (!r) return null; Object.assign(r, full(r)); const err = fn(r); return err || full(r); });
+      if (!out) return json(res, 404, { blad: 'nie-ma' });
+      return out.blad ? json(res, out.kod || 422, { blad: out.blad }) : json(res, 200, out);
+    };
+
+    if (!sub && m === 'DELETE') {
+      const gone = await mutate((list) => { const i = list.findIndex((r) => r.id === id); if (i < 0) return false; list.splice(i, 1); return true; });
+      return gone ? json(res, 200, { ok: true }) : json(res, 404, { blad: 'nie-ma' });
+    }
+    if (!sub && m === 'PATCH') {
       let body;
       try { body = await readJson(req); } catch { return json(res, 400, { blad: 'zly-json' }); }
-      if (!STATUSES.includes(body.status)) return json(res, 422, { blad: 'zly-status' });
-      const row = await mutate((list) => { const r = list.find((x) => x.id === id); if (r) r.status = body.status; return r || null; });
-      return row ? json(res, 200, row) : json(res, 404, { blad: 'nie-ma' });
+      if (body.status !== undefined && !STATUSES.includes(body.status)) return json(res, 422, { blad: 'zly-status' });
+      if (body.przeczytane !== undefined && typeof body.przeczytane !== 'boolean') return json(res, 422, { blad: 'zle-pole' });
+      if (body.status === undefined && body.przeczytane === undefined) return json(res, 422, { blad: 'brak-zmian' });
+      return change((r) => {
+        if (body.status !== undefined && body.status !== r.status) { r.historia.push(stamp(`status: ${r.status} → ${body.status}`)); r.status = body.status; }
+        if (body.przeczytane !== undefined) r.przeczytane = body.przeczytane;
+      });
+    }
+    if (sub === 'notatki' && !subId && m === 'POST') {
+      let body;
+      try { body = await readJson(req); } catch { return json(res, 400, { blad: 'zly-json' }); }
+      const tekst = clean(body.tekst, 2000);
+      if (!tekst) return json(res, 422, { blad: 'pusta-notatka' });
+      return change((r) => { if (r.notatki.length >= 200) return { blad: 'za-duzo-notatek' }; r.notatki.push({ id: randomUUID(), at: new Date().toISOString(), kto: me.login, tekst }); });
+    }
+    if (sub === 'notatki' && subId && m === 'DELETE') {
+      return change((r) => { const i = r.notatki.findIndex((n) => n.id === subId); if (i < 0) return { blad: 'nie-ma', kod: 404 }; r.notatki.splice(i, 1); });
     }
     return json(res, 405, { blad: 'metoda' });
   }

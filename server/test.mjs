@@ -94,6 +94,25 @@ try {
   check('właściciel widzi jedno zgłoszenie (pułapka i błędne pominięte)', list.zgloszenia.length === 1 && row.imie === 'Anna' && row.status === 'nowe');
   const auth = { cookie: a.cookie, 'Content-Type': 'application/json', 'x-fila': '1' };
   check('zmiana statusu', (await (await get('/api/zgloszenia/' + row.id, { method: 'PATCH', headers: auth, body: '{"status":"w toku"}' })).json()).status === 'w toku');
+  const afterStatus = (await (await get('/api/zgloszenia', { headers: { cookie: a.cookie } })).json()).zgloszenia[0];
+  check('zmiana statusu trafia do historii z loginem', afterStatus.historia.length === 1 && afterStatus.historia[0].kto === 'Wlasciciel' && afterStatus.historia[0].co === 'status: nowe → w toku');
+  check('nowe zgłoszenie jest nieprzeczytane', row.przeczytane === false);
+  check('oznaczenie jako przeczytane', (await (await get('/api/zgloszenia/' + row.id, { method: 'PATCH', headers: auth, body: '{"przeczytane":true}' })).json()).przeczytane === true);
+  check('pusty PATCH → 422', (await get('/api/zgloszenia/' + row.id, { method: 'PATCH', headers: auth, body: '{}' })).status === 422);
+  const noted = await (await get('/api/zgloszenia/' + row.id + '/notatki', { method: 'POST', headers: auth, body: JSON.stringify({ tekst: ' Zadzwonić w piątek ' }) })).json();
+  check('notatka dodana z autorem', noted.notatki.length === 1 && noted.notatki[0].tekst === 'Zadzwonić w piątek' && noted.notatki[0].kto === 'Wlasciciel');
+  check('pusta notatka → 422', (await get('/api/zgloszenia/' + row.id + '/notatki', { method: 'POST', headers: auth, body: '{"tekst":"  "}' })).status === 422);
+  check('notatka bez sesji → 401', (await get('/api/zgloszenia/' + row.id + '/notatki', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-fila': '1' }, body: '{"tekst":"x"}' })).status === 401);
+  check('notatka z obcego źródła → 403', (await get('/api/zgloszenia/' + row.id + '/notatki', { method: 'POST', headers: { ...auth, Origin: 'https://zla-strona.example' }, body: '{"tekst":"x"}' })).status === 403);
+  const csvNo = await get('/api/zgloszenia.csv');
+  check('eksport CSV bez sesji → 401', csvNo.status === 401);
+  const csvRes = await get('/api/zgloszenia.csv', { headers: { cookie: a.cookie } });
+  const csv = await csvRes.text();
+  check('eksport CSV: nagłówki i treść', csvRes.status === 200 && /text\/csv/.test(csvRes.headers.get('content-type')) && csv.includes('"Anna"') && csv.includes('Zadzwonić w piątek'), csv.slice(0, 200));
+  check('usunięcie notatki', (await (await get('/api/zgloszenia/' + row.id + '/notatki/' + noted.notatki[0].id, { method: 'DELETE', headers: auth })).json()).notatki.length === 0);
+  check('usunięcie nieistniejącej notatki → 404', (await get('/api/zgloszenia/' + row.id + '/notatki/nie-ma', { method: 'DELETE', headers: auth })).status === 404);
+  const panelRes = await get('/panel.html');
+  check('panel ma ścisłą politykę CSP i nie jest buforowany', /script-src 'self'/.test(panelRes.headers.get('content-security-policy') || '') && panelRes.headers.get('cache-control') === 'no-store');
   check('błędny status → 422', (await get('/api/zgloszenia/' + row.id, { method: 'PATCH', headers: auth, body: '{"status":"hack"}' })).status === 422);
   check('zmiana bez nagłówka x-fila → 403', (await get('/api/zgloszenia/' + row.id, { method: 'PATCH', headers: { cookie: a.cookie, 'Content-Type': 'application/json' }, body: '{"status":"zamknięte"}' })).status === 403);
   check('usunięcie z obcego źródła → 403', (await get('/api/zgloszenia/' + row.id, { method: 'DELETE', headers: { ...auth, Origin: 'https://zla-strona.example' } })).status === 403);
@@ -102,9 +121,12 @@ try {
   check('po usunięciu lista pusta', (await (await get('/api/zgloszenia', { headers: { cookie: a.cookie } })).json()).zgloszenia.length === 0);
 
   // limit zgłoszeń: 5 na 10 minut z jednego adresu (jedno już poszło)
+  const evil = await post({ imie: '=HYPERLINK("http://x")', kontakt: 'a@example.com', opis: 'B' });
+  const csv2 = await (await get('/api/zgloszenia.csv', { headers: { cookie: a.cookie } })).text();
+  check('CSV: treść nie staje się formułą', evil.status === 201 && csv2.includes(`"'=HYPERLINK(""http://x"")"`), csv2.slice(0, 300));
   const codes = [];
-  for (let i = 0; i < 6; i++) codes.push((await post({ imie: 'A', kontakt: 'a@example.com', opis: 'B' })).status);
-  check('limit zgłoszeń → 429', codes.slice(0, 4).every((c) => c === 201) && codes[4] === 429 && codes[5] === 429, codes.join(','));
+  for (let i = 0; i < 5; i++) codes.push((await post({ imie: 'A', kontakt: 'a@example.com', opis: 'B' })).status);
+  check('limit zgłoszeń → 429', codes.slice(0, 3).every((c) => c === 201) && codes[3] === 429 && codes[4] === 429, codes.join(','));
 
   // wylogowanie
   const out = await get('/auth/logout', { method: 'POST', headers: { cookie: a.cookie } });

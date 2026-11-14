@@ -3,15 +3,17 @@
 import { writeFileSync } from 'node:fs';
 
 const MAIL = 'business@filadroid.ai';
+// Adres, pod którym strona jest opublikowana. Zmień przy przejściu na docelową domenę (obraz do udostępnień i dane strukturalne).
+const SITE = 'https://myjakfilip7-jpg.github.io/filadelfia-ai/';
 
 const mark = (size = 22) => `<svg class="mark" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9.6" stroke-dasharray="46.3 14" transform="rotate(-38 12 12)"/><circle cx="12" cy="12" r="5.5" stroke-dasharray="21.5 13.06" transform="rotate(148 12 12)"/></g><circle class="mark__p" cx="12" cy="12" r="2.1"/></svg>`;
 const word = `<span class="word">filadelfia<span class="word__dot">.</span>ai</span>`;
 
 const SERVICES = [
-  { file: 'kampanie.html', form: 0, key: 'kampanie', name: 'Kampanie reklamowe AI', short: 'Kampanie AI', blurb: 'Spoty wideo, zdjęcia produktowe i grafiki do reklam, generowane w AI. Bez planu zdjęciowego.' },
-  { file: 'automatyzacje.html', form: 2, key: 'automatyzacje', name: 'Agenci i automatyzacje', short: 'Agenci i automatyzacje', blurb: 'Zapytania, oferty i raporty obsługiwane przez agentów AI połączonych z Twoimi narzędziami.' },
-  { file: 'chatboty.html', form: 3, key: 'chatboty', name: 'Chatboty AI', short: 'Chatboty', blurb: 'Bot, który odpowiada na podstawie Twoich materiałów, a trudne sprawy przekazuje człowiekowi.' },
-  { file: 'strony.html', form: 1, key: 'strony', name: 'Strony, aplikacje, sklepy', short: 'Strony i sklepy', blurb: 'Strony firmowe, sklepy i narzędzia wewnętrzne z panelem, w którym sam zmieniasz treści.' },
+  { file: 'kampanie.html', form: 0, key: 'kampanie', name: 'Kampanie reklamowe AI', short: 'Kampanie AI', tiny: 'Spoty, zdjęcia produktowe, formaty do reklam', blurb: 'Spoty wideo, zdjęcia produktowe i grafiki do reklam, generowane w AI. Bez planu zdjęciowego.' },
+  { file: 'automatyzacje.html', form: 2, key: 'automatyzacje', name: 'Agenci i automatyzacje', short: 'Agenci i automatyzacje', tiny: 'Zapytania, oferty i raporty bez przeklejania', blurb: 'Zapytania, oferty i raporty obsługiwane przez agentów AI połączonych z Twoimi narzędziami.' },
+  { file: 'chatboty.html', form: 3, key: 'chatboty', name: 'Chatboty AI', short: 'Chatboty', tiny: 'Odpowiedzi z Twoich materiałów, z przekazaniem człowiekowi', blurb: 'Bot, który odpowiada na podstawie Twoich materiałów, a trudne sprawy przekazuje człowiekowi.' },
+  { file: 'strony.html', form: 1, key: 'strony', name: 'Strony, aplikacje, sklepy', short: 'Strony i sklepy', tiny: 'Strony, sklepy i narzędzia, którymi zarządzasz sam', blurb: 'Strony firmowe, sklepy i narzędzia wewnętrzne z panelem, w którym sam zmieniasz treści.' },
 ];
 
 function shell({ file, title, desc, form, formName, lost, current, body, base, text }) {
@@ -32,6 +34,12 @@ function shell({ file, title, desc, form, formName, lost, current, body, base, t
   <meta property="og:description" content="${desc}">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="pl_PL">
+  <meta property="og:site_name" content="Filadelfia.ai">
+  <meta property="og:image" content="${SITE}og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'ProfessionalService', name: 'Filadelfia.ai', url: SITE, email: MAIL, description: 'Agencja AI: kampanie reklamowe AI, agenci i automatyzacje, chatboty, strony i sklepy.', address: { '@type': 'PostalAddress', addressLocality: 'Krynica-Zdrój', addressCountry: 'PL' }, sameAs: ['https://www.youtube.com/@filadroid'] })}</script>
   <script>try { if (localStorage.getItem('fila-theme') === 'noc') document.documentElement.setAttribute('data-theme', 'noc'); } catch (e) {}</script>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -43,15 +51,21 @@ function shell({ file, title, desc, form, formName, lost, current, body, base, t
   ${base ? '' : '<a class="skip" href="#main">Przejdź do treści</a>\n'}
   <canvas id="field" aria-hidden="true"></canvas>
 
-  <header class="bar">
+  <header class="bar" id="bar">
     <a class="logo" href="./" aria-label="Filadelfia.ai — strona główna">${mark()}${word}</a>
     <nav class="bar__nav mono" aria-label="Główna">
-      <a href="./#uslugi"${cur('uslugi')}>Usługi</a>
+      <div class="nav__has">
+        <a href="./#uslugi"${cur('uslugi')}>Usługi</a>
+        <div class="nav__panel">
+${SERVICES.map((sv) => `          <a href="${sv.file}"><strong>${sv.name}</strong><span>${sv.tiny}</span></a>`).join('\n')}
+        </div>
+      </div>
       <a href="./#proces">Proces</a>
       <a href="./#zasady">Zasady</a>
-      <a href="kontakt.html"${cur('kontakt')}>Kontakt</a>
+      <a href="./#faq">Pytania</a>
     </nav>
     <p class="bar__clock mono" aria-hidden="true">Krynica-Zdrój <span id="clock">--:--:--</span></p>
+    <a class="bar__cta" href="kontakt.html"${cur('kontakt')}>Umów rozmowę</a>
     <button class="bar__menu mono" type="button" id="menuBtn" aria-expanded="false" aria-controls="menu">Menu</button>
   </header>
 
@@ -61,6 +75,7 @@ ${SERVICES.map((s) => `    <a class="menu__big" href="${s.file}">${s.short}</a>`
     <p class="mono">Firma</p>
     <a class="menu__big" href="./#proces">Proces</a>
     <a class="menu__big" href="./#zasady">Zasady</a>
+    <a class="menu__big" href="./#faq">Pytania</a>
     <a class="menu__big" href="kontakt.html">Kontakt</a>
     <a class="menu__mail mono" href="mailto:${MAIL}">${MAIL}</a>
   </nav>
@@ -70,14 +85,32 @@ ${body}
   </main>
 
   <footer class="end">
-    <p class="end__row mono">
-      <span>© <span id="year">2026</span> Filadelfia.ai</span>
-      <a href="marka.html">Marka</a>
-      <a href="kontakt.html">Kontakt</a>
-      <a href="https://filadelfia.io" target="_blank" rel="noopener">Filadelfia.io</a>
-      <a href="https://www.youtube.com/@filadroid" target="_blank" rel="noopener">YouTube</a>
-    </p>
+    <div class="end__cols">
+      <div class="end__about">
+        <p>Agencja AI z Krynicy-Zdroju. Kampanie, agenci, chatboty i strony dla firm.</p>
+        <button class="end__theme mono" type="button" id="themeBtn" aria-pressed="false"><span class="end__sw" aria-hidden="true"></span>Tryb nocny</button>
+      </div>
+      <nav aria-label="Usługi">
+        <p class="mono">Usługi</p>
+${SERVICES.map((sv) => `        <a href="${sv.file}">${sv.short}</a>`).join('\n')}
+      </nav>
+      <nav aria-label="Firma">
+        <p class="mono">Firma</p>
+        <a href="./#proces">Proces</a>
+        <a href="./#zasady">Zasady</a>
+        <a href="./#faq">Pytania</a>
+        <a href="marka.html">Marka</a>
+      </nav>
+      <nav aria-label="Kontakt">
+        <p class="mono">Kontakt</p>
+        <a href="kontakt.html">Formularz</a>
+        <a href="mailto:${MAIL}">${MAIL}</a>
+        <a href="https://www.youtube.com/@filadroid" target="_blank" rel="noopener">YouTube</a>
+        <a href="https://filadelfia.io" target="_blank" rel="noopener">Filadelfia.io</a>
+      </nav>
+    </div>
     <p class="mega" aria-hidden="true">filadelfia<span class="word__dot">.</span>ai</p>
+    <p class="end__row mono"><span>© <span id="year">2026</span> Filadelfia.ai</span><span>Krynica-Zdrój, Polska</span><span>AI przygotowuje, człowiek zatwierdza</span></p>
   </footer>
 
   <aside class="hud mono">
@@ -130,6 +163,23 @@ const steps = (items) => items.map(([h, p], i) => `          <li data-r>
             <p>${p}</p>
           </li>`).join('\n');
 
+// Miniatury w kafelkach usług: czysty HTML i CSS, bez obrazków.
+const VIS = {
+  kampanie: `<div class="v-ad"><div class="v-ad__f">${mark(34)}</div><span class="mono">9:16 · 1:1 · 16:9</span></div>`,
+  automatyzacje: `<div class="v-flow"><b></b><span><i></i>zapytanie</span><span><i></i>agent</span><span><i></i>CRM</span><span><i></i>zgoda</span></div>`,
+  chatboty: `<div class="v-chat"><i class="v-chat__me"></i><i class="v-chat__bot"></i><i class="v-chat__me v-chat__me--s"></i><span class="mono">→ człowiek</span></div>`,
+  strony: `<div class="v-web"><p><i></i><i></i><i></i></p><div><b></b><u></u><u></u><em></em></div></div>`,
+};
+
+const FAQ = [
+  ['Ile to kosztuje?', 'Zależy od zakresu. Po pierwszej rozmowie dostajesz wycenę z konkretną kwotą, zanim cokolwiek zaczniemy.'],
+  ['Od czego zaczynamy?', 'Od jednego procesu albo jednej kampanii. Najpierw powstaje mała, działająca wersja, żebyś zobaczył efekt, zanim zdecydujesz o reszcie.'],
+  ['Czy muszę znać się na AI?', 'Nie. Opowiadasz, jak wygląda praca w firmie, a my wskazujemy, co da się oddać AI. Na koniec zespół dostaje prostą instrukcję.'],
+  ['Co, jeśli AI się pomyli?', 'Tam, gdzie błąd kosztuje, ostatni krok zatwierdza człowiek: wysyłka do klienta, płatności, zmiany w danych. Resztę monitorujemy i poprawiamy.'],
+  ['Co dzieje się z moimi danymi?', 'Zostają na Twoich kontach i w narzędziach, które sam wybierasz. Przed startem ustalamy, do czego AI ma dostęp, a do czego nie.'],
+  ['Z jakich narzędzi korzystacie?', 'Dobieramy je do zadania. Między innymi modele Claude i GPT do tekstu i agentów oraz Higgsfield do wideo.'],
+];
+
 /* ---------- strona główna ---------- */
 const home = `    <section class="scene scene--hero" id="top" data-scene="Tęczówka">
       <div class="col">
@@ -147,18 +197,23 @@ const home = `    <section class="scene scene--hero" id="top" data-scene="Tęcz�
       <p class="fill">Każda firma ma pracę, której nikt nie chce robić. Przepisywanie, odpisywanie, pilnowanie, raportowanie. Tę pracę oddajemy AI, a ludziom zostawiamy to, do czego są potrzebni.</p>
     </section>
 
-    <section class="scene" id="uslugi" data-scene="Siatka">
-      <div class="col">
+    <section class="wide wide--tiles" id="uslugi" data-scene="Siatka">
+      <div class="head">
         <p class="tag mono" data-r>Co wdrażamy</p>
-        <ul class="index index--links">
-${SERVICES.map((s) => `          <li data-r>
-            <a href="${s.file}" data-hover-form="${s.form}">
-              <h2>${s.name}</h2>
-              <p>${s.blurb}</p>
-            </a>
-          </li>`).join('\n')}
-        </ul>
+        <h2 class="ask" data-r>Cztery obszary. Zaczynamy od jednego.</h2>
       </div>
+      <ul class="tiles">
+${SERVICES.map((sv) => `        <li data-r>
+          <a class="tile" href="${sv.file}">
+            <div class="tile__vis" aria-hidden="true">${VIS[sv.key]}</div>
+            <div class="tile__txt">
+              <h3>${sv.name}</h3>
+              <p>${sv.blurb}</p>
+            </div>
+            <span class="tile__go" aria-hidden="true">→</span>
+          </a>
+        </li>`).join('\n')}
+      </ul>
     </section>
 
 ${flow('Jedno zapytanie. Zero przeklejania.', 'Tak wygląda proces po wdrożeniu: agent czyta wiadomość, uzupełnia CRM, pisze odpowiedź i czeka na Twoje „tak”. Ostatni krok należy do Ciebie.')}
@@ -194,6 +249,19 @@ ${steps([
             <p>Pracę z AI pokazujemy na kanale <a href="https://www.youtube.com/@filadroid" target="_blank" rel="noopener">Filadroid na YouTube</a>.</p>
           </li>
         </ul>
+      </div>
+    </section>
+
+    <section class="wide wide--faq" id="faq">
+      <div class="head">
+        <p class="tag mono" data-r>Pytania</p>
+        <h2 class="ask" data-r>Zanim napiszesz.</h2>
+      </div>
+      <div class="faq" data-r>
+${FAQ.map(([q, a]) => `        <details name="faq">
+          <summary>${q}</summary>
+          <p>${a}</p>
+        </details>`).join('\n')}
       </div>
     </section>
 

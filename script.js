@@ -65,8 +65,23 @@
     write(localStorage, 'fila-theme', name);
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', name === 'noc' ? '#0A0B0D' : '#E8EAED');
+    var tb = $('themeBtn');
+    if (tb) tb.setAttribute('aria-pressed', String(name === 'noc'));
     onTheme();
   }
+  if ($('themeBtn')) {
+    $('themeBtn').setAttribute('aria-pressed', String(root.getAttribute('data-theme') === 'noc'));
+    $('themeBtn').addEventListener('click', function () { setTheme(root.getAttribute('data-theme') === 'noc' ? 'dzien' : 'noc'); });
+  }
+
+  /* ---------- nagłówek: szkło po przewinięciu, chowa się przy przewijaniu w dół ---------- */
+  var bar = $('bar'), barY = window.scrollY;
+  function barState() {
+    var y = window.scrollY, open = menu && menu.classList.contains('open');
+    bar.classList.toggle('is-stuck', y > 24 && !open);
+    if (Math.abs(y - barY) > 6) { bar.classList.toggle('is-hidden', y > barY && y > 520 && !open && !bar.contains(document.activeElement)); barY = y; }
+  }
+  if (bar) { window.addEventListener('scroll', barState, { passive: true }); }
 
   /* ---------- menu (telefon) ---------- */
   var menu = $('menu'), menuBtn = $('menuBtn');
@@ -76,6 +91,7 @@
     menuBtn.setAttribute('aria-expanded', String(open));
     menuBtn.textContent = open ? 'Zamknij' : 'Menu';
     body.style.overflow = open ? 'hidden' : '';
+    if (bar) { bar.classList.remove('is-hidden'); bar.classList.toggle('is-stuck', !open && window.scrollY > 24); }
   }
   if (menu && menuBtn) {
     menuBtn.addEventListener('click', function () { setMenu(!menu.classList.contains('open')); });

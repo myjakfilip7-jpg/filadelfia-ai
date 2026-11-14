@@ -16,6 +16,7 @@ punktów w WebGL. Na stronie głównej przechodzi przy przewijaniu przez pięć 
 - `styles.css` — style i tokeny kolorów
 - `script.js` — pole punktów, odczyty, menu mobilne, wiersz poleceń, formularz
 - `favicon.svg` — znak (tęczówka)
+- `og.png` — obraz do udostępnień (1200 × 630)
 
 ## Zmiana treści
 
@@ -54,5 +55,6 @@ też w podkatalogu.
 ## Przed przejściem na docelową domenę
 
 - Usuń `<meta name="robots" content="noindex, nofollow">` w `build.mjs`.
-- Zweryfikuj treść usług i procesu — to wersja robocza.
+- Zmień `SITE` w `build.mjs` na nowy adres (obraz do udostępnień, dane strukturalne).
+- Zweryfikuj treść usług, procesu i pytań (FAQ) — to wersja robocza.
 - Podmień adres kontaktowy, jeśli ma być inny niż `business@filadroid.ai`.

@@ -8,9 +8,6 @@ w WebGL z pięcioma formami: tęczówka → siatka → przepływ → sfera → p
 główna zmienia je przy przewijaniu; każda podstrona ma jedną, stałą. Punkty
 układają też napisy (strona 404, polecenie `napisz`).
 
-W `script.js` został wyłączony wariant z aluminiowym żyroskopem 3D
-(`USE_OBJECT = false`). Zmiana na `true` przywraca go zamiast punktów.
-
 ## Pliki
 
 - `build.mjs` — **źródło wszystkich stron**: wspólny nagłówek, menu, stopka i treść
@@ -24,15 +21,29 @@ W `script.js` został wyłączony wariant z aluminiowym żyroskopem 3D
 - `panel.html`, `panel.js`, `panel.css`, `theme.js` — panel właściciela; działa tylko z uruchomionym backendem
 - `favicon.svg` — znak (tęczówka)
 - `og.png` — obraz do udostępnień (1200 × 630)
+- `icon-180.png`, `icon-192.png`, `icon-512.png`, `manifest.webmanifest` — ikony na ekran telefonu
+- `sitemap.xml` — mapa strony (generowana przez build z adresu `SITE`)
+- `tools/check.mjs` — kontrola frontendu
 - `media/` — trzy przykładowe kadry reklamowe wygenerowane w Higgsfield (GPT Image 2.6); to przykłady, nie realizacje dla klientów
 
-## Zmiana treści
+## Zmiana treści, stylów i skryptów
 
-Edytuj `build.mjs`, potem:
+Treść jest w `build.mjs`. Po każdej zmianie treści, `styles.css`, `script.js` albo plików panelu
+uruchom build — wpisuje on do stron skrót zawartości plików (`styles.css?v=…`), dzięki czemu
+przeglądarki od razu pobierają nową wersję:
 
 ```bash
 node build.mjs
 ```
+
+## Kontrola przed publikacją
+
+```bash
+node tools/check.mjs
+```
+
+Sprawdza zbudowane strony: odnośniki i kotwice, jeden nagłówek h1, opisy obrazów, nazwy
+przycisków, aktualność builda oraz wagę strony. Testy backendu: `node server/test.mjs`.
 
 ## Podgląd lokalny
 

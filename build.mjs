@@ -1,6 +1,11 @@
 // Generator stron Filadelfia.ai. Bez zależności: `node build.mjs`.
 // Wspólny nagłówek, menu, odczyty i stopka są tutaj — pliki .html to wynik, nie edytuj ich ręcznie.
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+
+// Skrót treści pliku w adresie: po każdej zmianie stylu lub skryptu przeglądarka pobiera nową wersję,
+// bez ręcznego odświeżania. Po edycji styles.css / script.js / panel.* uruchom ponownie `node build.mjs`.
+const v = (file) => `${file}?v=${createHash('sha256').update(readFileSync(new URL(file, import.meta.url))).digest('hex').slice(0, 10)}`;
 
 const MAIL = 'business@filadroid.ai';
 // Adres, pod którym strona jest opublikowana. Zmień przy przejściu na docelową domenę (obraz do udostępnień i dane strukturalne).
@@ -42,11 +47,13 @@ function shell({ file, title, desc, form, formName, lost, current, body, base, t
   <script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'ProfessionalService', name: 'Filadelfia.ai', url: SITE, email: MAIL, description: 'Agencja AI: kampanie reklamowe AI, agenci i automatyzacje, chatboty, strony i sklepy.', address: { '@type': 'PostalAddress', addressLocality: 'Krynica-Zdrój', addressCountry: 'PL' }, sameAs: ['https://www.youtube.com/@filadroid'] })}</script>
   <script>try { if (localStorage.getItem('fila-theme') === 'noc') document.documentElement.setAttribute('data-theme', 'noc'); } catch (e) {}</script>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="preload" href="fonts/mona-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="${v('styles.css')}">
 </head>
 <body${form != null ? ` data-form="${form}"` : ''}${lost ? ' data-lost' : ''}${text ? ` data-text="${text}"` : ''}>
-  ${base ? '' : '<a class="skip" href="#main">Przejdź do treści</a>\n'}
+  ${base ? '' : '<a class="skip" href="#main">Przejdź do treści</a>\n'}  <noscript><p class="noscript">Strona działa bez JavaScriptu, ale bez animacji i dem. Formularz kontaktowy otworzy wtedy Twój program pocztowy.</p></noscript>
   <canvas id="field" aria-hidden="true"></canvas>
 
   <header class="bar" id="bar">
@@ -122,7 +129,7 @@ ${SERVICES.map((sv) => `        <a href="${sv.file}">${sv.short}</a>`).join('\n'
     <form id="cmdForm"><span aria-hidden="true">›</span><input id="cmdIn" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Polecenie" placeholder="pomoc"><button type="button" id="cmdClose" aria-label="Zamknij wiersz poleceń">esc</button></form>
   </div>
 
-  <script src="script.js" defer></script>${scripts.map((src) => `\n  <script src="${src}" defer></script>`).join('')}
+  <script src="${v('script.js')}" defer></script>${scripts.map((src) => `\n  <script src="${v(src)}" defer></script>`).join('')}
 </body>
 </html>
 `;
@@ -156,10 +163,10 @@ const rows = (items) => items.map(([h, p]) => `          <li data-r>
             <p>${p}</p>
           </li>`).join('\n');
 
-const steps = (items) => items.map(([h, p], i) => `          <li data-r>
+const steps = (items) => items.map(([h, p, get], i) => `          <li data-r>
             <span class="steps__n mono">0${i + 1}</span>
             <h2>${h}</h2>
-            <p>${p}</p>
+            <p>${p}</p>${get ? `\n            <p class="steps__get mono"><span>Dostajesz:</span> ${get}</p>` : ''}
           </li>`).join('\n');
 
 // Przykładowe kadry reklamowe wygenerowane w Higgsfield. To przykłady, nie realizacje dla klientów.
@@ -246,10 +253,10 @@ ${flow('Jedno zapytanie. Zero przeklejania.', 'Tak wygląda proces po wdrożeniu
         <p class="tag mono" data-r>Jak pracujemy</p>
         <ol class="steps">
 ${steps([
-  ['Rozmowa', 'Pytamy, jak wygląda Twój dzień pracy, i wskazujemy miejsca, w których AI realnie oszczędzi czas.'],
-  ['Prototyp', 'Budujemy małą, działającą wersję na Twoich danych. Widzisz efekt, zanim zdecydujesz o całości.'],
-  ['Wdrożenie', 'Podłączamy rozwiązanie do Twoich narzędzi, testujemy je i uczymy zespół, jak z niego korzystać.'],
-  ['Opieka', 'Pilnujemy, żeby wszystko działało, i rozbudowujemy system, gdy pojawiają się nowe potrzeby.'],
+  ['Rozmowa', 'Pytamy, jak wygląda Twój dzień pracy, i wskazujemy miejsca, w których AI realnie oszczędzi czas.', 'listę miejsc, od których warto zacząć'],
+  ['Prototyp', 'Budujemy małą, działającą wersję na Twoich danych. Widzisz efekt, zanim zdecydujesz o całości.', 'działającą wersję do sprawdzenia'],
+  ['Wdrożenie', 'Podłączamy rozwiązanie do Twoich narzędzi, testujemy je i uczymy zespół, jak z niego korzystać.', 'system na Twoich kontach i instrukcję'],
+  ['Opieka', 'Pilnujemy, żeby wszystko działało, i rozbudowujemy system, gdy pojawiają się nowe potrzeby.', 'poprawki i rozbudowę na bieżąco'],
 ])}
         </ol>
       </div>
@@ -477,7 +484,7 @@ const kontakt = `    <section class="scene scene--form">
         <h1 class="h1--page" data-r>Opowiedz, co zabiera Ci najwięcej czasu.</h1>
         <p class="lead" data-r>Wybierz temat i napisz kilka zdań. Odpiszemy z propozycją, od czego zacząć.</p>
 
-        <form class="brief" id="brief" data-mail="${MAIL}" data-r>
+        <form class="brief" id="brief" data-mail="${MAIL}" action="mailto:${MAIL}" method="post" enctype="text/plain" data-r>
           <fieldset>
             <legend class="mono">Czego dotyczy</legend>
             <div class="chips">
@@ -592,10 +599,10 @@ const panelPage = `<!doctype html>
   <meta name="theme-color" content="#E8EAED">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preload" href="fonts/mona-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="panel.css">
-  <script src="theme.js"></script>
-  <script src="panel.js" defer></script>
+  <link rel="stylesheet" href="${v('styles.css')}">
+  <link rel="stylesheet" href="${v('panel.css')}">
+  <script src="${v('theme.js')}"></script>
+  <script src="${v('panel.js')}" defer></script>
 </head>
 <body class="app">
   <header class="app__bar">
@@ -638,7 +645,7 @@ const panelPage = `<!doctype html>
 
     <section class="page" id="stats" hidden>
       <div class="page__head">
-        <h1>Statystyki</h1>
+        <h2>Statystyki</h2>
         <div class="seg" id="range" role="group" aria-label="Zakres dni"></div>
       </div>
       <div class="kpis" id="kpis"></div>
@@ -651,7 +658,7 @@ const panelPage = `<!doctype html>
     </section>
 
     <section class="page" id="people" hidden>
-      <div class="page__head"><h1>Użytkownicy</h1></div>
+      <div class="page__head"><h2>Użytkownicy</h2></div>
       <ul class="people" id="peopleList"></ul>
       <form class="addform" id="addUser">
         <label><span class="mono">Login GitHub</span><input type="text" id="newLogin" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="np. jan-kowalski" required></label>
@@ -703,4 +710,9 @@ const pages = [
 
 for (const p of pages) writeFileSync(new URL(p.file, import.meta.url), shell(p));
 writeFileSync(new URL('panel.html', import.meta.url), panelPage);
+
+// mapa strony (bez panelu i 404) i manifest
+const listed = pages.filter((p) => !p.base).map((p) => `  <url><loc>${SITE}${p.file === 'index.html' ? '' : p.file}</loc></url>`).join('\n');
+writeFileSync(new URL('sitemap.xml', import.meta.url), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${listed}\n</urlset>\n`);
+writeFileSync(new URL('manifest.webmanifest', import.meta.url), JSON.stringify({ name: 'Filadelfia.ai', short_name: 'Filadelfia', lang: 'pl', start_url: './', display: 'browser', background_color: '#E8EAED', theme_color: '#E8EAED', icons: [{ src: 'icon-192.png', sizes: '192x192', type: 'image/png' }, { src: 'icon-512.png', sizes: '512x512', type: 'image/png' }] }, null, 2) + '\n');
 console.log('Zbudowano: ' + pages.map((p) => p.file).join(', '));

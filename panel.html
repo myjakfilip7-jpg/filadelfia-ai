@@ -8,10 +8,10 @@
   <meta name="theme-color" content="#E8EAED">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preload" href="fonts/mona-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="panel.css">
-  <script src="theme.js"></script>
-  <script src="panel.js" defer></script>
+  <link rel="stylesheet" href="styles.css?v=0c7f080783">
+  <link rel="stylesheet" href="panel.css?v=c43cf30e9f">
+  <script src="theme.js?v=038c6cb21a"></script>
+  <script src="panel.js?v=ab095ace2b" defer></script>
 </head>
 <body class="app">
   <header class="app__bar">
@@ -54,7 +54,7 @@
 
     <section class="page" id="stats" hidden>
       <div class="page__head">
-        <h1>Statystyki</h1>
+        <h2>Statystyki</h2>
         <div class="seg" id="range" role="group" aria-label="Zakres dni"></div>
       </div>
       <div class="kpis" id="kpis"></div>
@@ -67,7 +67,7 @@
     </section>
 
     <section class="page" id="people" hidden>
-      <div class="page__head"><h1>Użytkownicy</h1></div>
+      <div class="page__head"><h2>Użytkownicy</h2></div>
       <ul class="people" id="peopleList"></ul>
       <form class="addform" id="addUser">
         <label><span class="mono">Login GitHub</span><input type="text" id="newLogin" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="np. jan-kowalski" required></label>

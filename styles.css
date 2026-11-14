@@ -25,7 +25,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 :focus-visible { outline: 2px solid var(--signal); outline-offset: 4px; border-radius: 2px; }
 [hidden] { display: none !important; }
 
-.mono { font-family: var(--mono); font-size: 10.5px; font-weight: 400; letter-spacing: .12em; text-transform: uppercase; font-variant-numeric: tabular-nums; }
+.mono { font-family: var(--mono); font-size: 12px; font-weight: 400; letter-spacing: .09em; text-transform: uppercase; font-variant-numeric: tabular-nums; }
 .skip { position: fixed; left: -9999px; top: 10px; z-index: 30; background: var(--ink); color: var(--bg); padding: 10px 16px; }
 .skip:focus { left: 10px; }
 
@@ -250,7 +250,7 @@ h1 { font-size: clamp(46px, 6.6vw, 112px); font-weight: 300; font-stretch: 125%;
 .chat__me, .chat__bot { padding: 11px 16px; border-radius: 18px; }
 .chat__me { align-self: flex-end; background: var(--ink); color: var(--bg); border-bottom-right-radius: 5px; }
 .chat__bot { align-self: flex-start; border: 1px solid var(--line); border-bottom-left-radius: 5px; }
-.chat p.chat__sys { align-self: center; color: var(--signal); font-size: 10.5px; margin: 8px 0 4px; }
+.chat p.chat__sys { align-self: center; color: var(--signal); font-size: 12px; margin: 8px 0 4px; }
 .chat .more { align-self: flex-start; margin-top: 6px; }
 .js [data-step] { opacity: 0; transform: translateY(8px); transition: opacity .5s, transform .5s cubic-bezier(.2, .7, .2, 1); }
 .js [data-step].in { opacity: 1; transform: none; }
@@ -449,3 +449,26 @@ body::after { content: ''; position: fixed; inset: 0; z-index: 40; pointer-event
   .shots li { scroll-snap-align: center; }
   .shots li:nth-child(2) { margin-top: 0; }
 }
+
+/* ===== wersja 7: kroki w poziomie, polityka prywatności ===== */
+.wide--steps { padding-top: clamp(90px, 10vw, 150px); padding-bottom: clamp(90px, 10vw, 150px); }
+.wide--steps .tag { margin-bottom: clamp(36px, 4vw, 60px); }
+.steps--row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(18px, 2.4vw, 40px); }
+.steps--row li, .steps--row li:last-child { display: block; padding: 22px 0 0; border-top: 1px solid var(--ink); border-bottom: 0; }
+.steps--row .steps__n { display: block; padding: 0 0 clamp(40px, 6vw, 96px); color: var(--signal); }
+.steps--row h2 { font-size: clamp(24px, 2.4vw, 36px); }
+.steps--row p { margin-top: 12px; }
+.wide--note .tag { margin-bottom: clamp(30px, 3.4vw, 52px); }
+.legal li + li { margin-top: 44px; }
+.legal h2 { font-size: clamp(22px, 2vw, 30px); font-weight: 350; font-stretch: 122%; letter-spacing: -.026em; line-height: 1.15; }
+.legal p { font-size: 16px; color: var(--slate); margin-top: 12px; max-width: 34em; }
+.legal mark { background: color-mix(in srgb, var(--signal) 14%, transparent); color: var(--ink); padding: 1px 5px; border-radius: 3px; }
+@media (max-width: 860px) {
+  .steps--row { grid-template-columns: 1fr; gap: 0; }
+  .steps--row li, .steps--row li:last-child { display: grid; grid-template-columns: 56px 1fr; padding: 24px 0; border-top: 1px solid var(--line); }
+  .steps--row li:last-child { border-bottom: 1px solid var(--line); }
+  .steps--row .steps__n { padding: 9px 0 0; color: var(--slate); }
+  .steps--row p { grid-column: 2; margin-top: 8px; }
+}
+.legal a { color: var(--ink); border-bottom: 1px solid var(--ink); transition: color .2s, border-color .2s; }
+.legal a:hover { color: var(--signal); border-color: var(--signal); }

@@ -82,19 +82,19 @@
       <ul class="shots">
         <li data-r>
           <figure>
-            <div class="shot"><img src="media/serum.jpg" alt="Szklana buteleczka serum z aluminiową nakrętką na mokrym kamieniu, niebieskie światło z boku" width="896" height="1120" loading="lazy" decoding="async"></div>
+            <div class="shot"><img src="media/serum.jpg" srcset="media/serum-560.jpg 560w, media/serum.jpg 896w" sizes="(max-width: 860px) 76vw, 30vw" alt="Szklana buteleczka serum z aluminiową nakrętką na mokrym kamieniu, niebieskie światło z boku" width="896" height="1120" loading="lazy" decoding="async"></div>
             <figcaption class="mono"><span>Kosmetyki</span><span>AI · Higgsfield</span></figcaption>
           </figure>
         </li>
         <li data-r>
           <figure>
-            <div class="shot"><img src="media/but.jpg" alt="Jasny but do biegania uchwycony w powietrzu nad ciemną posadzką, za nim niebieska smuga światła" width="896" height="1120" loading="lazy" decoding="async"></div>
+            <div class="shot"><img src="media/but.jpg" srcset="media/but-560.jpg 560w, media/but.jpg 896w" sizes="(max-width: 860px) 76vw, 30vw" alt="Jasny but do biegania uchwycony w powietrzu nad ciemną posadzką, za nim niebieska smuga światła" width="896" height="1120" loading="lazy" decoding="async"></div>
             <figcaption class="mono"><span>Obuwie</span><span>AI · Higgsfield</span></figcaption>
           </figure>
         </li>
         <li data-r>
           <figure>
-            <div class="shot"><img src="media/kawa.jpg" alt="Grafitowa filiżanka czarnej kawy z unoszącą się parą na szczotkowanym aluminium" width="896" height="1120" loading="lazy" decoding="async"></div>
+            <div class="shot"><img src="media/kawa.jpg" srcset="media/kawa-560.jpg 560w, media/kawa.jpg 896w" sizes="(max-width: 860px) 76vw, 30vw" alt="Grafitowa filiżanka czarnej kawy z unoszącą się parą na szczotkowanym aluminium" width="896" height="1120" loading="lazy" decoding="async"></div>
             <figcaption class="mono"><span>Kawa</span><span>AI · Higgsfield</span></figcaption>
           </figure>
         </li>
@@ -108,7 +108,7 @@
       <div class="col">
         <p class="tag mono" data-r>Jeden materiał, trzy formaty</p>
         <div class="formats" data-formats data-r>
-          <div class="formats__stage"><div class="formats__frame" data-f="916"><img src="media/but.jpg" alt="Ten sam kadr z butem przycięty do wybranego formatu" loading="lazy" decoding="async"></div></div>
+          <div class="formats__stage"><div class="formats__frame" data-f="916"><img src="media/but-560.jpg" alt="Ten sam kadr z butem przycięty do wybranego formatu" loading="lazy" decoding="async"></div></div>
           <p class="chips">
             <button type="button" data-f="916">9:16 · Reels, TikTok</button>
             <button type="button" data-f="11">1:1 · Feed</button>
@@ -142,10 +142,9 @@
       </div>
     </section>
 
-    <section class="block">
-      <div class="col">
-        <p class="tag mono" data-r>Jak to przebiega</p>
-        <ol class="steps">
+    <section class="wide wide--steps">
+      <p class="tag mono" data-r>Jak to przebiega</p>
+      <ol class="steps steps--row">
           <li data-r>
             <span class="steps__n mono">01</span>
             <h2>Brief</h2>
@@ -166,16 +165,15 @@
             <h2>Formaty</h2>
             <p>Dostajesz pliki gotowe do wgrania w panel reklamowy.</p>
           </li>
-        </ol>
-      </div>
+      </ol>
     </section>
 
-    <section class="block">
-      <div class="col">
-        <p class="tag mono" data-r>Uczciwie</p>
-        <p class="note" data-r>AI nie zastąpi wszystkiego. Jeśli w reklamie ma wystąpić konkretna osoba albo dokładny detal produktu, powiemy wprost, co da się wygenerować, a co lepiej sfilmować.</p>
-      </div>
+    <section class="wide wide--note">
+      <p class="tag mono" data-r>Uczciwie</p>
+      <p class="fill">AI nie zastąpi wszystkiego. Jeśli w reklamie ma wystąpić konkretna osoba albo dokładny detal produktu, powiemy wprost, co da się wygenerować, a co lepiej sfilmować.</p>
     </section>
+
+    <div class="gap"></div>
 
     <section class="block block--end">
       <div class="col">
@@ -208,6 +206,7 @@
         <a href="./#zasady">Zasady</a>
         <a href="./#faq">Pytania</a>
         <a href="marka.html">Marka</a>
+        <a href="prywatnosc.html">Prywatność</a>
       </nav>
       <nav aria-label="Kontakt">
         <p class="mono">Kontakt</p>

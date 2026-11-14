@@ -233,7 +233,7 @@
     });
     return { el: el, spans: spans };
   });
-  var stepLists = Array.prototype.slice.call(document.querySelectorAll('.steps'));
+  var stepLists = Array.prototype.slice.call(document.querySelectorAll('.steps:not(.steps--row)'));
   stepLists.forEach(function (l) { l.classList.add('spy'); });
   var spyQueued = false;
   function spy() {
@@ -713,9 +713,23 @@
 
   function wgt(m, i) { return Math.max(0, 1 - Math.abs(m - i)); }
 
+  // pole punktów widać tylko przez przezroczyste sekcje; gdy żadnej nie ma na ekranie, nie rysujemy (bateria)
+  var shown = true;
+  if ('IntersectionObserver' in window) {
+    var clear = Array.prototype.slice.call(document.querySelectorAll('.scene, .block')), onNow = 0;
+    if (clear.length) {
+      var seeIO = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) { var was = !!e.target._on; e.target._on = e.isIntersecting; onNow += (e.isIntersecting ? 1 : 0) - (was ? 1 : 0); });
+        shown = onNow > 0; needs = true;
+      });
+      clear.forEach(function (el) { seeIO.observe(el); });
+    }
+  }
+
   function frame(now) {
     requestAnimationFrame(frame);
     if (!visible) return;
+    if (!shown && textTarget === 0) { last = now; fpsAt = now; frames = 0; return; }
     var dt = Math.min(0.05, (now - last) / 1000); last = now;
     var t = reduced ? 0 : (now - t0) / 1000;
 

@@ -100,6 +100,7 @@ ${SERVICES.map((sv) => `        <a href="${sv.file}">${sv.short}</a>`).join('\n'
         <a href="./#zasady">Zasady</a>
         <a href="./#faq">Pytania</a>
         <a href="marka.html">Marka</a>
+        <a href="prywatnosc.html">Prywatność</a>
       </nav>
       <nav aria-label="Kontakt">
         <p class="mono">Kontakt</p>
@@ -177,7 +178,7 @@ const shots = (h, link) => `    <section class="wide wide--shots">
       <ul class="shots">
 ${SHOTS.map(([f, cap, alt]) => `        <li data-r>
           <figure>
-            <div class="shot"><img src="media/${f}.jpg" alt="${alt}" width="896" height="1120" loading="lazy" decoding="async"></div>
+            <div class="shot"><img src="media/${f}.jpg" srcset="media/${f}-560.jpg 560w, media/${f}.jpg 896w" sizes="(max-width: 860px) 76vw, 30vw" alt="${alt}" width="896" height="1120" loading="lazy" decoding="async"></div>
             <figcaption class="mono"><span>${cap}</span><span>AI · Higgsfield</span></figcaption>
           </figure>
         </li>`).join('\n')}
@@ -187,7 +188,7 @@ ${SHOTS.map(([f, cap, alt]) => `        <li data-r>
 
 // Miniatury w kafelkach usług: HTML i CSS; kafelek kampanii pokazuje prawdziwy kadr.
 const VIS = {
-  kampanie: `<div class="v-ad"><div class="v-ad__f"><img src="media/but.jpg" alt="" loading="lazy" decoding="async"></div><span class="mono">9:16 · 1:1 · 16:9</span></div>`,
+  kampanie: `<div class="v-ad"><div class="v-ad__f"><img src="media/but-560.jpg" alt="" loading="lazy" decoding="async"></div><span class="mono">9:16 · 1:1 · 16:9</span></div>`,
   automatyzacje: `<div class="v-flow"><b></b><span><i></i>zapytanie</span><span><i></i>agent</span><span><i></i>CRM</span><span><i></i>zgoda</span></div>`,
   chatboty: `<div class="v-chat"><i class="v-chat__me"></i><i class="v-chat__bot"></i><i class="v-chat__me v-chat__me--s"></i><span class="mono">→ człowiek</span></div>`,
   strony: `<div class="v-web"><p><i></i><i></i><i></i></p><div><b></b><u></u><u></u><em></em></div></div>`,
@@ -322,21 +323,19 @@ ${rows(what)}
       </div>
     </section>
 
-    <section class="block">
-      <div class="col">
-        <p class="tag mono" data-r>Jak to przebiega</p>
-        <ol class="steps">
+    <section class="wide wide--steps">
+      <p class="tag mono" data-r>Jak to przebiega</p>
+      <ol class="steps steps--row">
 ${steps(how)}
-        </ol>
-      </div>
+      </ol>
     </section>
 
-    <section class="block">
-      <div class="col">
-        <p class="tag mono" data-r>${noteTag}</p>
-        <p class="note" data-r>${note}</p>
-      </div>
+    <section class="wide wide--note">
+      <p class="tag mono" data-r>${noteTag}</p>
+      <p class="fill">${note}</p>
     </section>
+
+    <div class="gap"></div>
 
     <section class="block block--end">
       <div class="col">
@@ -374,7 +373,7 @@ const kampanie = service(0, {
       <div class="col">
         <p class="tag mono" data-r>Jeden materiał, trzy formaty</p>
         <div class="formats" data-formats data-r>
-          <div class="formats__stage"><div class="formats__frame" data-f="916"><img src="media/but.jpg" alt="Ten sam kadr z butem przycięty do wybranego formatu" loading="lazy" decoding="async"></div></div>
+          <div class="formats__stage"><div class="formats__frame" data-f="916"><img src="media/but-560.jpg" alt="Ten sam kadr z butem przycięty do wybranego formatu" loading="lazy" decoding="async"></div></div>
           <p class="chips">
             <button type="button" data-f="916">9:16 · Reels, TikTok</button>
             <button type="button" data-f="11">1:1 · Feed</button>
@@ -557,6 +556,29 @@ ${sw('Sygnał', '#2B2BFF', 'Jeden punkt na ekran. Nigdy tło, nigdy cały nagł�
       </div>
     </section>`;
 
+/* ---------- prywatność (szkic: dane administratora do uzupełnienia, treść do sprawdzenia przez prawnika) ---------- */
+const TODO = (t) => `<mark>[do uzupełnienia: ${t}]</mark>`;
+const legal = `    <section class="scene scene--hero scene--page">
+      <div class="col">
+        <p class="tag mono" data-r>Prywatność</p>
+        <h1 class="h1--page" data-r>Co ta strona wie o Tobie.</h1>
+        <p class="lead" data-r>Krótko: prawie nic. Nie używamy plików cookie ani narzędzi śledzących. Poniżej wszystko, co się dzieje, gdy tu jesteś.</p>
+      </div>
+    </section>
+
+    <section class="block block--end">
+      <div class="col">
+        <ul class="legal">
+          <li data-r><h2>Kto odpowiada za dane</h2><p>${TODO('nazwa firmy, adres, NIP')}. Kontakt: <a href="mailto:${MAIL}">${MAIL}</a>.</p></li>
+          <li data-r><h2>Pliki cookie i śledzenie</h2><p>Strona nie zapisuje plików cookie i nie ma analityki ani pikseli reklamowych.</p></li>
+          <li data-r><h2>Co zostaje w Twojej przeglądarce</h2><p>Wybór trybu dziennego lub nocnego oraz informacja, że animacja wejścia już się odtworzyła. Te dane nie opuszczają Twojego urządzenia.</p></li>
+          <li data-r><h2>Formularz kontaktowy</h2><p>Formularz niczego nie wysyła na nasz serwer. Składa wiadomość i otwiera Twój program pocztowy; to, co wyślesz, trafia do nas jak zwykły e-mail. Używamy tych danych tylko po to, żeby odpowiedzieć. ${TODO('jak długo przechowujemy korespondencję')}</p></li>
+          <li data-r><h2>Usługi zewnętrzne</h2><p>Kroje pisma ładują się z Google Fonts, a strona jest hostowana na GitHub Pages. Obie usługi widzą Twój adres IP, tak jak każdy serwer, z którym łączy się przeglądarka.</p></li>
+          <li data-r><h2>Twoje prawa</h2><p>Możesz poprosić o wgląd w swoje dane, ich poprawienie lub usunięcie, pisząc na adres powyżej. Masz też prawo złożyć skargę do Prezesa Urzędu Ochrony Danych Osobowych.</p></li>
+        </ul>
+      </div>
+    </section>`;
+
 /* ---------- 404 ---------- */
 const lostPage = `    <section class="scene scene--hero">
       <div class="col">
@@ -577,6 +599,7 @@ const pages = [
   { file: 'chatboty.html', title: 'Chatboty AI — Filadelfia.ai', desc: 'Chatbot, który odpowiada na podstawie Twoich materiałów i przekazuje trudne sprawy człowiekowi.', form: 3, formName: 'Sfera', current: 'uslugi', body: chatboty },
   { file: 'strony.html', title: 'Strony, aplikacje, sklepy — Filadelfia.ai', desc: 'Strony firmowe, sklepy internetowe i narzędzia wewnętrzne, którymi zarządzasz sam.', form: 1, formName: 'Siatka', current: 'uslugi', body: strony },
   { file: 'kontakt.html', title: 'Kontakt — Filadelfia.ai', desc: 'Opowiedz, co zabiera Ci najwięcej czasu. Odpiszemy z propozycją, od czego zacząć.', form: 4, formName: 'Punkt', current: 'kontakt', body: kontakt },
+  { file: 'prywatnosc.html', title: 'Prywatność — Filadelfia.ai', desc: 'Jakie dane zbiera strona Filadelfia.ai: bez plików cookie i bez śledzenia.', form: 3, formName: 'Sfera', body: legal },
   { file: 'marka.html', title: 'Marka — Filadelfia.ai', desc: 'Znak, kolory i pismo Filadelfia.ai.', form: 0, formName: 'Tęczówka', body: marka },
   { file: '404.html', title: 'Nie ma takiej strony — Filadelfia.ai', desc: 'Pod tym adresem nic nie ma.', form: 4, formName: 'Zgubiony', lost: true, base: true, text: '404', body: lostPage },
 ];

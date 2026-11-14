@@ -16,7 +16,7 @@ W `script.js` został wyłączony wariant z aluminiowym żyroskopem 3D
 - `build.mjs` — **źródło wszystkich stron**: wspólny nagłówek, menu, stopka i treść
 - `*.html` — wynik `node build.mjs`; nie edytuj ręcznie
   - `index.html`, `kampanie.html`, `automatyzacje.html`, `chatboty.html`, `strony.html`,
-    `kontakt.html`, `marka.html`, `404.html`
+    `kontakt.html`, `prywatnosc.html`, `marka.html`, `404.html`
 - `styles.css` — style i tokeny kolorów
 - `script.js` — pole punktów, odczyty, menu, wiersz poleceń, dema, formularz
 - `favicon.svg` — znak (tęczówka)
@@ -62,4 +62,5 @@ też w podkatalogu.
 - Usuń `<meta name="robots" content="noindex, nofollow">` w `build.mjs`.
 - Zmień `SITE` w `build.mjs` na nowy adres (obraz do udostępnień, dane strukturalne).
 - Zweryfikuj treść usług, procesu i pytań (FAQ) — to wersja robocza.
+- Uzupełnij `prywatnosc.html` (pola „do uzupełnienia” w `build.mjs`) i daj treść do sprawdzenia prawnikowi.
 - Podmień adres kontaktowy, jeśli ma być inny niż `business@filadroid.ai`.

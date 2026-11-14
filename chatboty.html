@@ -60,6 +60,20 @@
 
     <section class="block">
       <div class="col">
+        <p class="tag mono" data-r>Przykładowa rozmowa</p>
+        <div class="chat" data-seq data-r>
+          <p class="chat__me" data-step>Czy w sobotę jest wolny termin?</p>
+          <p class="chat__bot" data-step>Jestem botem gabinetu. W sobotę są wolne godziny 10:00 i 12:30. Zarezerwować którąś?</p>
+          <p class="chat__me" data-step>Najpierw chcę złożyć reklamację.</p>
+          <p class="chat__bot" data-step>To sprawa dla człowieka. Przekazuję rozmowę do recepcji razem z historią. Odpiszą w tym oknie.</p>
+          <p class="chat__sys mono" data-step>Rozmowa przekazana · recepcja</p>
+          <button class="more" type="button" data-replay>Puść jeszcze raz</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="col">
         <p class="tag mono" data-r>Co potrafi</p>
         <ul class="index">
           <li data-r>
@@ -124,15 +138,21 @@
           <a class="pill" href="kontakt.html?temat=chatboty">Napisz w tej sprawie</a>
           <a class="more" href="strony.html">Dalej: Strony i sklepy <span aria-hidden="true">→</span></a>
         </p>
-        <footer class="foot mono">
-          <span>© <span id="year">2026</span> Filadelfia.ai</span>
-          <a href="marka.html">Marka</a>
-          <a href="https://filadelfia.io" target="_blank" rel="noopener">Filadelfia.io</a>
-          <a href="https://www.youtube.com/@filadroid" target="_blank" rel="noopener">YouTube</a>
-        </footer>
+        
       </div>
     </section>
   </main>
+
+  <footer class="end">
+    <p class="end__row mono">
+      <span>© <span id="year">2026</span> Filadelfia.ai</span>
+      <a href="marka.html">Marka</a>
+      <a href="kontakt.html">Kontakt</a>
+      <a href="https://filadelfia.io" target="_blank" rel="noopener">Filadelfia.io</a>
+      <a href="https://www.youtube.com/@filadroid" target="_blank" rel="noopener">YouTube</a>
+    </p>
+    <p class="mega" aria-hidden="true">filadelfia<span class="word__dot">.</span>ai</p>
+  </footer>
 
   <aside class="hud mono">
     <button class="hud__form" type="button" id="hudBtn" aria-label="Otwórz wiersz poleceń"><span class="hud__dot"></span><span id="hudIndex">4/5</span> <span id="hudName">Sfera</span></button>

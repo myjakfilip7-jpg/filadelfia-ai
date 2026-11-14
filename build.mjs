@@ -8,13 +8,13 @@ const mark = (size = 22) => `<svg class="mark" width="${size}" height="${size}" 
 const word = `<span class="word">filadelfia<span class="word__dot">.</span>ai</span>`;
 
 const SERVICES = [
-  { file: 'kampanie.html', key: 'kampanie', name: 'Kampanie reklamowe AI', short: 'Kampanie AI', blurb: 'Spoty wideo, zdjęcia produktowe i grafiki do reklam, generowane w AI. Bez planu zdjęciowego.' },
-  { file: 'automatyzacje.html', key: 'automatyzacje', name: 'Agenci i automatyzacje', short: 'Agenci i automatyzacje', blurb: 'Zapytania, oferty i raporty obsługiwane przez agentów AI połączonych z Twoimi narzędziami.' },
-  { file: 'chatboty.html', key: 'chatboty', name: 'Chatboty AI', short: 'Chatboty', blurb: 'Bot, który odpowiada na podstawie Twoich materiałów, a trudne sprawy przekazuje człowiekowi.' },
-  { file: 'strony.html', key: 'strony', name: 'Strony, aplikacje, sklepy', short: 'Strony i sklepy', blurb: 'Strony firmowe, sklepy i narzędzia wewnętrzne z panelem, w którym sam zmieniasz treści.' },
+  { file: 'kampanie.html', form: 0, key: 'kampanie', name: 'Kampanie reklamowe AI', short: 'Kampanie AI', blurb: 'Spoty wideo, zdjęcia produktowe i grafiki do reklam, generowane w AI. Bez planu zdjęciowego.' },
+  { file: 'automatyzacje.html', form: 2, key: 'automatyzacje', name: 'Agenci i automatyzacje', short: 'Agenci i automatyzacje', blurb: 'Zapytania, oferty i raporty obsługiwane przez agentów AI połączonych z Twoimi narzędziami.' },
+  { file: 'chatboty.html', form: 3, key: 'chatboty', name: 'Chatboty AI', short: 'Chatboty', blurb: 'Bot, który odpowiada na podstawie Twoich materiałów, a trudne sprawy przekazuje człowiekowi.' },
+  { file: 'strony.html', form: 1, key: 'strony', name: 'Strony, aplikacje, sklepy', short: 'Strony i sklepy', blurb: 'Strony firmowe, sklepy i narzędzia wewnętrzne z panelem, w którym sam zmieniasz treści.' },
 ];
 
-function shell({ file, title, desc, form, formName, lost, current, body, base }) {
+function shell({ file, title, desc, form, formName, lost, current, body, base, text }) {
   const cur = (k) => (current === k ? ' aria-current="page"' : '');
   return `<!doctype html>
 <html lang="pl">
@@ -39,7 +39,7 @@ function shell({ file, title, desc, form, formName, lost, current, body, base })
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mona+Sans:wdth,wght@75..125,200..900&family=Martian+Mono:wght@300..500&display=swap">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body${form != null ? ` data-form="${form}"` : ''}${lost ? ' data-lost' : ''}>
+<body${form != null ? ` data-form="${form}"` : ''}${lost ? ' data-lost' : ''}${text ? ` data-text="${text}"` : ''}>
   ${base ? '' : '<a class="skip" href="#main">Przejdź do treści</a>\n'}
   <canvas id="field" aria-hidden="true"></canvas>
 
@@ -69,6 +69,17 @@ ${SERVICES.map((s) => `    <a class="menu__big" href="${s.file}">${s.short}</a>`
 ${body}
   </main>
 
+  <footer class="end">
+    <p class="end__row mono">
+      <span>© <span id="year">2026</span> Filadelfia.ai</span>
+      <a href="marka.html">Marka</a>
+      <a href="kontakt.html">Kontakt</a>
+      <a href="https://filadelfia.io" target="_blank" rel="noopener">Filadelfia.io</a>
+      <a href="https://www.youtube.com/@filadroid" target="_blank" rel="noopener">YouTube</a>
+    </p>
+    <p class="mega" aria-hidden="true">filadelfia<span class="word__dot">.</span>ai</p>
+  </footer>
+
   <aside class="hud mono">
     <button class="hud__form" type="button" id="hudBtn" aria-label="Otwórz wiersz poleceń"><span class="hud__dot"></span><span id="hudIndex">${lost ? '0/5' : (form != null ? form + 1 : 1) + '/5'}</span> <span id="hudName">${formName}</span></button>
     <p class="hud__data" aria-hidden="true">49.4217° N 20.9594° E<span id="hudStats"></span> · <span class="hud__key">/</span> polecenia</p>
@@ -85,12 +96,28 @@ ${body}
 `;
 }
 
-const foot = `<footer class="foot mono">
-          <span>© <span id="year">2026</span> Filadelfia.ai</span>
-          <a href="marka.html">Marka</a>
-          <a href="https://filadelfia.io" target="_blank" rel="noopener">Filadelfia.io</a>
-          <a href="https://www.youtube.com/@filadroid" target="_blank" rel="noopener">YouTube</a>
-        </footer>`;
+const foot = '';
+
+// Symulacja jednego procesu. Zatrzymuje się na zatwierdzeniu — klika je odwiedzający.
+const flow = (h, p) => `    <section class="dark" data-flow>
+      <div class="dark__in">
+        <div>
+          <p class="tag mono" data-r>Od środka · symulacja</p>
+          <h2 class="ask" data-r>${h}</h2>
+          <p class="lead" data-r>${p}</p>
+        </div>
+        <div class="flow" data-r>
+          <p class="flow__bar" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></p>
+          <p class="flow__now mono" aria-live="polite">1/5 Zapytanie</p>
+          <div class="flow__log" aria-hidden="true"></div>
+          <p class="flow__act">
+            <button class="pill pill--inv flow__ok" type="button" hidden>Zatwierdź i wyślij</button>
+            <button class="more flow__again" type="button" hidden>Puść jeszcze raz</button>
+          </p>
+        </div>
+      </div>
+    </section>`;
+
 
 const rows = (items) => items.map(([h, p]) => `          <li data-r>
             <h2>${h}</h2>
@@ -116,12 +143,16 @@ const home = `    <section class="scene scene--hero" id="top" data-scene="Tęcz�
       </div>
     </section>
 
+    <section class="wide">
+      <p class="fill">Każda firma ma pracę, której nikt nie chce robić. Przepisywanie, odpisywanie, pilnowanie, raportowanie. Tę pracę oddajemy AI, a ludziom zostawiamy to, do czego są potrzebni.</p>
+    </section>
+
     <section class="scene" id="uslugi" data-scene="Siatka">
       <div class="col">
         <p class="tag mono" data-r>Co wdrażamy</p>
         <ul class="index index--links">
 ${SERVICES.map((s) => `          <li data-r>
-            <a href="${s.file}">
+            <a href="${s.file}" data-hover-form="${s.form}">
               <h2>${s.name}</h2>
               <p>${s.blurb}</p>
             </a>
@@ -129,6 +160,8 @@ ${SERVICES.map((s) => `          <li data-r>
         </ul>
       </div>
     </section>
+
+${flow('Jedno zapytanie. Zero przeklejania.', 'Tak wygląda proces po wdrożeniu: agent czyta wiadomość, uzupełnia CRM, pisze odpowiedź i czeka na Twoje „tak”. Ostatni krok należy do Ciebie.')}
 
     <section class="scene" id="proces" data-scene="Przepływ">
       <div class="col">
@@ -178,7 +211,7 @@ ${steps([
     </section>`;
 
 /* ---------- podstrony usług ---------- */
-function service(i, { h1, lead, whatTag, what, how, noteTag, note }) {
+function service(i, { h1, lead, whatTag, what, how, noteTag, note, demo = '' }) {
   const s = SERVICES[i], next = SERVICES[(i + 1) % SERVICES.length];
   return `    <section class="scene scene--hero scene--page">
       <div class="col">
@@ -187,7 +220,7 @@ function service(i, { h1, lead, whatTag, what, how, noteTag, note }) {
         <p class="lead" data-r>${lead}</p>
       </div>
     </section>
-
+${demo}
     <section class="block">
       <div class="col">
         <p class="tag mono" data-r>${whatTag}</p>
@@ -241,6 +274,21 @@ const kampanie = service(0, {
     ['Produkcja', 'Generujemy ujęcia, montujemy, dodajemy dźwięk i napisy.'],
     ['Formaty', 'Dostajesz pliki gotowe do wgrania w panel reklamowy.'],
   ],
+  demo: `
+    <section class="block">
+      <div class="col">
+        <p class="tag mono" data-r>Jeden materiał, trzy formaty</p>
+        <div class="formats" data-formats data-r>
+          <div class="formats__stage"><div class="formats__frame" data-f="916">${mark(44)}<span class="mono">Twój produkt</span></div></div>
+          <p class="chips">
+            <button type="button" data-f="916">9:16 · Reels, TikTok</button>
+            <button type="button" data-f="11">1:1 · Feed</button>
+            <button type="button" data-f="169">16:9 · YouTube</button>
+          </p>
+        </div>
+      </div>
+    </section>
+`,
   noteTag: 'Uczciwie',
   note: 'AI nie zastąpi wszystkiego. Jeśli w reklamie ma wystąpić konkretna osoba albo dokładny detal produktu, powiemy wprost, co da się wygenerować, a co lepiej sfilmować.',
 });
@@ -261,6 +309,7 @@ const automatyzacje = service(1, {
     ['Wdrożenie', 'Podłączamy narzędzia, testujemy i zostawiamy instrukcję dla zespołu.'],
     ['Opieka', 'Monitorujemy działanie i poprawiamy, gdy coś się zmienia.'],
   ],
+  demo: '\n' + flow('Zobacz jeden proces od środka.', 'Agent czyta wiadomość, uzupełnia CRM, pisze odpowiedź i czeka na Twoje „tak”. Ostatni krok należy do Ciebie.') + '\n\n    <div class="gap"></div>\n',
   noteTag: 'Granica',
   note: 'Agent nie działa bez nadzoru tam, gdzie błąd kosztuje. Wysyłka do klienta, płatności i zmiany w danych przechodzą przez zatwierdzenie człowieka.',
 });
@@ -281,6 +330,21 @@ const chatboty = service(2, {
     ['Uruchomienie', 'Osadzamy bota na stronie lub w komunikatorze i podłączamy powiadomienia.'],
     ['Poprawki', 'Po pierwszych tygodniach przeglądamy rozmowy i uzupełniamy wiedzę bota.'],
   ],
+  demo: `
+    <section class="block">
+      <div class="col">
+        <p class="tag mono" data-r>Przykładowa rozmowa</p>
+        <div class="chat" data-seq data-r>
+          <p class="chat__me" data-step>Czy w sobotę jest wolny termin?</p>
+          <p class="chat__bot" data-step>Jestem botem gabinetu. W sobotę są wolne godziny 10:00 i 12:30. Zarezerwować którąś?</p>
+          <p class="chat__me" data-step>Najpierw chcę złożyć reklamację.</p>
+          <p class="chat__bot" data-step>To sprawa dla człowieka. Przekazuję rozmowę do recepcji razem z historią. Odpiszą w tym oknie.</p>
+          <p class="chat__sys mono" data-step>Rozmowa przekazana · recepcja</p>
+          <button class="more" type="button" data-replay>Puść jeszcze raz</button>
+        </div>
+      </div>
+    </section>
+`,
   noteTag: 'Zasada',
   note: 'Bot przedstawia się jako bot. Klient zawsze wie, że rozmawia z AI, i zawsze może poprosić o człowieka.',
 });
@@ -301,6 +365,15 @@ const strony = service(3, {
     ['Budowa', 'Kodujemy, podłączamy płatności i formularze, testujemy na telefonach.'],
     ['Przekazanie', 'Domena, hosting i kod są na Twoich kontach. Pokazujemy, jak zmieniać treści.'],
   ],
+  demo: `
+    <section class="block">
+      <div class="col">
+        <p class="tag mono" data-r>Spróbuj</p>
+        <h2 class="edit" contenteditable="plaintext-only" spellcheck="false" data-r>Kliknij i zmień ten nagłówek.</h2>
+        <p class="lead" data-r>Tak działa panel: klikasz w tekst i piszesz. Tutaj zmiana zostaje tylko w Twojej przeglądarce.</p>
+      </div>
+    </section>
+`,
   noteTag: 'Zasada',
   note: 'Sprzedajemy kontrolę, nie zależność. Strona, domena i dane należą do Ciebie od pierwszego dnia.',
 });
@@ -410,7 +483,7 @@ const pages = [
   { file: 'strony.html', title: 'Strony, aplikacje, sklepy — Filadelfia.ai', desc: 'Strony firmowe, sklepy internetowe i narzędzia wewnętrzne, którymi zarządzasz sam.', form: 1, formName: 'Siatka', current: 'uslugi', body: strony },
   { file: 'kontakt.html', title: 'Kontakt — Filadelfia.ai', desc: 'Opowiedz, co zabiera Ci najwięcej czasu. Odpiszemy z propozycją, od czego zacząć.', form: 4, formName: 'Punkt', current: 'kontakt', body: kontakt },
   { file: 'marka.html', title: 'Marka — Filadelfia.ai', desc: 'Znak, kolory i pismo Filadelfia.ai.', form: 0, formName: 'Tęczówka', body: marka },
-  { file: '404.html', title: 'Nie ma takiej strony — Filadelfia.ai', desc: 'Pod tym adresem nic nie ma.', form: 4, formName: 'Rozproszenie', lost: true, base: true, body: lostPage },
+  { file: '404.html', title: 'Nie ma takiej strony — Filadelfia.ai', desc: 'Pod tym adresem nic nie ma.', form: 4, formName: 'Zgubiony', lost: true, base: true, text: '404', body: lostPage },
 ];
 
 for (const p of pages) writeFileSync(new URL(p.file, import.meta.url), shell(p));

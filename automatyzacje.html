@@ -58,6 +58,27 @@
       </div>
     </section>
 
+    <section class="dark" data-flow>
+      <div class="dark__in">
+        <div>
+          <p class="tag mono" data-r>Od środka · symulacja</p>
+          <h2 class="ask" data-r>Zobacz jeden proces od środka.</h2>
+          <p class="lead" data-r>Agent czyta wiadomość, uzupełnia CRM, pisze odpowiedź i czeka na Twoje „tak”. Ostatni krok należy do Ciebie.</p>
+        </div>
+        <div class="flow" data-r>
+          <p class="flow__bar" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></p>
+          <p class="flow__now mono" aria-live="polite">1/5 Zapytanie</p>
+          <div class="flow__log" aria-hidden="true"></div>
+          <p class="flow__act">
+            <button class="pill pill--inv flow__ok" type="button" hidden>Zatwierdź i wyślij</button>
+            <button class="more flow__again" type="button" hidden>Puść jeszcze raz</button>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <div class="gap"></div>
+
     <section class="block">
       <div class="col">
         <p class="tag mono" data-r>Co wdrażamy</p>
@@ -124,15 +145,21 @@
           <a class="pill" href="kontakt.html?temat=automatyzacje">Napisz w tej sprawie</a>
           <a class="more" href="chatboty.html">Dalej: Chatboty <span aria-hidden="true">→</span></a>
         </p>
-        <footer class="foot mono">
-          <span>© <span id="year">2026</span> Filadelfia.ai</span>
-          <a href="marka.html">Marka</a>
-          <a href="https://filadelfia.io" target="_blank" rel="noopener">Filadelfia.io</a>
-          <a href="https://www.youtube.com/@filadroid" target="_blank" rel="noopener">YouTube</a>
-        </footer>
+        
       </div>
     </section>
   </main>
+
+  <footer class="end">
+    <p class="end__row mono">
+      <span>© <span id="year">2026</span> Filadelfia.ai</span>
+      <a href="marka.html">Marka</a>
+      <a href="kontakt.html">Kontakt</a>
+      <a href="https://filadelfia.io" target="_blank" rel="noopener">Filadelfia.io</a>
+      <a href="https://www.youtube.com/@filadroid" target="_blank" rel="noopener">YouTube</a>
+    </p>
+    <p class="mega" aria-hidden="true">filadelfia<span class="word__dot">.</span>ai</p>
+  </footer>
 
   <aside class="hud mono">
     <button class="hud__form" type="button" id="hudBtn" aria-label="Otwórz wiersz poleceń"><span class="hud__dot"></span><span id="hudIndex">3/5</span> <span id="hudName">Przepływ</span></button>

@@ -35,10 +35,11 @@ python3 -m http.server 4173
 
 - `/` (albo dotknięcie nazwy formacji na dole) otwiera wiersz poleceń; `pomoc` pokazuje listę
 - `noc` / `dzien` — tryb nocny, zapamiętywany w przeglądarce
-- `forma 1–5`, `puls`, `filadelfia`
+- `forma 1–5`, `puls`, `filadelfia`, `napisz <słowo>` (punkty układają się w napis)
+- kursor odpycha punkty; najechanie na usługę pokazuje jej formę
 - kliknięcie w tło rozsuwa punkty
 - podpis w konsoli przeglądarki
-- strona 404 z formą, która się nie składa
+- strona 404: punkty układają się w „404”
 
 ## Formularz kontaktowy
 

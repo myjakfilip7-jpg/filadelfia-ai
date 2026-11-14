@@ -25,6 +25,21 @@
     setInterval(tick, 1000);
   }
 
+  /* ---------- nagłówki: słowa wjeżdżają po kolei ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll('h1, .ask'), function (el) {
+    if (el.children.length || el.isContentEditable) return;
+    var words = el.textContent.split(' ');
+    el.setAttribute('aria-label', el.textContent);
+    el.textContent = '';
+    words.forEach(function (wd, n) {
+      var outer = document.createElement('span'), inner = document.createElement('span');
+      outer.className = 'w'; outer.setAttribute('aria-hidden', 'true');
+      inner.textContent = wd; inner.style.transitionDelay = (n * 70) + 'ms';
+      outer.appendChild(inner); el.appendChild(outer);
+      if (n < words.length - 1) el.appendChild(document.createTextNode(' '));
+    });
+  });
+
   /* ---------- wejście treści ---------- */
   var items = document.querySelectorAll('[data-r]');
   if ('IntersectionObserver' in window && !reduced) {
@@ -44,6 +59,7 @@
 
   /* ---------- motyw (dzień / noc) ---------- */
   var onTheme = function () {};
+  var showText = function () { return false; }; // podmieniane, gdy działa WebGL
   function setTheme(name) {
     if (name === 'noc') root.setAttribute('data-theme', 'noc'); else root.removeAttribute('data-theme');
     write(localStorage, 'fila-theme', name);
@@ -122,7 +138,7 @@
     var text = raw.trim().toLowerCase().replace(/^\//, '');
     var parts = text.split(/\s+/), c = parts[0];
     if (!c) return;
-    if (c === 'pomoc' || c === 'help' || c === '?') return say('kampanie · agenci · chatboty · strony · kontakt · marka\nnoc · dzien · forma 1–5 · puls · filadelfia');
+    if (c === 'pomoc' || c === 'help' || c === '?') return say('kampanie · agenci · chatboty · strony · kontakt · marka\nnoc · dzien · forma 1–5 · puls · napisz <słowo> · filadelfia');
     if (GO[c]) { say('Otwieram: ' + c); window.location.href = GO[c]; return; }
     if (c === 'noc') { setTheme('noc'); return say('Tryb nocny. Wróć poleceniem „dzien”.'); }
     if (c === 'dzien' || c === 'dzień') { setTheme('dzien'); return say('Tryb dzienny.'); }
@@ -133,6 +149,11 @@
       return say(n + '/5 ' + NAMES[n - 1]);
     }
     if (c === 'puls') { pulse = 1; return say('Puls.'); }
+    if (c === 'napisz') {
+      var word = raw.trim().replace(/^\/?\S+\s*/, '').slice(0, 14);
+      if (!word) return say('Podaj słowo, np. „napisz cześć”.');
+      return say(showText(word, 7000) ? 'Punkty piszą: ' + word : 'Tutaj nie mogę rysować.');
+    }
     if (c === 'filadelfia') return say('φιλαδέλφεια — braterska miłość. Stąd nazwa.');
     if (c === 'fps' || c === 'punkty') return say(hudStats && hudStats.textContent ? hudStats.textContent.replace(/^ · /, '') : 'Brak odczytu.');
     say('Nie znam polecenia „' + c + '”. Wpisz „pomoc”.');
@@ -182,6 +203,128 @@
     });
   }
 
+  /* ---------- manifest: słowa zapalają się przy przewijaniu; kroki: aktywny ten na środku ---------- */
+  var fills = Array.prototype.map.call(document.querySelectorAll('.fill'), function (el) {
+    var words = el.textContent.trim().split(/\s+/);
+    el.setAttribute('aria-label', words.join(' '));
+    el.textContent = '';
+    var spans = words.map(function (wd, n) {
+      var sp = document.createElement('span');
+      sp.textContent = wd; sp.setAttribute('aria-hidden', 'true');
+      el.appendChild(sp);
+      if (n < words.length - 1) el.appendChild(document.createTextNode(' '));
+      return sp;
+    });
+    return { el: el, spans: spans };
+  });
+  var stepLists = Array.prototype.slice.call(document.querySelectorAll('.steps'));
+  stepLists.forEach(function (l) { l.classList.add('spy'); });
+  var spyQueued = false;
+  function spy() {
+    spyQueued = false;
+    var vh = window.innerHeight;
+    fills.forEach(function (f) {
+      var r = f.el.getBoundingClientRect();
+      var p = reduced ? 1 : (vh * 0.82 - r.top) / (r.height + vh * 0.3);
+      var lit = Math.round(Math.min(1, Math.max(0, p)) * f.spans.length);
+      f.spans.forEach(function (sp, n) { sp.classList.toggle('on', n < lit); });
+    });
+    stepLists.forEach(function (l) {
+      var best = null, bestD = 1e9;
+      Array.prototype.forEach.call(l.children, function (li) {
+        var r = li.getBoundingClientRect(), d = Math.abs(r.top + r.height / 2 - vh * 0.5);
+        if (d < bestD) { bestD = d; best = li; }
+      });
+      Array.prototype.forEach.call(l.children, function (li) { li.classList.toggle('on', li === best && bestD < vh * 0.5); });
+    });
+  }
+  function queueSpy() { if (!spyQueued) { spyQueued = true; requestAnimationFrame(spy); } }
+  if (fills.length || stepLists.length) {
+    window.addEventListener('scroll', queueSpy, { passive: true });
+    window.addEventListener('resize', queueSpy);
+    spy();
+  }
+
+  function whenSeen(el, fn) {
+    if (!('IntersectionObserver' in window)) return fn();
+    var o = new IntersectionObserver(function (en) { if (en[0].isIntersecting) { o.disconnect(); fn(); } }, { threshold: 0.35 });
+    o.observe(el);
+  }
+  var stampFmt = new Intl.DateTimeFormat('pl-PL', { timeZone: 'Europe/Warsaw', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+  /* ---------- symulacja procesu: zatrzymuje się i czeka na kliknięcie człowieka ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll('[data-flow]'), function (el) {
+    var log = el.querySelector('.flow__log'), dots = el.querySelectorAll('.flow__bar i'), nowEl = el.querySelector('.flow__now');
+    var ok = el.querySelector('.flow__ok'), again = el.querySelector('.flow__again'), timer = 0;
+    var STEPS = [
+      [0, 'Zapytanie', 'nowe zapytanie · formularz na stronie'],
+      [1, 'Agent czyta', 'agent czyta: „Potrzebuję wyceny strony dla gabinetu”'],
+      [1, 'Agent czyta', 'rozpoznano: wycena · strona firmowa'],
+      [2, 'CRM', 'CRM: utworzono kontakt i szansę sprzedaży'],
+      [3, 'Szkic odpowiedzi', 'szkic odpowiedzi gotowy · trzy zdania i link do kalendarza'],
+      [4, 'Twoja zgoda', 'czeka na zatwierdzenie człowieka']
+    ];
+    function line(text, cls) {
+      var pEl = document.createElement('p'), tm = document.createElement('time');
+      if (cls) pEl.className = cls;
+      tm.textContent = stampFmt.format(new Date());
+      pEl.appendChild(tm); pEl.appendChild(document.createTextNode(text));
+      log.appendChild(pEl);
+    }
+    function at(n, name) {
+      Array.prototype.forEach.call(dots, function (d, k) { d.classList.toggle('on', k <= n); });
+      nowEl.textContent = (n + 1) + '/5 ' + name;
+    }
+    function play() {
+      clearTimeout(timer);
+      log.textContent = ''; ok.hidden = true; again.hidden = true;
+      var k = 0;
+      (function next() {
+        var st = STEPS[k++];
+        at(st[0], st[1]); line(st[2]);
+        if (k < STEPS.length) timer = setTimeout(next, reduced ? 0 : 1150); else ok.hidden = false;
+      })();
+    }
+    ok.addEventListener('click', function () {
+      ok.hidden = true; again.hidden = false;
+      line('zatwierdzono · odpowiedź wysłana', 'done');
+      nowEl.textContent = 'Gotowe';
+      pulse = 1;
+    });
+    again.addEventListener('click', play);
+    whenSeen(el, play);
+  });
+
+  /* ---------- sekwencje (przykładowa rozmowa) ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll('[data-seq]'), function (el) {
+    var st = Array.prototype.slice.call(el.querySelectorAll('[data-step]')), replay = el.querySelector('[data-replay]'), timer = 0;
+    function play() {
+      clearTimeout(timer);
+      st.forEach(function (x) { x.classList.remove('in'); });
+      var k = 0;
+      (function next() {
+        if (k >= st.length) return;
+        st[k++].classList.add('in');
+        timer = setTimeout(next, reduced ? 0 : 1500);
+      })();
+    }
+    if (replay) replay.addEventListener('click', play);
+    whenSeen(el, play);
+  });
+
+  /* ---------- formaty reklamy: jedna klatka, trzy proporcje ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll('[data-formats]'), function (el) {
+    var frame = el.querySelector('.formats__frame'), btns = Array.prototype.slice.call(el.querySelectorAll('button')), cur = 0, auto = 0;
+    function set(n) {
+      cur = n;
+      frame.setAttribute('data-f', btns[n].getAttribute('data-f'));
+      btns.forEach(function (b, k) { b.setAttribute('aria-pressed', String(k === n)); });
+    }
+    btns.forEach(function (b, k) { b.addEventListener('click', function () { clearInterval(auto); set(k); }); });
+    set(0);
+    if (!reduced) whenSeen(el, function () { auto = setInterval(function () { set((cur + 1) % btns.length); }, 2600); });
+  });
+
   /* ---------- podpis w konsoli ---------- */
   try {
     console.log('%cfiladelfia%c.%cai', 'font: 300 26px Mona Sans, sans-serif; color: #0A0B0D; background: #E8EAED; padding: 10px 0 10px 14px', 'font: 700 26px sans-serif; color: #2B2BFF; background: #E8EAED; padding: 10px 0', 'font: 300 26px Mona Sans, sans-serif; color: #0A0B0D; background: #E8EAED; padding: 10px 14px 10px 0');
@@ -198,11 +341,12 @@
     return;
   }
 
+  var needs = true;
   var VS = [
     'attribute vec3 aA; attribute vec2 aB; attribute vec2 aC; attribute vec3 aE;',
-    'attribute float aD; attribute float aSeed; attribute float aKind;',
-    'uniform float uT, uMix, uAspect, uDpr, uScale, uSize, uIntro, uPulse;',
-    'uniform vec2 uTilt, uShift;',
+    'attribute float aD; attribute float aSeed; attribute float aKind; attribute vec2 aF;',
+    'uniform float uT, uMix, uAspect, uDpr, uScale, uSize, uIntro, uPulse, uText, uPtrOn;',
+    'uniform vec2 uTilt, uShift, uPtr;',
     'varying float vAlpha; varying float vKind;',
     'mat2 rot(float a){ float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }',
     'float w(float m, float i){ return clamp(1. - abs(m - i), 0., 1.); }',
@@ -231,15 +375,22 @@
     // wejście: z rozproszenia do formy
     '  float it = clamp(uIntro * 1.6 - aSeed * .6, 0., 1.); it = 1. - pow(1. - it, 3.);',
     '  p = mix(aE * (2.2 + aSeed * 1.6), p, it); al *= it;',
+    // napis: punkty układają się w litery
+    '  float tw = clamp(uText * 1.5 - aSeed * .5, 0., 1.); tw = tw * tw * (3. - 2. * tw);',
+    '  p = mix(p, vec3(aF, 0.), tw); al = mix(al, 1., tw);',
     // puls: dotknięcie tła rozsuwa punkty na chwilę
     '  p *= 1. + uPulse * (.1 + aSeed * .55);',
     '  p.yz = rot(uTilt.x) * p.yz; p.xz = rot(uTilt.y) * p.xz;',
     '  p *= uScale;',
     '  float d = 3.2; float k = d / (p.z + d);',
-    '  gl_Position = vec4(p.x * k / uAspect + uShift.x, p.y * k + uShift.y, 0., 1.);',
+    '  vec2 q = vec2(p.x * k / uAspect + uShift.x, p.y * k + uShift.y);',
+    // kursor odpycha punkty
+    '  vec2 dq = (q - uPtr) * vec2(uAspect, 1.); float dd = length(dq);',
+    '  q += dq / (dd + .0001) / vec2(uAspect, 1.) * uPtrOn * smoothstep(.36, 0., dd) * .12;',
+    '  gl_Position = vec4(q, 0., 1.);',
     '  gl_PointSize = max(1., uSize * uDpr * k);',
     '  vAlpha = al * clamp(.35 + (k - .82) * 2.6, .28, 1.);',
-    '  vKind = aKind * w(m, 0.);',
+    '  vKind = aKind * w(m, 0.) * (1. - tw);',
     '}'
   ].join('\n');
 
@@ -335,9 +486,48 @@
     gl.vertexAttribPointer(loc, a[1], gl.FLOAT, false, STRIDE * 4, a[2] * 4);
   });
 
+  // osobny bufor na cele napisu — podmieniany przy każdym nowym słowie
+  var tbuf = gl.createBuffer(), tdata = new Float32Array(N * 2), locF = gl.getAttribLocation(prog, 'aF');
+  gl.bindBuffer(gl.ARRAY_BUFFER, tbuf);
+  gl.bufferData(gl.ARRAY_BUFFER, tdata, gl.DYNAMIC_DRAW);
+  if (locF >= 0) { gl.enableVertexAttribArray(locF); gl.vertexAttribPointer(locF, 2, gl.FLOAT, false, 0, 0); }
+  var textW = 0, textTarget = 0, textTimer = 0;
+  function makeText(str) {
+    var cw = 1024, ch = 512, c2 = document.createElement('canvas');
+    c2.width = cw; c2.height = ch;
+    var x2 = c2.getContext('2d');
+    if (!x2) return false;
+    var fam = 'px "Mona Sans", "Helvetica Neue", Arial, sans-serif', size = 300;
+    x2.font = '300 ' + size + fam;
+    var mw = x2.measureText(str).width;
+    if (!mw) return false;
+    size = Math.min(430, size * cw * 0.94 / mw);
+    x2.font = '300 ' + size + fam;
+    x2.textAlign = 'center'; x2.textBaseline = 'middle';
+    x2.fillText(str, cw / 2, ch / 2);
+    var px = x2.getImageData(0, 0, cw, ch).data, pts = [];
+    for (var ty = 0; ty < ch; ty += 2) for (var txx = 0; txx < cw; txx += 2) if (px[(ty * cw + txx) * 4 + 3] > 128) pts.push(txx, ty);
+    if (!pts.length) return false;
+    var cnt = pts.length / 2;
+    for (var k = 0; k < N; k++) {
+      var j = Math.floor(Math.random() * cnt);
+      tdata[k * 2] = (pts[j * 2] + Math.random() * 2) / cw * 2 - 1;
+      tdata[k * 2 + 1] = -((pts[j * 2 + 1] + Math.random() * 2) - ch / 2) / (cw / 2);
+    }
+    gl.bindBuffer(gl.ARRAY_BUFFER, tbuf);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, tdata);
+    return true;
+  }
+  showText = function (str, hold) {
+    if (!makeText(str)) return false;
+    textTarget = 1; needs = true;
+    clearTimeout(textTimer);
+    if (hold) textTimer = setTimeout(function () { textTarget = 0; }, hold);
+    return true;
+  };
+
   var U = {};
-  ['uT', 'uMix', 'uAspect', 'uDpr', 'uScale', 'uSize', 'uIntro', 'uPulse', 'uTilt', 'uShift', 'uInk', 'uSignal', 'uAlpha'].forEach(function (n) { U[n] = gl.getUniformLocation(prog, n); });
-  var needs = true;
+  ['uT', 'uMix', 'uAspect', 'uDpr', 'uScale', 'uSize', 'uIntro', 'uPulse', 'uText', 'uPtrOn', 'uPtr', 'uTilt', 'uShift', 'uInk', 'uSignal', 'uAlpha'].forEach(function (n) { U[n] = gl.getUniformLocation(prog, n); });
   onTheme = function () {
     var night = root.getAttribute('data-theme') === 'noc';
     if (night) { gl.uniform3f(U.uInk, 232 / 255, 234 / 255, 237 / 255); gl.uniform3f(U.uSignal, 112 / 255, 112 / 255, 1); }
@@ -370,6 +560,8 @@
   /* ---------- pętla ---------- */
   var mix = mixTarget;
   var tiltX = 0, tiltY = 0, ptrX = 0, ptrY = 0;
+  var ptrOn = 0, ptrSeen = 0, cx = 0, cy = 0, cxT = 0, cyT = 0, lastY = window.scrollY, hoverForm = null;
+  function retarget() { mixTarget = hoverForm !== null ? hoverForm : scrollMix(); needs = true; }
   var t0 = performance.now(), last = t0;
   var frames = 0, fpsAt = t0, visible = true;
   // pierwsze wejście składa formę powoli; kolejne podstrony — szybciej
@@ -380,13 +572,29 @@
     if (e.pointerType === 'touch') return;
     ptrX = e.clientX / window.innerWidth - 0.5;
     ptrY = e.clientY / window.innerHeight - 0.5;
+    cxT = ptrX * 2; cyT = -ptrY * 2;
+    if (!ptrSeen) { cx = cxT; cy = cyT; }
+    ptrSeen = 1;
   }, { passive: true });
   window.addEventListener('pointerdown', function (e) {
     if (reduced || (e.target.closest && e.target.closest('a, button, input, textarea, label, .cmd'))) return;
     pulse = 1;
   }, { passive: true });
-  window.addEventListener('scroll', function () { mixTarget = scrollMix(); needs = true; }, { passive: true });
-  window.addEventListener('resize', function () { resize(); mixTarget = scrollMix(); });
+  root.addEventListener('mouseleave', function () { ptrSeen = 0; });
+  window.addEventListener('scroll', function () {
+    var y = window.scrollY;
+    if (!reduced) pulse = Math.max(pulse, Math.min(0.2, Math.abs(y - lastY) / 1100)); // przewijanie lekko rozsuwa formę
+    lastY = y;
+    retarget();
+  }, { passive: true });
+  window.addEventListener('resize', function () { resize(); retarget(); });
+  // najechanie na usługę pokazuje jej formę
+  Array.prototype.forEach.call(document.querySelectorAll('[data-hover-form]'), function (el) {
+    el.addEventListener('pointerenter', function (e) { if (e.pointerType === 'touch') return; hoverForm = +el.getAttribute('data-hover-form'); retarget(); });
+    el.addEventListener('pointerleave', function () { hoverForm = null; retarget(); });
+  });
+  var pageText = body.getAttribute('data-text');
+  if (pageText) (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(function () { setTimeout(function () { showText(pageText); }, reduced ? 0 : 700); });
   document.addEventListener('visibilitychange', function () { visible = !document.hidden; last = performance.now(); });
 
   function wgt(m, i) { return Math.max(0, 1 - Math.abs(m - i)); }
@@ -399,6 +607,9 @@
 
     mix += (mixTarget - mix) * (reduced ? 1 : Math.min(1, dt * 5));
     pulse *= Math.exp(-dt * 3.2);
+    textW += (textTarget - textW) * (reduced ? 1 : Math.min(1, dt * 2.4));
+    ptrOn += ((ptrSeen && !reduced ? 1 : 0) - ptrOn) * Math.min(1, dt * 4);
+    cx += (cxT - cx) * Math.min(1, dt * 9); cy += (cyT - cy) * Math.min(1, dt * 9);
     // tęczówka patrzy za kursorem; pozostałe formy tylko lekko się przechylają
     var look = 0.35 + 0.65 * wgt(mix, 0);
     var tx = -0.22 + ptrY * 0.7 * look, ty = -0.3 + ptrX * 0.9 * look;
@@ -409,19 +620,22 @@
     needs = false;
 
     var intro = reduced ? 1 : Math.min(1, t / introTime);
-    if (lost) intro = Math.min(intro, 0.34); // 404: forma nigdy się nie składa
     gl.uniform1f(U.uT, t);
     gl.uniform1f(U.uMix, mix);
     gl.uniform1f(U.uIntro, intro);
     gl.uniform1f(U.uPulse, pulse);
-    gl.uniform2f(U.uTilt, reduced ? -0.22 : tiltX, reduced ? -0.3 : tiltY);
+    var flat = 1 - 0.9 * textW; // napis ma być czytelny, więc prostuje formę
+    gl.uniform1f(U.uText, textW);
+    gl.uniform1f(U.uPtrOn, ptrOn);
+    gl.uniform2f(U.uPtr, cx, cy);
+    gl.uniform2f(U.uTilt, (reduced ? -0.22 : tiltX) * flat, (reduced ? -0.3 : tiltY) * flat);
     if (narrow) {
       // na telefonie forma jest wyraźna tylko tam, gdzie ma miejsce: u góry strony i przy kontakcie
       var top, end;
       if (pin !== null) { top = Math.max(0, 1 - window.scrollY / (H * 0.55)); end = 0; }
       else { top = wgt(mix, 0); end = wgt(mix, 4); }
-      gl.uniform2f(U.uShift, 0, 0.45 * top + 0.62 * end);
-      gl.uniform1f(U.uAlpha, 0.16 + 0.6 * top + 0.5 * end);
+      gl.uniform2f(U.uShift, 0, (0.45 * top + 0.62 * end) * (1 - textW) + 0.4 * textW);
+      gl.uniform1f(U.uAlpha, Math.max(0.16 + 0.6 * top + 0.5 * end, 0.85 * textW));
     } else {
       gl.uniform2f(U.uShift, 0.5, 0.02);
       gl.uniform1f(U.uAlpha, 0.86);

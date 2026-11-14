@@ -54,4 +54,4 @@ też w podkatalogu.
 
 - Usuń `<meta name="robots" content="noindex, nofollow">` w `build.mjs`.
 - Zweryfikuj treść usług i procesu — to wersja robocza.
-- Podmień adres kontaktowy, jeśli ma być inny niż `kontakt@filadelfia.io`.
+- Podmień adres kontaktowy, jeśli ma być inny niż `business@filadroid.ai`.

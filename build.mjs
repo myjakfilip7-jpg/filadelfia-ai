@@ -2,7 +2,7 @@
 // Wspólny nagłówek, menu, odczyty i stopka są tutaj — pliki .html to wynik, nie edytuj ich ręcznie.
 import { writeFileSync } from 'node:fs';
 
-const MAIL = 'kontakt@filadelfia.io';
+const MAIL = 'business@filadroid.ai';
 
 const mark = (size = 22) => `<svg class="mark" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9.6" stroke-dasharray="46.3 14" transform="rotate(-38 12 12)"/><circle cx="12" cy="12" r="5.5" stroke-dasharray="21.5 13.06" transform="rotate(148 12 12)"/></g><circle class="mark__p" cx="12" cy="12" r="2.1"/></svg>`;
 const word = `<span class="word">filadelfia<span class="word__dot">.</span>ai</span>`;

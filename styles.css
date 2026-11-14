@@ -510,3 +510,22 @@ body::after { content: ''; position: fixed; inset: 0; z-index: 40; pointer-event
 }
 .legal a { color: var(--ink); border-bottom: 1px solid var(--ink); transition: color .2s, border-color .2s; }
 .legal a:hover { color: var(--signal); border-color: var(--signal); }
+
+/* ===== panel właściciela i pole-pułapka formularza ===== */
+.trap { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.col--panel { width: min(760px, 54vw); }
+.panel { margin-top: 44px; }
+.panel .lead { margin-top: 0; }
+.panel__bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding-bottom: 20px; border-bottom: 1px solid var(--ink); color: var(--slate); }
+.panel__bar strong { color: var(--ink); font-weight: 400; }
+.panel__err { color: var(--signal); margin-bottom: 22px; }
+.zg { padding: 26px 0 28px; border-bottom: 1px solid var(--line); }
+.zg__meta { display: flex; flex-wrap: wrap; gap: 6px 18px; color: var(--slate); }
+.zg__meta .is-new { color: var(--signal); }
+.zg h2 { font-size: clamp(22px, 2vw, 30px); font-weight: 350; font-stretch: 122%; letter-spacing: -.026em; line-height: 1.15; margin-top: 12px; }
+.zg__who { font-size: 15px; color: var(--slate); margin-top: 4px; overflow-wrap: anywhere; }
+.zg__text { font-size: 16.5px; margin-top: 14px; white-space: pre-wrap; overflow-wrap: anywhere; max-width: 40em; }
+.zg__act { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 22px; margin-top: 18px; }
+.zg select { font: inherit; font-size: 14.5px; color: var(--ink); background: none; border: 1px solid var(--line); border-radius: 999px; height: 40px; padding: 0 14px; cursor: pointer; }
+.zg select:hover { border-color: var(--ink); }
+@media (max-width: 860px) { .col--panel { width: 100%; } }

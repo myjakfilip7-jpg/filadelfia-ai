@@ -202,11 +202,36 @@
       lines.push('', brief.opis.value.trim());
       return { subject: 'Rozmowa o AI — ' + topic.getAttribute('data-label'), text: lines.join('\n') };
     };
+    var openMail = function () {
+      var m = compose();
+      window.location.href = 'mailto:' + brief.getAttribute('data-mail') + '?subject=' + encodeURIComponent(m.subject) + '&body=' + encodeURIComponent(m.text);
+    };
+    // jeśli strona działa z backendem, formularz zapisuje zgłoszenie w panelu; bez niego otwiera pocztę
+    var backend = false, sendBtn = $('briefSend'), contact = $('briefContact');
+    fetch('api/health', { headers: { Accept: 'application/json' } })
+      .then(function (r) { return r.ok && /json/.test(r.headers.get('content-type') || '') ? r.json() : null; })
+      .then(function (d) {
+        if (!d || !d.ok) return;
+        backend = true;
+        contact.hidden = false; brief.kontakt.required = true;
+        sendBtn.textContent = 'Wyślij';
+        $('briefHint').textContent = 'Wiadomość trafi prosto do nas. Odpiszemy na podany kontakt.';
+      })
+      .catch(function () {});
     brief.addEventListener('submit', function (e) {
       e.preventDefault();
-      var m = compose();
-      status.textContent = 'Otwieram pocztę. Wystarczy kliknąć „Wyślij”.';
-      window.location.href = 'mailto:' + brief.getAttribute('data-mail') + '?subject=' + encodeURIComponent(m.subject) + '&body=' + encodeURIComponent(m.text);
+      if (!backend) { status.textContent = 'Otwieram pocztę. Wystarczy kliknąć „Wyślij”.'; return openMail(); }
+      var topic = brief.querySelector('input[name="temat"]:checked');
+      sendBtn.disabled = true; status.textContent = 'Wysyłam…';
+      fetch('api/zgloszenia', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ temat: topic.value, imie: brief.imie.value, firma: brief.firma.value, kontakt: brief.kontakt.value, opis: brief.opis.value, www: brief.www.value })
+      }).then(function (r) {
+        sendBtn.disabled = false;
+        if (r.status === 201 || r.status === 200) { brief.reset(); status.textContent = 'Wysłano. Odpiszemy na podany kontakt.'; pulse = 1; return; }
+        if (r.status === 429) { status.textContent = 'Za dużo zgłoszeń z tego adresu. Spróbuj za kilka minut albo napisz na ' + brief.getAttribute('data-mail') + '.'; return; }
+        status.textContent = 'Nie udało się wysłać. Otwieram pocztę z tą samą treścią.'; openMail();
+      }).catch(function () { sendBtn.disabled = false; status.textContent = 'Nie udało się wysłać. Otwieram pocztę z tą samą treścią.'; openMail(); });
     });
     $('briefCopy').addEventListener('click', function () {
       if (!brief.reportValidity()) return;

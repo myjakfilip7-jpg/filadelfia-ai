@@ -16,7 +16,7 @@ const SERVICES = [
   { file: 'strony.html', form: 1, key: 'strony', name: 'Strony, aplikacje, sklepy', short: 'Strony i sklepy', tiny: 'Strony, sklepy i narzędzia, którymi zarządzasz sam', blurb: 'Strony firmowe, sklepy i narzędzia wewnętrzne z panelem, w którym sam zmieniasz treści.' },
 ];
 
-function shell({ file, title, desc, form, formName, lost, current, body, base, text }) {
+function shell({ file, title, desc, form, formName, lost, current, body, base, text, scripts = [] }) {
   const cur = (k) => (current === k ? ' aria-current="page"' : '');
   return `<!doctype html>
 <html lang="pl">
@@ -122,7 +122,7 @@ ${SERVICES.map((sv) => `        <a href="${sv.file}">${sv.short}</a>`).join('\n'
     <form id="cmdForm"><span aria-hidden="true">›</span><input id="cmdIn" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Polecenie" placeholder="pomoc"><button type="button" id="cmdClose" aria-label="Zamknij wiersz poleceń">esc</button></form>
   </div>
 
-  <script src="script.js" defer></script>
+  <script src="script.js" defer></script>${scripts.map((src) => `\n  <script src="${src}" defer></script>`).join('')}
 </body>
 </html>
 `;
@@ -487,13 +487,15 @@ ${SERVICES.map((s) => `              <label><input type="radio" name="temat" val
           </fieldset>
           <label class="field"><span class="mono">Imię</span><input type="text" name="imie" autocomplete="given-name" required></label>
           <label class="field"><span class="mono">Firma lub strona — opcjonalnie</span><input type="text" name="firma" autocomplete="organization"></label>
+          <label class="field" id="briefContact" hidden><span class="mono">E-mail lub telefon</span><input type="text" name="kontakt" autocomplete="email"></label>
           <label class="field"><span class="mono">Co chcesz usprawnić</span><textarea name="opis" rows="4" required></textarea></label>
+          <label class="trap" aria-hidden="true">Strona www<input type="text" name="www" tabindex="-1" autocomplete="off"></label>
           <p class="actions">
-            <button class="pill" type="submit">Otwórz w poczcie</button>
+            <button class="pill" type="submit" id="briefSend">Otwórz w poczcie</button>
             <button class="more" type="button" id="briefCopy">Skopiuj treść</button>
           </p>
           <p class="brief__status mono" id="briefStatus" role="status"></p>
-          <p class="brief__hint">Formularz niczego nie wysyła sam. Otwiera Twoją pocztę z gotową wiadomością do <a href="mailto:${MAIL}">${MAIL}</a>.</p>
+          <p class="brief__hint" id="briefHint">Formularz niczego nie wysyła sam. Otwiera Twoją pocztę z gotową wiadomością do <a href="mailto:${MAIL}">${MAIL}</a>.</p>
         </form>
         ${foot}
       </div>
@@ -577,6 +579,15 @@ const legal = `    <section class="scene scene--hero scene--page">
       </div>
     </section>`;
 
+/* ---------- panel właściciela (działa tylko z backendem: server/server.mjs) ---------- */
+const panel = `    <section class="scene scene--form">
+      <div class="col col--panel">
+        <p class="tag mono" data-r>Panel</p>
+        <h1 class="h1--page" data-r>Zgłoszenia</h1>
+        <div class="panel" id="panel" aria-live="polite"><p class="lead">Sprawdzam…</p></div>
+      </div>
+    </section>`;
+
 /* ---------- 404 ---------- */
 const lostPage = `    <section class="scene scene--hero">
       <div class="col">
@@ -598,6 +609,7 @@ const pages = [
   { file: 'strony.html', title: 'Strony, aplikacje, sklepy — Filadelfia.ai', desc: 'Strony firmowe, sklepy internetowe i narzędzia wewnętrzne, którymi zarządzasz sam.', form: 1, formName: 'Siatka', current: 'uslugi', body: strony },
   { file: 'kontakt.html', title: 'Kontakt — Filadelfia.ai', desc: 'Opowiedz, co zabiera Ci najwięcej czasu. Odpiszemy z propozycją, od czego zacząć.', form: 4, formName: 'Punkt', current: 'kontakt', body: kontakt },
   { file: 'prywatnosc.html', title: 'Prywatność — Filadelfia.ai', desc: 'Jakie dane zbiera strona Filadelfia.ai: bez plików cookie i bez śledzenia.', form: 3, formName: 'Sfera', body: legal },
+  { file: 'panel.html', title: 'Panel — Filadelfia.ai', desc: 'Panel właściciela.', form: 4, formName: 'Punkt', body: panel, scripts: ['panel.js'] },
   { file: 'marka.html', title: 'Marka — Filadelfia.ai', desc: 'Znak, kolory i pismo Filadelfia.ai.', form: 0, formName: 'Tęczówka', body: marka },
   { file: '404.html', title: 'Nie ma takiej strony — Filadelfia.ai', desc: 'Pod tym adresem nic nie ma.', form: 4, formName: 'Zgubiony', lost: true, base: true, text: '404', body: lostPage },
 ];

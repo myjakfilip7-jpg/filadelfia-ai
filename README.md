@@ -20,6 +20,8 @@ W `script.js` został wyłączony wariant z aluminiowym żyroskopem 3D
 - `styles.css` — style i tokeny kolorów
 - `script.js` — pole punktów, odczyty, menu, wiersz poleceń, dema, formularz
 - `fonts/` — Mona Sans i Martian Mono (licencja SIL OFL), hostowane lokalnie
+- `server/` — backend: logowanie przez GitHub, zgłoszenia, panel (opis w `server/README.md`)
+- `panel.html`, `panel.js` — panel właściciela; działa tylko z uruchomionym backendem
 - `favicon.svg` — znak (tęczówka)
 - `og.png` — obraz do udostępnień (1200 × 630)
 - `media/` — trzy przykładowe kadry reklamowe wygenerowane w Higgsfield (GPT Image 2.6); to przykłady, nie realizacje dla klientów
@@ -50,8 +52,9 @@ python3 -m http.server 4173
 
 ## Formularz kontaktowy
 
-Nie ma backendu. Formularz składa wiadomość i otwiera program pocztowy (`mailto:`)
-albo kopiuje treść do schowka. Adres jest w `build.mjs` (`MAIL`).
+Bez backendu (np. na GitHub Pages) formularz składa wiadomość i otwiera program pocztowy
+(`mailto:`) albo kopiuje treść do schowka. Gdy strona działa z backendem (`node server/server.mjs`),
+formularz zapisuje zgłoszenie, a właściciel widzi je w panelu. Adres jest w `build.mjs` (`MAIL`).
 
 ## Wdrożenie
 

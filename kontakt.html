@@ -83,13 +83,15 @@
           </fieldset>
           <label class="field"><span class="mono">Imię</span><input type="text" name="imie" autocomplete="given-name" required></label>
           <label class="field"><span class="mono">Firma lub strona — opcjonalnie</span><input type="text" name="firma" autocomplete="organization"></label>
+          <label class="field" id="briefContact" hidden><span class="mono">E-mail lub telefon</span><input type="text" name="kontakt" autocomplete="email"></label>
           <label class="field"><span class="mono">Co chcesz usprawnić</span><textarea name="opis" rows="4" required></textarea></label>
+          <label class="trap" aria-hidden="true">Strona www<input type="text" name="www" tabindex="-1" autocomplete="off"></label>
           <p class="actions">
-            <button class="pill" type="submit">Otwórz w poczcie</button>
+            <button class="pill" type="submit" id="briefSend">Otwórz w poczcie</button>
             <button class="more" type="button" id="briefCopy">Skopiuj treść</button>
           </p>
           <p class="brief__status mono" id="briefStatus" role="status"></p>
-          <p class="brief__hint">Formularz niczego nie wysyła sam. Otwiera Twoją pocztę z gotową wiadomością do <a href="mailto:business@filadroid.ai">business@filadroid.ai</a>.</p>
+          <p class="brief__hint" id="briefHint">Formularz niczego nie wysyła sam. Otwiera Twoją pocztę z gotową wiadomością do <a href="mailto:business@filadroid.ai">business@filadroid.ai</a>.</p>
         </form>
         
       </div>

@@ -155,6 +155,14 @@ main { position: relative; z-index: 1; }
 .scene--page { min-height: 88vh; min-height: 88svh; }
 .scene--form { align-items: flex-start; padding-top: clamp(150px, 12vw, 210px); padding-bottom: 110px; }
 .scene--contact .col { width: min(1100px, 62vw); }
+.scene--about .ask { font-size: clamp(30px, 3.9vw, 74px); line-height: 1.02; }
+.facts { margin-top: clamp(30px, 3vw, 48px); border-top: 1px solid var(--line); }
+.facts div { display: grid; grid-template-columns: clamp(84px, 7vw, 130px) 1fr; gap: 16px; align-items: baseline; padding: clamp(13px, 1.2vw, 19px) 0; border-bottom: 1px solid var(--line); }
+.facts dt { color: var(--slate); }
+.facts dd { font-size: var(--t-body); }
+.facts a { border-bottom: 1px solid var(--ink); transition: color .2s, border-color .2s; }
+.facts a:hover { color: var(--signal); border-color: var(--signal); }
+.about__note { margin-top: clamp(26px, 2.4vw, 40px); color: var(--slate); }
 .scene--contact .ask { font-size: clamp(38px, 6.2vw, 124px); line-height: .96; }
 .block { padding: 0 var(--edge) clamp(96px, 13vw, 170px); }
 .block--end { min-height: 84vh; min-height: 84svh; display: flex; align-items: center; padding-top: 80px; padding-bottom: 80px; }
@@ -445,6 +453,8 @@ h1 { font-size: var(--t-h1); font-weight: 300; font-stretch: 125%; line-height: 
   .scene--page { min-height: 100vh; min-height: 100svh; }
   .scene--form { padding-top: 132px; }
   .scene--contact { align-items: flex-end; padding-bottom: 80px; }
+  .scene--about { align-items: flex-end; padding-top: 52vh; padding-top: 52svh; }
+  .about__note { display: none; }
   .block--end { min-height: 0; display: block; padding-top: 0; padding-bottom: 64px; }
   .head { max-width: none; }
   .actions { gap: 22px; }

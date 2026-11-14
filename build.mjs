@@ -66,7 +66,7 @@ ${SERVICES.map((sv) => `          <a href="${sv.file}"><strong>${sv.name}</stron
         </div>
       </div>
       <a href="./#proces">Proces</a>
-      <a href="./#zasady">Zasady</a>
+      <a href="./#o-nas">O nas</a>
       <a href="./#faq">Pytania</a>
     </nav>
     <p class="bar__clock mono" aria-hidden="true">Krynica-Zdrój <span id="clock">--:--:--</span></p>
@@ -80,6 +80,7 @@ ${SERVICES.map((s) => `    <a class="menu__big" href="${s.file}">${s.short}</a>`
     <p class="mono">Firma</p>
     <a class="menu__big" href="./#proces">Proces</a>
     <a class="menu__big" href="./#zasady">Zasady</a>
+    <a class="menu__big" href="./#o-nas">O nas</a>
     <a class="menu__big" href="./#faq">Pytania</a>
     <a class="menu__big" href="kontakt.html">Kontakt</a>
     <a class="menu__mail mono" href="mailto:${MAIL}">${MAIL}</a>
@@ -103,6 +104,7 @@ ${SERVICES.map((sv) => `        <a href="${sv.file}">${sv.short}</a>`).join('\n'
         <p class="mono">Firma</p>
         <a href="./#proces">Proces</a>
         <a href="./#zasady">Zasady</a>
+        <a href="./#o-nas">O nas</a>
         <a href="./#faq">Pytania</a>
         <a href="marka.html">Marka</a>
         <a href="prywatnosc.html">Prywatność</a>
@@ -300,6 +302,24 @@ ${steps([
             <p>Pracę z AI pokazujemy na kanale <a href="https://www.youtube.com/@filadroid" target="_blank" rel="noopener">Filadroid na YouTube</a>.</p>
           </li>
         </ul>
+      </div>
+    </section>
+
+    <section class="scene scene--about" id="o-nas" data-portrait>
+      <div class="col">
+        <p class="tag mono" data-r>O nas</p>
+        <h2 class="ask" data-r>Najpierw pokazujemy to publicznie. Potem wdrażamy u&nbsp;Ciebie.</h2>
+        <p class="lead" data-r>Prowadzimy Filadroid, polski kanał na YouTube o praktycznym AI. Krok po kroku pokazujemy tam pracę z Claude, Gemini i NotebookLM oraz generowanie wideo w Higgsfield i Kling. W agencji robimy to samo dla firm.</p>
+        <dl class="facts" data-r>
+          <div><dt class="mono">Kto</dt><dd>Filip, prowadzący Filadroid</dd></div>
+          <div><dt class="mono">Kanał</dt><dd><a href="https://www.youtube.com/@filadroid" target="_blank" rel="noopener">youtube.com/@filadroid</a></dd></div>
+          <div><dt class="mono">Skąd</dt><dd>Krynica-Zdrój, pracujemy zdalnie</dd></div>
+        </dl>
+        <p class="actions" data-r>
+          <a class="pill" href="https://www.youtube.com/@filadroid" target="_blank" rel="noopener">Zobacz kanał</a>
+          <a class="more" href="kontakt.html">Napisz do nas</a>
+        </p>
+        <p class="about__note mono" data-r>Portret obok to te same punkty co na reszcie strony</p>
       </div>
     </section>
 

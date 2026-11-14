@@ -107,7 +107,7 @@
 
   /* ---------- formacja: przewijanie albo stała ---------- */
   var hudIndex = $('hudIndex'), hudName = $('hudName'), hudStats = $('hudStats');
-  var shownScene = -1, pulse = 0;
+  var shownScene = -1, pulse = 0, portraitShown = false;
 
   function scrollMix() {
     if (pin !== null) return pin;
@@ -126,6 +126,7 @@
   }
   function label(mix) {
     var i = Math.round(mix);
+    if (portraitShown) { if (shownScene !== 99) { shownScene = 99; hudIndex.textContent = '·'; hudName.textContent = 'Portret'; } return; }
     if (i === shownScene || lost) return;
     shownScene = i;
     hudIndex.textContent = (i + 1) + '/' + NAMES.length;
@@ -561,13 +562,13 @@
       gl.enableVertexAttribArray(a[0]);
       gl.vertexAttribPointer(a[0], a[1], gl.FLOAT, false, STRIDE * 4, a[2] * 4);
     });
-    if (locF >= 0) { gl.bindBuffer(gl.ARRAY_BUFFER, tbuf); gl.enableVertexAttribArray(locF); gl.vertexAttribPointer(locF, 2, gl.FLOAT, false, 0, 0); }
   })();
 
   // osobny bufor na cele napisu — podmieniany przy każdym nowym słowie
   var tbuf = gl.createBuffer(), tdata = new Float32Array(N * 2), locF = gl.getAttribLocation(prog, 'aF');
   gl.bindBuffer(gl.ARRAY_BUFFER, tbuf);
   gl.bufferData(gl.ARRAY_BUFFER, tdata, gl.DYNAMIC_DRAW);
+  if (locF >= 0) { gl.enableVertexAttribArray(locF); gl.vertexAttribPointer(locF, 2, gl.FLOAT, false, 0, 0); } // bufor napisu musi być podpięty zaraz po utworzeniu
   var textW = 0, textTarget = 0, textTimer = 0;
   function makeText(str) {
     var cw = 1024, ch = 512, c2 = document.createElement('canvas');
@@ -595,8 +596,37 @@
     gl.bufferSubData(gl.ARRAY_BUFFER, 0, tdata);
     return true;
   }
+  // portret: gotowe współrzędne punktów (media/portret.bin), układane tym samym mechanizmem co napisy
+  var portrait = null, portraitOn = false, portraitWanted = false;
+  function fillPortrait() {
+    var n = portrait.length / 2, ratio = 0.904, hh = 1.0; // proporcje kadru i połowa wysokości w jednostkach sceny
+    for (var k = 0; k < N; k++) {
+      var j = k % n;
+      tdata[k * 2] = (portrait[j * 2] / 255 * 2 - 1) * hh * ratio + (Math.random() - 0.5) * 0.008;
+      tdata[k * 2 + 1] = -(portrait[j * 2 + 1] / 255 * 2 - 1) * hh + (Math.random() - 0.5) * 0.008;
+    }
+    gl.bindBuffer(gl.ARRAY_BUFFER, tbuf);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, tdata);
+  }
+  function setPortrait(on) {
+    portraitWanted = on;
+    if (on && !portrait) {
+      if (portrait === null) { portrait = false; fetch('media/portret.bin').then(function (r) { return r.ok ? r.arrayBuffer() : null; }).then(function (b) { if (b) { portrait = new Uint8Array(b); if (portraitWanted) setPortrait(true); } }).catch(function () {}); }
+      return;
+    }
+    if (on && portrait) { clearTimeout(textTimer); fillPortrait(); textTarget = 1; portraitOn = true; }
+    else if (!on && portraitOn) { textTarget = 0; portraitOn = false; }
+    portraitShown = portraitOn;
+    shownScene = -1; needs = true;
+  }
+  var about = document.querySelector('[data-portrait]');
+  if (about && 'IntersectionObserver' in window) {
+    new IntersectionObserver(function (en) { setPortrait(en[0].isIntersecting && en[0].intersectionRatio > 0.45); }, { threshold: [0, 0.45, 0.6] }).observe(about);
+  }
+
   showText = function (str, hold) {
     if (!makeText(str)) return false;
+    portraitOn = false;
     textTarget = 1; needs = true;
     clearTimeout(textTimer);
     if (hold) textTimer = setTimeout(function () { textTarget = 0; }, hold);

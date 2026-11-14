@@ -163,9 +163,31 @@ const steps = (items) => items.map(([h, p], i) => `          <li data-r>
             <p>${p}</p>
           </li>`).join('\n');
 
-// Miniatury w kafelkach usług: czysty HTML i CSS, bez obrazków.
+// Przykładowe kadry reklamowe wygenerowane w Higgsfield. To przykłady, nie realizacje dla klientów.
+const SHOTS = [
+  ['serum', 'Kosmetyki', 'Szklana buteleczka serum z aluminiową nakrętką na mokrym kamieniu, niebieskie światło z boku'],
+  ['but', 'Obuwie', 'Jasny but do biegania uchwycony w powietrzu nad ciemną posadzką, za nim niebieska smuga światła'],
+  ['kawa', 'Kawa', 'Grafitowa filiżanka czarnej kawy z unoszącą się parą na szczotkowanym aluminium'],
+];
+const shots = (h, link) => `    <section class="wide wide--shots">
+      <div class="head">
+        <p class="tag mono" data-r>Kampanie AI · przykładowe kadry</p>
+        <h2 class="ask" data-r>${h}</h2>
+      </div>
+      <ul class="shots">
+${SHOTS.map(([f, cap, alt]) => `        <li data-r>
+          <figure>
+            <div class="shot"><img src="media/${f}.jpg" alt="${alt}" width="896" height="1120" loading="lazy" decoding="async"></div>
+            <figcaption class="mono"><span>${cap}</span><span>AI · Higgsfield</span></figcaption>
+          </figure>
+        </li>`).join('\n')}
+      </ul>
+      <p class="shots__note" data-r>To przykłady, nie realizacje dla klientów. Żadnego z tych produktów nie sfotografowano: wszystkie trzy kadry wygenerowaliśmy w Higgsfield.${link ? ' <a href="kampanie.html">Zobacz, jak powstaje kampania <span aria-hidden="true">→</span></a>' : ''}</p>
+    </section>`;
+
+// Miniatury w kafelkach usług: HTML i CSS; kafelek kampanii pokazuje prawdziwy kadr.
 const VIS = {
-  kampanie: `<div class="v-ad"><div class="v-ad__f">${mark(34)}</div><span class="mono">9:16 · 1:1 · 16:9</span></div>`,
+  kampanie: `<div class="v-ad"><div class="v-ad__f"><img src="media/but.jpg" alt="" loading="lazy" decoding="async"></div><span class="mono">9:16 · 1:1 · 16:9</span></div>`,
   automatyzacje: `<div class="v-flow"><b></b><span><i></i>zapytanie</span><span><i></i>agent</span><span><i></i>CRM</span><span><i></i>zgoda</span></div>`,
   chatboty: `<div class="v-chat"><i class="v-chat__me"></i><i class="v-chat__bot"></i><i class="v-chat__me v-chat__me--s"></i><span class="mono">→ człowiek</span></div>`,
   strony: `<div class="v-web"><p><i></i><i></i><i></i></p><div><b></b><u></u><u></u><em></em></div></div>`,
@@ -215,6 +237,8 @@ ${SERVICES.map((sv) => `        <li data-r>
         </li>`).join('\n')}
       </ul>
     </section>
+
+${shots('Tych zdjęć nikt nie zrobił.', true)}
 
 ${flow('Jedno zapytanie. Zero przeklejania.', 'Tak wygląda proces po wdrożeniu: agent czyta wiadomość, uzupełnia CRM, pisze odpowiedź i czeka na Twoje „tak”. Ostatni krok należy do Ciebie.')}
 
@@ -342,12 +366,15 @@ const kampanie = service(0, {
     ['Produkcja', 'Generujemy ujęcia, montujemy, dodajemy dźwięk i napisy.'],
     ['Formaty', 'Dostajesz pliki gotowe do wgrania w panel reklamowy.'],
   ],
-  demo: `
+  demo: '\n' + shots('Tych zdjęć nikt nie zrobił.', false) + `
+
+    <div class="gap"></div>
+
     <section class="block">
       <div class="col">
         <p class="tag mono" data-r>Jeden materiał, trzy formaty</p>
         <div class="formats" data-formats data-r>
-          <div class="formats__stage"><div class="formats__frame" data-f="916">${mark(44)}<span class="mono">Twój produkt</span></div></div>
+          <div class="formats__stage"><div class="formats__frame" data-f="916"><img src="media/but.jpg" alt="Ten sam kadr z butem przycięty do wybranego formatu" loading="lazy" decoding="async"></div></div>
           <p class="chips">
             <button type="button" data-f="916">9:16 · Reels, TikTok</button>
             <button type="button" data-f="11">1:1 · Feed</button>

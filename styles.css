@@ -426,3 +426,26 @@ h1 { font-size: clamp(46px, 6.6vw, 112px); font-weight: 300; font-stretch: 125%;
 /* ===== wersja 5: materiał — drobne ziarno na całej stronie ===== */
 body::after { content: ''; position: fixed; inset: 0; z-index: 40; pointer-events: none; opacity: .055; mix-blend-mode: multiply; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
 :root[data-theme="noc"] body::after { mix-blend-mode: screen; opacity: .05; filter: invert(1); }
+
+/* ===== wersja 6: prawdziwe kadry ===== */
+.wide--shots { padding-top: clamp(96px, 11vw, 170px); padding-bottom: clamp(96px, 11vw, 170px); }
+.shots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(10px, 1.5vw, 24px); align-items: start; }
+.shots li:nth-child(2) { margin-top: clamp(28px, 6vw, 110px); }
+.shots figure { margin: 0; }
+.shot { aspect-ratio: 4 / 5; overflow: hidden; border-radius: 6px; background: var(--line); }
+.shot img { display: block; width: 100%; height: 100%; object-fit: cover; transform: scale(1.01); transition: transform 1.4s cubic-bezier(.16, .8, .2, 1); }
+@media (hover: hover) { .shots li:hover img { transform: scale(1.05); } }
+.shots figcaption { display: flex; justify-content: space-between; gap: 12px; margin-top: 14px; color: var(--slate); }
+.shots figcaption span:first-child { color: var(--ink); }
+.shots__note { margin-top: clamp(36px, 5vw, 70px); max-width: 38em; font-size: 16.5px; color: var(--slate); }
+.shots__note a { color: var(--ink); border-bottom: 1px solid var(--ink); white-space: nowrap; transition: color .2s, border-color .2s; }
+.shots__note a:hover { color: var(--signal); border-color: var(--signal); }
+.v-ad__f, .formats__frame { overflow: hidden; }
+.v-ad__f img, .formats__frame img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+@media (max-width: 860px) {
+  .shots { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 76%; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 calc(-1 * var(--edge)); padding: 0 var(--edge); scrollbar-width: none; }
+  .shots::-webkit-scrollbar { display: none; }
+  .shots li { scroll-snap-align: center; }
+  .shots li:nth-child(2) { margin-top: 0; }
+}

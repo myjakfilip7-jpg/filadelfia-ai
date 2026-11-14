@@ -20,6 +20,7 @@ przewijaniu; każda podstrona ma jeden, stały. Punkty zostały tylko do napisó
 - `script.js` — obiekt 3D, punkty do napisów, odczyty, menu, wiersz poleceń, dema, formularz
 - `favicon.svg` — znak (tęczówka)
 - `og.png` — obraz do udostępnień (1200 × 630)
+- `media/` — trzy przykładowe kadry reklamowe wygenerowane w Higgsfield (GPT Image 2.6); to przykłady, nie realizacje dla klientów
 
 ## Zmiana treści
 

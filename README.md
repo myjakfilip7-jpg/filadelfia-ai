@@ -24,8 +24,8 @@ układają też napisy (strona 404, polecenie `napisz`).
 - `icon-180.png`, `icon-192.png`, `icon-512.png`, `manifest.webmanifest` — ikony na ekran telefonu
 - `sitemap.xml` — mapa strony (generowana przez build z adresu `SITE`)
 - `tools/check.mjs` — kontrola frontendu
-- `media/portret.bin` — 9000 punktów dwóch sylwetek w sekcji „O nas” (pary bajtów x, y; na przemian lewa i prawa osoba)
-- `tools/stipple.js` — robi te punkty ze zdjęć na przezroczystym tle: `node tools/stipple.js lewa.bmp prawa.bmp media/portret.bin`
+- `media/osoba-filip.bin`, `media/osoba-dawid.bin` — po 9000 punktów sylwetek w sekcji „O nas” (pary bajtów x, y)
+- `tools/stipple.js` — robi te punkty ze zdjęcia; opis parametrów jest na górze pliku
 - `media/` — trzy przykładowe kadry reklamowe wygenerowane w Higgsfield (GPT Image 2.6); to przykłady, nie realizacje dla klientów
 
 ## Zmiana treści, stylów i skryptów

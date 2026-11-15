@@ -596,38 +596,51 @@
     gl.bufferSubData(gl.ARRAY_BUFFER, 0, tdata);
     return true;
   }
-  // portret: gotowe współrzędne punktów (media/portret.bin), układane tym samym mechanizmem co napisy
-  var portrait = null, portraitOn = false, portraitWanted = false;
-  function fillPortrait() {
-    // dwie postacie obok siebie: punkty parzyste to lewa, nieparzyste — prawa (tak zapisuje je tools/stipple.js)
-    var n = portrait.length / 2, SPACING = 0.9, wf = 2 / (1 + SPACING); // szerokość jednej postaci, gdy obie mieszczą się w ±1
+  // sylwetki w „O nas”: gotowe współrzędne punktów (media/osoba-*.bin), układane tym samym mechanizmem co napisy
+  var people = {}, portraitOn = false, shownKey = null, wantKey = null, swapTimer = 0;
+  function fillPerson(pts, ratio) {
+    var n = pts.length / 2, hh = 1.0; // połowa wysokości postaci w jednostkach sceny
     for (var k = 0; k < N; k++) {
-      var j = k % n, cx0 = -1 + wf / 2 + (j % 2) * SPACING * wf;
-      tdata[k * 2] = cx0 + (portrait[j * 2] / 255 - 0.5) * wf + (Math.random() - 0.5) * 0.006;
-      tdata[k * 2 + 1] = -(portrait[j * 2 + 1] / 255 - 0.5) * wf + (Math.random() - 0.5) * 0.006;
+      var j = k % n;
+      tdata[k * 2] = (pts[j * 2] / 255 * 2 - 1) * hh * ratio + (Math.random() - 0.5) * 0.008;
+      tdata[k * 2 + 1] = -(pts[j * 2 + 1] / 255 * 2 - 1) * hh + (Math.random() - 0.5) * 0.008;
     }
     gl.bindBuffer(gl.ARRAY_BUFFER, tbuf);
     gl.bufferSubData(gl.ARRAY_BUFFER, 0, tdata);
   }
-  function setPortrait(on) {
-    portraitWanted = on;
-    if (on && !portrait) {
-      if (portrait === null) { portrait = false; fetch('media/portret.bin').then(function (r) { return r.ok ? r.arrayBuffer() : null; }).then(function (b) { if (b) { portrait = new Uint8Array(b); if (portraitWanted) setPortrait(true); } }).catch(function () {}); }
+  function showPerson(key, ratio) {
+    wantKey = key;
+    if (!key) {
+      clearTimeout(swapTimer);
+      if (portraitOn) { textTarget = 0; portraitOn = false; portraitShown = false; shownKey = null; shownScene = -1; needs = true; }
       return;
     }
-    if (on && portrait) { clearTimeout(textTimer); fillPortrait(); textTarget = 1; portraitOn = true; }
-    else if (!on && portraitOn) { textTarget = 0; portraitOn = false; }
-    portraitShown = portraitOn;
-    shownScene = -1; needs = true;
+    if (people[key] === undefined) { // pierwsze wejście: pobierz punkty tej osoby
+      people[key] = null;
+      fetch('media/osoba-' + key + '.bin').then(function (r) { return r.ok ? r.arrayBuffer() : null; }).then(function (b) { if (b) { people[key] = new Uint8Array(b); if (wantKey === key) showPerson(key, ratio); } }).catch(function () {});
+      return;
+    }
+    if (!people[key] || shownKey === key) return;
+    clearTimeout(textTimer); clearTimeout(swapTimer);
+    var go = function () { fillPerson(people[key], ratio); textTarget = 1; portraitOn = true; portraitShown = true; shownKey = key; shownScene = -1; needs = true; };
+    // zmiana osoby: najpierw punkty się rozchodzą, potem składają nową sylwetkę
+    if (portraitOn && textW > 0.3) { textTarget = 0; shownKey = null; swapTimer = setTimeout(function () { if (wantKey === key) go(); }, 450); } else go();
   }
-  var about = document.querySelector('[data-portrait]');
-  if (about && 'IntersectionObserver' in window) {
-    new IntersectionObserver(function (en) { setPortrait(en[0].isIntersecting && en[0].intersectionRatio > 0.45); }, { threshold: [0, 0.45, 0.6] }).observe(about);
+  var persons = Array.prototype.slice.call(document.querySelectorAll('[data-portrait]'));
+  if (persons.length && 'IntersectionObserver' in window) {
+    var seenRatio = new Map();
+    var personIO = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { seenRatio.set(e.target, e.isIntersecting ? e.intersectionRatio : 0); });
+      var best = null, bestR = 0.45;
+      persons.forEach(function (el) { var r = seenRatio.get(el) || 0; if (r > bestR) { bestR = r; best = el; } });
+      if (best) showPerson(best.getAttribute('data-portrait'), +best.getAttribute('data-ratio') || 1); else showPerson(null);
+    }, { threshold: [0, 0.25, 0.45, 0.6, 0.8] });
+    persons.forEach(function (el) { personIO.observe(el); });
   }
 
   showText = function (str, hold) {
     if (!makeText(str)) return false;
-    portraitOn = false;
+    portraitOn = false; portraitShown = false; shownKey = null;
     textTarget = 1; needs = true;
     clearTimeout(textTimer);
     if (hold) textTimer = setTimeout(function () { textTarget = 0; }, hold);

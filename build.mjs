@@ -222,10 +222,15 @@ const VIS = {
   strony: `<div class="v-web"><p><i></i><i></i><i></i></p><div><b></b><u></u><u></u><em></em></div></div>`,
 };
 
-// Ci sami właściciele co na filadelfia.io. Sylwetki z punktów: media/portret.bin (lewa, prawa — w tej kolejności).
+// Ci sami właściciele co na filadelfia.io. Każdy ma własny ekran i sylwetkę z punktów: media/osoba-<key>.bin
+// (ratio = szerokość / wysokość kadru, wypisuje ją tools/stipple.js).
 const TEAM = [
-  { side: 'Po lewej', name: 'Filip Myjak', skills: 'Automatyzacje, AI, strony i aplikacje', channel: 'Filadroid', youtube: 'https://www.youtube.com/@filadroid' },
-  { side: 'Po prawej', name: 'Dawid Borzęcki', skills: 'Produkcja wideo, strategie, social media', channel: 'Bez litości', youtube: 'https://www.youtube.com/@bez_litosci' },
+  { key: 'filip', ratio: 0.904, name: 'Filip Myjak', youtube: 'https://www.youtube.com/@filadroid',
+    heading: 'Najpierw pokazujemy to publicznie. Potem wdrażamy u&nbsp;Ciebie.',
+    lead: 'Filip prowadzi Filadroid, polski kanał na YouTube o praktycznym AI. Krok po kroku pokazuje tam pracę z Claude, Gemini i NotebookLM oraz generowanie wideo w Higgsfield i Kling. W agencji robimy to samo dla firm.' },
+  { key: 'dawid', ratio: 0.92, name: 'Dawid Borzęcki', youtube: 'https://www.youtube.com/@bez_litosci',
+    heading: 'Wideo, strategia, social media.',
+    lead: 'Dawid prowadzi kanał Bez litości. W agencji odpowiada za produkcję wideo, strategie i social media.' },
 ];
 
 const FAQ = [
@@ -311,25 +316,22 @@ ${steps([
       </div>
     </section>
 
-    <section class="scene scene--about" id="o-nas" data-portrait>
+${TEAM.map((m, n) => `    <section class="scene scene--about"${n === 0 ? ' id="o-nas"' : ''} data-portrait="${m.key}" data-ratio="${m.ratio}">
       <div class="col">
-        <p class="tag mono" data-r>O nas</p>
-        <h2 class="ask" data-r>Najpierw pokazujemy to publicznie. Potem wdrażamy u&nbsp;Ciebie.</h2>
-        <p class="lead" data-r>Filadelfia.ai to dwie osoby. Każdy z nas prowadzi kanał na YouTube, więc to, jak pracujemy, możesz zobaczyć, zanim napiszesz.</p>
-        <ul class="duo" data-r>
-${TEAM.map((m) => `          <li>
-            <p class="mono duo__side">${m.side}</p>
-            <h3>${m.name}</h3>
-            <p class="duo__skills">${m.skills}</p>
-            <a class="more" href="${m.youtube}" target="_blank" rel="noopener">YouTube: ${m.channel} <span aria-hidden="true">↗</span></a>
-          </li>`).join('\n')}
-        </ul>
+        <p class="tag mono" data-r>O nas · ${n + 1} z ${TEAM.length}</p>
+        <h2 class="ask" data-r>${m.heading}</h2>
+        <p class="lead" data-r>${m.lead}</p>
+        <dl class="facts" data-r>
+          <div><dt class="mono">Kto</dt><dd>${m.name}</dd></div>
+          <div><dt class="mono">Kanał</dt><dd><a href="${m.youtube}" target="_blank" rel="noopener">${m.youtube.replace('https://www.', '')}</a></dd></div>
+          <div><dt class="mono">Kontakt</dt><dd><a href="mailto:${MAIL}">${MAIL}</a></dd></div>
+        </dl>
         <p class="actions" data-r>
-          <a class="pill" href="kontakt.html">Napisz do nas</a>
-          <a class="more" href="mailto:${MAIL}">${MAIL}</a>
+          <a class="pill" href="${m.youtube}" target="_blank" rel="noopener">Zobacz kanał</a>
+          <a class="more" href="kontakt.html">Napisz do nas</a>
         </p>
       </div>
-    </section>
+    </section>`).join('\n\n')}
 
     <section class="wide wide--faq" id="faq">
       <div class="head">

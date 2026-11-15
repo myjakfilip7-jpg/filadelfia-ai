@@ -23,7 +23,7 @@
   <link rel="apple-touch-icon" href="icon-180.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="preload" href="fonts/mona-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=a41b8c37c8">
+  <link rel="stylesheet" href="styles.css?v=68e47451eb">
 </head>
 <body>
   <a class="skip" href="#main">Przejdź do treści</a>
@@ -261,28 +261,36 @@
       </div>
     </section>
 
-    <section class="scene scene--about" id="o-nas" data-portrait>
+    <section class="scene scene--about" id="o-nas" data-portrait="filip" data-ratio="0.904">
       <div class="col">
-        <p class="tag mono" data-r>O nas</p>
+        <p class="tag mono" data-r>O nas · 1 z 2</p>
         <h2 class="ask" data-r>Najpierw pokazujemy to publicznie. Potem wdrażamy u&nbsp;Ciebie.</h2>
-        <p class="lead" data-r>Filadelfia.ai to dwie osoby. Każdy z nas prowadzi kanał na YouTube, więc to, jak pracujemy, możesz zobaczyć, zanim napiszesz.</p>
-        <ul class="duo" data-r>
-          <li>
-            <p class="mono duo__side">Po lewej</p>
-            <h3>Filip Myjak</h3>
-            <p class="duo__skills">Automatyzacje, AI, strony i aplikacje</p>
-            <a class="more" href="https://www.youtube.com/@filadroid" target="_blank" rel="noopener">YouTube: Filadroid <span aria-hidden="true">↗</span></a>
-          </li>
-          <li>
-            <p class="mono duo__side">Po prawej</p>
-            <h3>Dawid Borzęcki</h3>
-            <p class="duo__skills">Produkcja wideo, strategie, social media</p>
-            <a class="more" href="https://www.youtube.com/@bez_litosci" target="_blank" rel="noopener">YouTube: Bez litości <span aria-hidden="true">↗</span></a>
-          </li>
-        </ul>
+        <p class="lead" data-r>Filip prowadzi Filadroid, polski kanał na YouTube o praktycznym AI. Krok po kroku pokazuje tam pracę z Claude, Gemini i NotebookLM oraz generowanie wideo w Higgsfield i Kling. W agencji robimy to samo dla firm.</p>
+        <dl class="facts" data-r>
+          <div><dt class="mono">Kto</dt><dd>Filip Myjak</dd></div>
+          <div><dt class="mono">Kanał</dt><dd><a href="https://www.youtube.com/@filadroid" target="_blank" rel="noopener">youtube.com/@filadroid</a></dd></div>
+          <div><dt class="mono">Kontakt</dt><dd><a href="mailto:business@filadelfia.ai">business@filadelfia.ai</a></dd></div>
+        </dl>
         <p class="actions" data-r>
-          <a class="pill" href="kontakt.html">Napisz do nas</a>
-          <a class="more" href="mailto:business@filadelfia.ai">business@filadelfia.ai</a>
+          <a class="pill" href="https://www.youtube.com/@filadroid" target="_blank" rel="noopener">Zobacz kanał</a>
+          <a class="more" href="kontakt.html">Napisz do nas</a>
+        </p>
+      </div>
+    </section>
+
+    <section class="scene scene--about" data-portrait="dawid" data-ratio="0.92">
+      <div class="col">
+        <p class="tag mono" data-r>O nas · 2 z 2</p>
+        <h2 class="ask" data-r>Wideo, strategia, social media.</h2>
+        <p class="lead" data-r>Dawid prowadzi kanał Bez litości. W agencji odpowiada za produkcję wideo, strategie i social media.</p>
+        <dl class="facts" data-r>
+          <div><dt class="mono">Kto</dt><dd>Dawid Borzęcki</dd></div>
+          <div><dt class="mono">Kanał</dt><dd><a href="https://www.youtube.com/@bez_litosci" target="_blank" rel="noopener">youtube.com/@bez_litosci</a></dd></div>
+          <div><dt class="mono">Kontakt</dt><dd><a href="mailto:business@filadelfia.ai">business@filadelfia.ai</a></dd></div>
+        </dl>
+        <p class="actions" data-r>
+          <a class="pill" href="https://www.youtube.com/@bez_litosci" target="_blank" rel="noopener">Zobacz kanał</a>
+          <a class="more" href="kontakt.html">Napisz do nas</a>
         </p>
       </div>
     </section>
@@ -378,6 +386,6 @@
     <form id="cmdForm"><span aria-hidden="true">›</span><input id="cmdIn" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Polecenie" placeholder="pomoc"><button type="button" id="cmdClose" aria-label="Zamknij wiersz poleceń">esc</button></form>
   </div>
 
-  <script src="script.js?v=db0184bdee" defer></script>
+  <script src="script.js?v=55ccfd38dc" defer></script>
 </body>
 </html>

@@ -16,6 +16,10 @@ const PORT = Number(env.PORT || 8787);
 const BASE_URL = (env.BASE_URL || `http://localhost:${PORT}`).replace(/\/$/, '');
 const ORIGIN = new URL(BASE_URL).origin;
 const SECURE = BASE_URL.startsWith('https://');
+// Za proxy hostingu (TRUST_PROXY=1) adres gościa jest w nagłówku; bez tej zmiennej liczy się adres połączenia.
+// Nagłówek może podać sam klient, więc włączaj to tylko tam, gdzie serwer nie jest dostępny z pominięciem proxy.
+const TRUST_PROXY = env.TRUST_PROXY === '1';
+const clientIp = (req) => (TRUST_PROXY && String(req.headers['x-forwarded-for'] || '').split(',')[0].trim().slice(0, 64)) || req.socket.remoteAddress || '?';
 const SECRET = env.SESSION_SECRET || '';
 const CLIENT_ID = env.GITHUB_CLIENT_ID || '';
 const CLIENT_SECRET = env.GITHUB_CLIENT_SECRET || '';
@@ -174,7 +178,7 @@ function countView(req, body) {
   if (session(req)) return 'panel'; // własnych wejść nie liczymy
   let page = clean(body.sciezka, 120).replace(/index\.html$/, '');
   if (!/^\/[a-z0-9\-_.\/]*$/i.test(page) || page === '/panel.html') return 'sciezka';
-  const ip = req.socket.remoteAddress || '?', now = Date.now();
+  const ip = clientIp(req), now = Date.now();
   const recent = (beacons.get(ip) || []).filter((t) => now - t < 60000);
   if (recent.length >= 120) return 'limit';
   recent.push(now); beacons.set(ip, recent);
@@ -221,7 +225,7 @@ async function serveStatic(res, pathname) {
   if (rel.endsWith('/')) rel += 'index.html';
   const file = path.join(ROOT, rel);
   const inside = file.startsWith(ROOT + path.sep);
-  const hidden = rel.split('/').some((seg) => seg.startsWith('.')) || rel.startsWith('/server/') || rel.startsWith('/tools/') || rel === '/build.mjs' || rel === '/README.md';
+  const hidden = rel.split('/').some((seg) => seg.startsWith('.')) || rel.startsWith('/server/') || rel.startsWith('/tools/') || rel === '/build.mjs' || rel === '/README.md' || rel === '/package.json';
   if (inside && !hidden) {
     try {
       let data = await readFile(file);
@@ -293,7 +297,7 @@ async function handle(req, res) {
   /* --- zgłoszenia --- */
   if (p === '/api/zgloszenia' && m === 'POST') { // publiczne: formularz kontaktowy
     if (!sameOrigin(req)) return json(res, 403, { blad: 'obce-zrodlo' });
-    const ip = req.socket.remoteAddress || '?';
+    const ip = clientIp(req);
     let body;
     try { body = await readJson(req); } catch (e) { return json(res, e.message === 'za-duze' ? 413 : 400, { blad: e.message }); }
     if (clean(body.www, 10)) return json(res, 200, { ok: true }); // pole-pułapka: bot dostaje „ok”, nic nie zapisujemy

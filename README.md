@@ -84,6 +84,17 @@ Buduje strony pod podany adres i tworzy `paczka/habadzibadlo-pl.zip` z samymi pl
 oraz `.htaccess` (strona 404, pamięć podręczna, kompresja). ZIP wgrywa się do `public_html`
 i rozpakowuje w menedżerze plików. Folder `paczka/` nie trafia do repozytorium.
 
+## Paczka z backendem na hosting z Node.js (Hostinger)
+
+```bash
+node tools/paczka-node.mjs https://habadzibadlo.pl/
+```
+
+Tworzy `paczka/habadzibadlo-pl-node.zip`: strony, panel, `server/server.mjs` i `package.json`. W Hostingerze wdraża się ją
+jako aplikację Node.js (typ „Other”, plik startowy `server/server.mjs`, Node 22). Zmienne środowiska ustawia się w panelu
+hostingu: `BASE_URL`, `SESSION_SECRET`, `ADMIN_GITHUB_LOGINS`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `TRUST_PROXY=1`
+oraz `DATA_FILE` ze ścieżką poza katalogiem aplikacji, żeby zgłoszenia przetrwały kolejne wdrożenia.
+
 ## Przed przejściem na docelową domenę
 
 - Usuń `<meta name="robots" content="noindex, nofollow">` w `build.mjs`.

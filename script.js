@@ -101,7 +101,7 @@
     // gdy menu jest otwarte, reszta strony jest wyłączona z klawiatury i czytników
     Array.prototype.forEach.call(document.querySelectorAll('main, footer.end, .hud'), function (el) { el.inert = open; });
     // wymuszone przeliczenie stylu: bez niego menu jest w tej chwili jeszcze niewidoczne i nie przyjmuje fokusu
-    if (open) { void menu.offsetWidth; var firstLink = menu.querySelector('a'); if (firstLink) firstLink.focus({ preventScroll: true }); }
+    if (open) { void menu.offsetWidth; var firstLink = menu.querySelector('summary, a'); if (firstLink) firstLink.focus({ preventScroll: true }); }
     else if (menu.contains(document.activeElement)) menuBtn.focus({ preventScroll: true });
     if (bar) { bar.classList.remove('is-hidden'); bar.classList.toggle('is-stuck', !open && window.scrollY > 24); }
   }

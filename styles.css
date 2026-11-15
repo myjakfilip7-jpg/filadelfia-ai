@@ -106,7 +106,7 @@ img { max-width: 100%; }
 .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 28px; margin-top: clamp(36px, 3.2vw, 56px); }
 
 /* ---------- nagłówek: szkło po przewinięciu, chowa się przy przewijaniu w dół ---------- */
-.bar { position: fixed; inset: 0 0 auto 0; z-index: 10; display: flex; align-items: center; gap: clamp(24px, 2.6vw, 44px); padding: clamp(18px, 1.6vw, 28px) var(--edge) 34px; background: linear-gradient(to bottom, var(--bg) 45%, transparent); border-bottom: 1px solid transparent; transition: transform .45s var(--ease), padding .3s, background .3s; }
+.bar { position: fixed; inset: 0 0 auto 0; z-index: 12; display: flex; align-items: center; gap: clamp(24px, 2.6vw, 44px); padding: clamp(18px, 1.6vw, 28px) var(--edge) 34px; background: linear-gradient(to bottom, var(--bg) 45%, transparent); border-bottom: 1px solid transparent; transition: transform .45s var(--ease), padding .3s, background .3s; }
 .bar.is-stuck { padding-top: 13px; padding-bottom: 13px; background: color-mix(in srgb, var(--bg) 78%, transparent); -webkit-backdrop-filter: blur(16px) saturate(1.3); backdrop-filter: blur(16px) saturate(1.3); border-bottom-color: color-mix(in srgb, var(--line) 70%, transparent); }
 .bar.is-hidden { transform: translateY(-101%); }
 .logo { display: inline-flex; align-items: center; gap: .62em; font-size: clamp(15px, .45vw + 10px, 19px); margin-right: auto; }
@@ -139,15 +139,24 @@ img { max-width: 100%; }
 .nav__panel span { display: block; font-size: clamp(13px, .95vw, 14.5px); margin-top: 2px; color: var(--slate); }
 .nav__panel a:hover strong { color: var(--signal); }
 
-/* menu pełnoekranowe (telefon) */
-.menu { position: fixed; inset: 0; z-index: 9; background: var(--bg); padding: 104px var(--edge) 84px; display: flex; flex-direction: column; overflow-y: auto; opacity: 0; visibility: hidden; transition: opacity .3s, visibility 0s linear .3s; }
+/* menu na telefonie: prosta lista pod nagłówkiem, usługi rozwijane, jeden przycisk na dole */
+.menu { position: fixed; inset: 0; z-index: 11; background: var(--bg); padding: 76px var(--edge) calc(24px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; overflow-y: auto; opacity: 0; visibility: hidden; transition: opacity .2s, visibility 0s linear .2s; }
 /* przy otwarciu menu jest widoczne od razu (inaczej nie przyjmie fokusu); przy zamknięciu znika po wygaszeniu */
-.menu.open { opacity: 1; visibility: visible; transition: opacity .3s, visibility 0s; }
-.menu > .mono { color: var(--slate); margin: 0 0 10px; }
-.menu > .mono ~ .mono { margin-top: 30px; }
-.menu__big { font-size: clamp(27px, 8vw, 42px); font-weight: 300; font-stretch: 125%; letter-spacing: -.035em; line-height: 1.12; padding: 7px 0; transform: translateY(10px); opacity: 0; transition: transform .5s var(--ease), opacity .5s; }
-.menu.open .menu__big { transform: none; opacity: 1; }
-.menu a.menu__mail { margin-top: auto; padding-top: 32px; color: var(--slate); }
+.menu.open { opacity: 1; visibility: visible; transition: opacity .2s, visibility 0s; }
+.menu__list { border-top: 1px solid var(--line); interpolate-size: allow-keywords; }
+.menu__row, .menu__group summary { display: flex; align-items: center; justify-content: space-between; min-height: 60px; font-size: 21px; font-weight: 400; font-stretch: 112%; letter-spacing: -.015em; border-bottom: 1px solid var(--line); cursor: pointer; list-style: none; }
+.menu__group summary::-webkit-details-marker { display: none; }
+.menu__group summary::after { content: ''; width: 8px; height: 8px; margin-right: 4px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: translateY(-2px) rotate(45deg); transition: transform .3s var(--ease); }
+.menu__group[open] summary::after { transform: translateY(2px) rotate(225deg); }
+.menu__group[open] summary { border-bottom-color: transparent; }
+.menu__group a { display: flex; align-items: center; min-height: 46px; padding-left: 14px; font-size: 17px; color: var(--slate); }
+.menu__group a:last-child { margin-bottom: 10px; }
+.menu__group[open] { border-bottom: 1px solid var(--line); }
+.menu__group::details-content { block-size: 0; overflow: clip; transition: block-size .3s var(--ease), content-visibility .3s allow-discrete; }
+.menu__group[open]::details-content { block-size: auto; }
+.menu__row:active, .menu__group summary:active, .menu__group a:active { color: var(--signal); }
+.menu__foot { margin-top: auto; padding-top: 28px; }
+.menu__foot .pill { width: 100%; height: 56px; }
 
 /* ---------- sekcje ---------- */
 main { position: relative; z-index: 1; }

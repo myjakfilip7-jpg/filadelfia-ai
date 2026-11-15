@@ -75,15 +75,18 @@ ${SERVICES.map((sv) => `          <a href="${sv.file}"><strong>${sv.name}</stron
   </header>
 
   <nav class="menu" id="menu" aria-label="Menu" inert>
-    <p class="mono">Usługi</p>
-${SERVICES.map((s) => `    <a class="menu__big" href="${s.file}">${s.short}</a>`).join('\n')}
-    <p class="mono">Firma</p>
-    <a class="menu__big" href="./#proces">Proces</a>
-    <a class="menu__big" href="./#zasady">Zasady</a>
-    <a class="menu__big" href="./#o-nas">O nas</a>
-    <a class="menu__big" href="./#faq">Pytania</a>
-    <a class="menu__big" href="kontakt.html">Kontakt</a>
-    <a class="menu__mail mono" href="mailto:${MAIL}">${MAIL}</a>
+    <div class="menu__list">
+      <details class="menu__group">
+        <summary>Usługi</summary>
+${SERVICES.map((sv) => `        <a href="${sv.file}">${sv.name}</a>`).join('\n')}
+      </details>
+      <a class="menu__row" href="./#proces">Proces</a>
+      <a class="menu__row" href="./#o-nas">O nas</a>
+      <a class="menu__row" href="./#faq">Pytania</a>
+    </div>
+    <div class="menu__foot">
+      <a class="pill" href="kontakt.html">Umów rozmowę</a>
+    </div>
   </nav>
 
   <main id="main">

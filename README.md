@@ -74,6 +74,16 @@ formularz zapisuje zgłoszenie, a właściciel widzi je w panelu. Adres jest w `
 GitHub Pages z gałęzi `main`. Wszystkie ścieżki są względne, więc strona działa
 też w podkatalogu.
 
+## Paczka na zwykły hosting (Hostinger)
+
+```bash
+node tools/paczka.mjs https://habadzibadlo.pl/
+```
+
+Buduje strony pod podany adres i tworzy `paczka/habadzibadlo-pl.zip` z samymi plikami statycznymi
+oraz `.htaccess` (strona 404, pamięć podręczna, kompresja). ZIP wgrywa się do `public_html`
+i rozpakowuje w menedżerze plików. Folder `paczka/` nie trafia do repozytorium.
+
 ## Przed przejściem na docelową domenę
 
 - Usuń `<meta name="robots" content="noindex, nofollow">` w `build.mjs`.

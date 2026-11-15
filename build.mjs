@@ -436,21 +436,33 @@ const kampanie = service(0, {
   ],
   demo: '\n' + shots('Tych zdjęć nikt nie zrobił.', false) + `
 
-    <div class="gap"></div>
-
-    <section class="block">
-      <div class="col">
-        <p class="tag mono" data-r>Jeden materiał, trzy formaty</p>
-        <div class="formats" data-formats data-r>
-          <div class="formats__stage"><div class="formats__frame" data-f="916"><img src="media/but-560.jpg" alt="Ten sam kadr z butem przycięty do wybranego formatu" loading="lazy" decoding="async"></div></div>
-          <p class="chips">
-            <button type="button" data-f="916">9:16 · Reels, TikTok</button>
-            <button type="button" data-f="11">1:1 · Feed</button>
-            <button type="button" data-f="169">16:9 · YouTube</button>
+    <section class="wide wide--demo" data-formats>
+      <div class="split">
+        <div>
+          <p class="tag mono" data-r>Jeden kadr, trzy formaty</p>
+          <h2 class="ask" data-r>Wybierz produkt i format.</h2>
+          <p class="lead" data-r>Ten sam wygenerowany kadr przycinamy pod każde miejsce emisji. Niczego nie trzeba fotografować drugi raz.</p>
+          <p class="picker__label mono" data-r>Produkt</p>
+          <p class="chips" data-r>
+            <button type="button" data-img="media/but.jpg" aria-pressed="true">Obuwie</button>
+            <button type="button" data-img="media/serum.jpg" aria-pressed="false">Kosmetyki</button>
+            <button type="button" data-img="media/kawa.jpg" aria-pressed="false">Kawa</button>
           </p>
+          <p class="picker__label mono" data-r>Format</p>
+          <p class="chips" data-r>
+            <button type="button" data-f="916" data-meta="9:16 · 1080 × 1920 · Reels, TikTok" aria-pressed="true">Pion</button>
+            <button type="button" data-f="11" data-meta="1:1 · 1080 × 1080 · feed" aria-pressed="false">Kwadrat</button>
+            <button type="button" data-f="169" data-meta="16:9 · 1920 × 1080 · YouTube" aria-pressed="false">Poziom</button>
+          </p>
+        </div>
+        <div class="formats" data-r>
+          <div class="formats__stage"><div class="formats__frame" data-f="916"><img src="media/but.jpg" alt="Wybrany kadr przycięty do wybranego formatu" decoding="async"></div></div>
+          <p class="formats__meta mono" aria-live="polite">9:16 · 1080 × 1920 · Reels, TikTok</p>
         </div>
       </div>
     </section>
+
+    <div class="gap"></div>
 `,
   noteTag: 'Uczciwie',
   note: 'AI nie zastąpi wszystkiego. Jeśli w reklamie ma wystąpić konkretna osoba albo dokładny detal produktu, powiemy wprost, co da się wygenerować, a co lepiej sfilmować.',
@@ -494,19 +506,31 @@ const chatboty = service(2, {
     ['Poprawki', 'Po pierwszych tygodniach przeglądamy rozmowy i uzupełniamy wiedzę bota.'],
   ],
   demo: `
-    <section class="block">
-      <div class="col">
-        <p class="tag mono" data-r>Przykładowa rozmowa</p>
-        <div class="chat" data-seq data-r>
-          <p class="chat__me" data-step>Czy w sobotę jest wolny termin?</p>
-          <p class="chat__bot" data-step>Jestem botem gabinetu. W sobotę są wolne godziny 10:00 i 12:30. Zarezerwować którąś?</p>
-          <p class="chat__me" data-step>Najpierw chcę złożyć reklamację.</p>
-          <p class="chat__bot" data-step>To sprawa dla człowieka. Przekazuję rozmowę do recepcji razem z historią. Odpiszą w tym oknie.</p>
-          <p class="chat__sys mono" data-step>Rozmowa przekazana · recepcja</p>
-          <button class="more" type="button" data-replay>Puść jeszcze raz</button>
+    <section class="wide wide--demo">
+      <div class="split">
+        <div>
+          <p class="tag mono" data-r>Wypróbuj · przykład</p>
+          <h2 class="ask" data-r>Zadaj mu pytanie.</h2>
+          <p class="lead" data-r>To przykładowy bot gabinetu. Zna trzy dokumenty i odpowiada tylko na ich podstawie. Odpowiedzi są tu przygotowane z góry: pokazują zachowanie bota, a nie działający model.</p>
+          <p class="picker__label mono" data-r>Co bot wie</p>
+          <p class="sources" data-r><span>Cennik</span><span>Godziny otwarcia</span><span>Regulamin</span></p>
+        </div>
+        <div class="chatbox" data-chat data-r>
+          <div class="chatbox__log" aria-live="polite">
+            <p class="chat__bot">Dzień dobry, jestem botem gabinetu. W czym mogę pomóc?</p>
+          </div>
+          <p class="chips chatbox__asks">
+            <button type="button" data-a="Pierwsza wizyta kosztuje 180 zł i trwa 50 minut. Kolejne wizyty to 150 zł. Źródło: cennik.">Ile kosztuje wizyta?</button>
+            <button type="button" data-a="W sobotę gabinet jest otwarty od 9:00 do 14:00. Wolne terminy sprawdzi i potwierdzi recepcja. Źródło: godziny otwarcia.">Czy jest termin w sobotę?</button>
+            <button type="button" data-a="To sprawa dla człowieka. Przekazuję rozmowę do recepcji razem z całą historią. Odpiszą w tym oknie." data-sys="Rozmowa przekazana · recepcja">Chcę złożyć reklamację</button>
+            <button type="button" data-a="Tego nie wiem. Odpowiadam tylko na pytania o gabinet: cennik, godziny i regulamin.">Jaka będzie jutro pogoda?</button>
+          </p>
+          <button class="more chatbox__reset" type="button" data-reset hidden>Zacznij od nowa</button>
         </div>
       </div>
     </section>
+
+    <div class="gap"></div>
 `,
   noteTag: 'Zasada',
   note: 'Bot przedstawia się jako bot. Klient zawsze wie, że rozmawia z AI, i zawsze może poprosić o człowieka.',
@@ -529,13 +553,33 @@ const strony = service(3, {
     ['Przekazanie', 'Domena, hosting i kod są na Twoich kontach. Pokazujemy, jak zmieniać treści.'],
   ],
   demo: `
-    <section class="block">
-      <div class="col">
-        <p class="tag mono" data-r>Spróbuj</p>
-        <h2 class="edit" contenteditable="plaintext-only" spellcheck="false" data-r>Kliknij i zmień ten nagłówek.</h2>
-        <p class="lead" data-r>Tak działa panel: klikasz w tekst i piszesz. Tutaj zmiana zostaje tylko w Twojej przeglądarce.</p>
+    <section class="wide wide--demo" data-cms>
+      <div class="split">
+        <div>
+          <p class="tag mono" data-r>Spróbuj · przykładowy panel</p>
+          <h2 class="ask" data-r>Zmień treść. Zobacz stronę.</h2>
+          <p class="lead" data-r>Tak działa panel: wpisujesz, a strona zmienia się od razu. Bez kodu i bez programisty.</p>
+          <form class="cms" data-r>
+            <label class="field"><span class="mono">Nagłówek</span><input type="text" name="h" value="Fizjoterapia w centrum miasta" maxlength="48" autocomplete="off"></label>
+            <label class="field"><span class="mono">Opis</span><textarea name="p" rows="2" maxlength="150">Pomagamy wrócić do formy po urazach. Wizytę umówisz online w minutę.</textarea></label>
+            <label class="field"><span class="mono">Tekst przycisku</span><input type="text" name="b" value="Umów wizytę" maxlength="22" autocomplete="off"></label>
+            <label class="cms__check"><input type="checkbox" name="hours" checked><span>Pokaż godziny otwarcia</span></label>
+          </form>
+          <p class="cms__note" data-r>To przykład. Zmiany zostają tylko w Twojej przeglądarce.</p>
+        </div>
+        <div class="site" data-r aria-live="polite">
+          <p class="site__bar" aria-hidden="true"><i></i><i></i><i></i><span class="mono">twojafirma.pl</span></p>
+          <div class="site__body">
+            <p class="site__h" data-out="h">Fizjoterapia w centrum miasta</p>
+            <p class="site__p" data-out="p">Pomagamy wrócić do formy po urazach. Wizytę umówisz online w minutę.</p>
+            <p><span class="site__btn" data-out="b">Umów wizytę</span></p>
+            <p class="site__hours mono" data-out="hours">Pon.–pt. 8:00–18:00 · sob. 9:00–14:00</p>
+          </div>
+        </div>
       </div>
     </section>
+
+    <div class="gap"></div>
 `,
   noteTag: 'Zasada',
   note: 'Sprzedajemy kontrolę, nie zależność. Strona, domena i dane należą do Ciebie od pierwszego dnia.',

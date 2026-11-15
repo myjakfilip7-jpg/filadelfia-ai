@@ -23,7 +23,7 @@
   <link rel="apple-touch-icon" href="icon-180.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="preload" href="fonts/mona-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=857f700621">
+  <link rel="stylesheet" href="styles.css?v=53e0865dc0">
 </head>
 <body data-form="3">
   <a class="skip" href="#main">Przejdź do treści</a>
@@ -78,19 +78,31 @@
       </div>
     </section>
 
-    <section class="block">
-      <div class="col">
-        <p class="tag mono" data-r>Przykładowa rozmowa</p>
-        <div class="chat" data-seq data-r>
-          <p class="chat__me" data-step>Czy w sobotę jest wolny termin?</p>
-          <p class="chat__bot" data-step>Jestem botem gabinetu. W sobotę są wolne godziny 10:00 i 12:30. Zarezerwować którąś?</p>
-          <p class="chat__me" data-step>Najpierw chcę złożyć reklamację.</p>
-          <p class="chat__bot" data-step>To sprawa dla człowieka. Przekazuję rozmowę do recepcji razem z historią. Odpiszą w tym oknie.</p>
-          <p class="chat__sys mono" data-step>Rozmowa przekazana · recepcja</p>
-          <button class="more" type="button" data-replay>Puść jeszcze raz</button>
+    <section class="wide wide--demo">
+      <div class="split">
+        <div>
+          <p class="tag mono" data-r>Wypróbuj · przykład</p>
+          <h2 class="ask" data-r>Zadaj mu pytanie.</h2>
+          <p class="lead" data-r>To przykładowy bot gabinetu. Zna trzy dokumenty i odpowiada tylko na ich podstawie. Odpowiedzi są tu przygotowane z góry: pokazują zachowanie bota, a nie działający model.</p>
+          <p class="picker__label mono" data-r>Co bot wie</p>
+          <p class="sources" data-r><span>Cennik</span><span>Godziny otwarcia</span><span>Regulamin</span></p>
+        </div>
+        <div class="chatbox" data-chat data-r>
+          <div class="chatbox__log" aria-live="polite">
+            <p class="chat__bot">Dzień dobry, jestem botem gabinetu. W czym mogę pomóc?</p>
+          </div>
+          <p class="chips chatbox__asks">
+            <button type="button" data-a="Pierwsza wizyta kosztuje 180 zł i trwa 50 minut. Kolejne wizyty to 150 zł. Źródło: cennik.">Ile kosztuje wizyta?</button>
+            <button type="button" data-a="W sobotę gabinet jest otwarty od 9:00 do 14:00. Wolne terminy sprawdzi i potwierdzi recepcja. Źródło: godziny otwarcia.">Czy jest termin w sobotę?</button>
+            <button type="button" data-a="To sprawa dla człowieka. Przekazuję rozmowę do recepcji razem z całą historią. Odpiszą w tym oknie." data-sys="Rozmowa przekazana · recepcja">Chcę złożyć reklamację</button>
+            <button type="button" data-a="Tego nie wiem. Odpowiadam tylko na pytania o gabinet: cennik, godziny i regulamin.">Jaka będzie jutro pogoda?</button>
+          </p>
+          <button class="more chatbox__reset" type="button" data-reset hidden>Zacznij od nowa</button>
         </div>
       </div>
     </section>
+
+    <div class="gap"></div>
 
     <section class="block">
       <div class="col">
@@ -205,6 +217,6 @@
     <form id="cmdForm"><span aria-hidden="true">›</span><input id="cmdIn" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Polecenie" placeholder="pomoc"><button type="button" id="cmdClose" aria-label="Zamknij wiersz poleceń">esc</button></form>
   </div>
 
-  <script src="script.js?v=df0912e227" defer></script>
+  <script src="script.js?v=a52c9e3ff2" defer></script>
 </body>
 </html>

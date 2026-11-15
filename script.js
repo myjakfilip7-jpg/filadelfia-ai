@@ -352,34 +352,57 @@
     whenSeen(el, function () { setTimeout(function () { if (!touched) { mode = 'ai'; draw(); } }, reduced ? 0 : 1600); });
   });
 
-  /* ---------- sekwencje (przykładowa rozmowa) ---------- */
-  Array.prototype.forEach.call(document.querySelectorAll('[data-seq]'), function (el) {
-    var st = Array.prototype.slice.call(el.querySelectorAll('[data-step]')), replay = el.querySelector('[data-replay]'), timer = 0;
-    function play() {
-      clearTimeout(timer);
-      st.forEach(function (x) { x.classList.remove('in'); });
-      var k = 0;
-      (function next() {
-        if (k >= st.length) return;
-        st[k++].classList.add('in');
-        timer = setTimeout(next, reduced ? 0 : 1500);
-      })();
-    }
-    if (replay) replay.addEventListener('click', play);
-    whenSeen(el, play);
+  /* ---------- czat-przykład: wybierasz pytanie, bot odpowiada przygotowaną odpowiedzią ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll('[data-chat]'), function (el) {
+    var log = el.querySelector('.chatbox__log'), asks = Array.prototype.slice.call(el.querySelectorAll('[data-a]')), reset = el.querySelector('[data-reset]');
+    var first = log.innerHTML, busy = false;
+    function say(cls, text) { var p = document.createElement('p'); p.className = cls; p.textContent = text; log.appendChild(p); log.scrollTop = log.scrollHeight; return p; }
+    asks.forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (busy) return;
+        busy = true; b.disabled = true; reset.hidden = false;
+        say('chat__me', b.textContent);
+        var dots = say('chat__bot chat__typing', '···');
+        setTimeout(function () {
+          dots.remove();
+          say('chat__bot', b.getAttribute('data-a'));
+          if (b.getAttribute('data-sys')) say('chat__sys mono', b.getAttribute('data-sys'));
+          busy = false;
+        }, reduced ? 0 : 750);
+      });
+    });
+    reset.addEventListener('click', function () { log.innerHTML = first; asks.forEach(function (b) { b.disabled = false; }); reset.hidden = true; busy = false; });
   });
 
-  /* ---------- formaty reklamy: jedna klatka, trzy proporcje ---------- */
+  /* ---------- kadr reklamy: wybór produktu i formatu ---------- */
   Array.prototype.forEach.call(document.querySelectorAll('[data-formats]'), function (el) {
-    var frame = el.querySelector('.formats__frame'), btns = Array.prototype.slice.call(el.querySelectorAll('button')), cur = 0, auto = 0;
-    function set(n) {
-      cur = n;
-      frame.setAttribute('data-f', btns[n].getAttribute('data-f'));
-      btns.forEach(function (b, k) { b.setAttribute('aria-pressed', String(k === n)); });
+    var frame = el.querySelector('.formats__frame'), img = frame.querySelector('img'), meta = el.querySelector('.formats__meta');
+    var fBtns = Array.prototype.slice.call(el.querySelectorAll('button[data-f]')), iBtns = Array.prototype.slice.call(el.querySelectorAll('button[data-img]'));
+    var cur = 0, auto = 0;
+    function press(list, n) { list.forEach(function (b, k) { b.setAttribute('aria-pressed', String(k === n)); }); }
+    function setFormat(n) { cur = n; frame.setAttribute('data-f', fBtns[n].getAttribute('data-f')); meta.textContent = fBtns[n].getAttribute('data-meta'); press(fBtns, n); }
+    fBtns.forEach(function (b, k) { b.addEventListener('click', function () { clearInterval(auto); setFormat(k); }); });
+    iBtns.forEach(function (b, k) { b.addEventListener('click', function () { clearInterval(auto); img.src = b.getAttribute('data-img'); press(iBtns, k); }); });
+    setFormat(0);
+    whenSeen(el, function () {
+      // pozostałe kadry pobieramy z wyprzedzeniem, żeby zmiana produktu była natychmiastowa
+      iBtns.forEach(function (b) { new Image().src = b.getAttribute('data-img'); });
+      // dopóki nikt nie kliknie, formaty zmieniają się same
+      if (!reduced) auto = setInterval(function () { setFormat((cur + 1) % fBtns.length); }, 2800);
+    });
+  });
+
+  /* ---------- mini panel treści: pola zmieniają podgląd strony ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll('[data-cms]'), function (el) {
+    var form = el.querySelector('form'), outs = {};
+    Array.prototype.forEach.call(el.querySelectorAll('[data-out]'), function (o) { outs[o.getAttribute('data-out')] = o; });
+    function sync() {
+      ['h', 'p', 'b'].forEach(function (k) { outs[k].textContent = form[k].value.trim() || '…'; });
+      outs.hours.hidden = !form.hours.checked;
     }
-    btns.forEach(function (b, k) { b.addEventListener('click', function () { clearInterval(auto); set(k); }); });
-    set(0);
-    if (!reduced) whenSeen(el, function () { auto = setInterval(function () { set((cur + 1) % btns.length); }, 2600); });
+    form.addEventListener('input', sync); form.addEventListener('change', sync);
+    form.addEventListener('submit', function (e) { e.preventDefault(); });
+    sync();
   });
 
   /* ---------- obrazy: pojawiają się po wczytaniu; błąd zostawia opis zamiast pustego pola ---------- */

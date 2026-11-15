@@ -23,7 +23,7 @@
   <link rel="apple-touch-icon" href="icon-180.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="preload" href="fonts/mona-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=857f700621">
+  <link rel="stylesheet" href="styles.css?v=53e0865dc0">
 </head>
 <body data-form="1">
   <a class="skip" href="#main">Przejdź do treści</a>
@@ -78,13 +78,33 @@
       </div>
     </section>
 
-    <section class="block">
-      <div class="col">
-        <p class="tag mono" data-r>Spróbuj</p>
-        <h2 class="edit" contenteditable="plaintext-only" spellcheck="false" data-r>Kliknij i zmień ten nagłówek.</h2>
-        <p class="lead" data-r>Tak działa panel: klikasz w tekst i piszesz. Tutaj zmiana zostaje tylko w Twojej przeglądarce.</p>
+    <section class="wide wide--demo" data-cms>
+      <div class="split">
+        <div>
+          <p class="tag mono" data-r>Spróbuj · przykładowy panel</p>
+          <h2 class="ask" data-r>Zmień treść. Zobacz stronę.</h2>
+          <p class="lead" data-r>Tak działa panel: wpisujesz, a strona zmienia się od razu. Bez kodu i bez programisty.</p>
+          <form class="cms" data-r>
+            <label class="field"><span class="mono">Nagłówek</span><input type="text" name="h" value="Fizjoterapia w centrum miasta" maxlength="48" autocomplete="off"></label>
+            <label class="field"><span class="mono">Opis</span><textarea name="p" rows="2" maxlength="150">Pomagamy wrócić do formy po urazach. Wizytę umówisz online w minutę.</textarea></label>
+            <label class="field"><span class="mono">Tekst przycisku</span><input type="text" name="b" value="Umów wizytę" maxlength="22" autocomplete="off"></label>
+            <label class="cms__check"><input type="checkbox" name="hours" checked><span>Pokaż godziny otwarcia</span></label>
+          </form>
+          <p class="cms__note" data-r>To przykład. Zmiany zostają tylko w Twojej przeglądarce.</p>
+        </div>
+        <div class="site" data-r aria-live="polite">
+          <p class="site__bar" aria-hidden="true"><i></i><i></i><i></i><span class="mono">twojafirma.pl</span></p>
+          <div class="site__body">
+            <p class="site__h" data-out="h">Fizjoterapia w centrum miasta</p>
+            <p class="site__p" data-out="p">Pomagamy wrócić do formy po urazach. Wizytę umówisz online w minutę.</p>
+            <p><span class="site__btn" data-out="b">Umów wizytę</span></p>
+            <p class="site__hours mono" data-out="hours">Pon.–pt. 8:00–18:00 · sob. 9:00–14:00</p>
+          </div>
+        </div>
       </div>
     </section>
+
+    <div class="gap"></div>
 
     <section class="block">
       <div class="col">
@@ -199,6 +219,6 @@
     <form id="cmdForm"><span aria-hidden="true">›</span><input id="cmdIn" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Polecenie" placeholder="pomoc"><button type="button" id="cmdClose" aria-label="Zamknij wiersz poleceń">esc</button></form>
   </div>
 
-  <script src="script.js?v=df0912e227" defer></script>
+  <script src="script.js?v=a52c9e3ff2" defer></script>
 </body>
 </html>

@@ -23,7 +23,7 @@
   <link rel="apple-touch-icon" href="icon-180.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="preload" href="fonts/mona-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=857f700621">
+  <link rel="stylesheet" href="styles.css?v=53e0865dc0">
 </head>
 <body data-form="0">
   <a class="skip" href="#main">Przejdź do treści</a>
@@ -106,21 +106,33 @@
       <p class="shots__note" data-r>To przykłady, nie realizacje dla klientów. Żadnego z tych produktów nie sfotografowano: wszystkie trzy kadry wygenerowaliśmy w Higgsfield.</p>
     </section>
 
-    <div class="gap"></div>
-
-    <section class="block">
-      <div class="col">
-        <p class="tag mono" data-r>Jeden materiał, trzy formaty</p>
-        <div class="formats" data-formats data-r>
-          <div class="formats__stage"><div class="formats__frame" data-f="916"><img src="media/but-560.jpg" alt="Ten sam kadr z butem przycięty do wybranego formatu" loading="lazy" decoding="async"></div></div>
-          <p class="chips">
-            <button type="button" data-f="916">9:16 · Reels, TikTok</button>
-            <button type="button" data-f="11">1:1 · Feed</button>
-            <button type="button" data-f="169">16:9 · YouTube</button>
+    <section class="wide wide--demo" data-formats>
+      <div class="split">
+        <div>
+          <p class="tag mono" data-r>Jeden kadr, trzy formaty</p>
+          <h2 class="ask" data-r>Wybierz produkt i format.</h2>
+          <p class="lead" data-r>Ten sam wygenerowany kadr przycinamy pod każde miejsce emisji. Niczego nie trzeba fotografować drugi raz.</p>
+          <p class="picker__label mono" data-r>Produkt</p>
+          <p class="chips" data-r>
+            <button type="button" data-img="media/but.jpg" aria-pressed="true">Obuwie</button>
+            <button type="button" data-img="media/serum.jpg" aria-pressed="false">Kosmetyki</button>
+            <button type="button" data-img="media/kawa.jpg" aria-pressed="false">Kawa</button>
           </p>
+          <p class="picker__label mono" data-r>Format</p>
+          <p class="chips" data-r>
+            <button type="button" data-f="916" data-meta="9:16 · 1080 × 1920 · Reels, TikTok" aria-pressed="true">Pion</button>
+            <button type="button" data-f="11" data-meta="1:1 · 1080 × 1080 · feed" aria-pressed="false">Kwadrat</button>
+            <button type="button" data-f="169" data-meta="16:9 · 1920 × 1080 · YouTube" aria-pressed="false">Poziom</button>
+          </p>
+        </div>
+        <div class="formats" data-r>
+          <div class="formats__stage"><div class="formats__frame" data-f="916"><img src="media/but.jpg" alt="Wybrany kadr przycięty do wybranego formatu" decoding="async"></div></div>
+          <p class="formats__meta mono" aria-live="polite">9:16 · 1080 × 1920 · Reels, TikTok</p>
         </div>
       </div>
     </section>
+
+    <div class="gap"></div>
 
     <section class="block">
       <div class="col">
@@ -235,6 +247,6 @@
     <form id="cmdForm"><span aria-hidden="true">›</span><input id="cmdIn" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Polecenie" placeholder="pomoc"><button type="button" id="cmdClose" aria-label="Zamknij wiersz poleceń">esc</button></form>
   </div>
 
-  <script src="script.js?v=df0912e227" defer></script>
+  <script src="script.js?v=a52c9e3ff2" defer></script>
 </body>
 </html>

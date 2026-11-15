@@ -98,6 +98,11 @@
     menuBtn.setAttribute('aria-expanded', String(open));
     menuBtn.textContent = open ? 'Zamknij' : 'Menu';
     body.style.overflow = open ? 'hidden' : '';
+    // gdy menu jest otwarte, reszta strony jest wyłączona z klawiatury i czytników
+    Array.prototype.forEach.call(document.querySelectorAll('main, footer.end, .hud'), function (el) { el.inert = open; });
+    // wymuszone przeliczenie stylu: bez niego menu jest w tej chwili jeszcze niewidoczne i nie przyjmuje fokusu
+    if (open) { void menu.offsetWidth; var firstLink = menu.querySelector('a'); if (firstLink) firstLink.focus({ preventScroll: true }); }
+    else if (menu.contains(document.activeElement)) menuBtn.focus({ preventScroll: true });
     if (bar) { bar.classList.remove('is-hidden'); bar.classList.toggle('is-stuck', !open && window.scrollY > 24); }
   }
   if (menu && menuBtn) {
@@ -147,7 +152,7 @@
     agenci: 'automatyzacje.html', automatyzacje: 'automatyzacje.html',
     chatboty: 'chatboty.html', chatbot: 'chatboty.html',
     strony: 'strony.html', sklepy: 'strony.html', aplikacje: 'strony.html',
-    kontakt: 'kontakt.html', marka: 'marka.html'
+    kontakt: 'kontakt.html', marka: 'marka.html', onas: './#o-nas', 'o-nas': './#o-nas', pytania: './#faq', prywatnosc: 'prywatnosc.html'
   };
   function say(text) { cmdOut.textContent = text; }
   function openCmd() {
@@ -162,7 +167,7 @@
     var text = raw.trim().toLowerCase().replace(/^\//, '');
     var parts = text.split(/\s+/), c = parts[0];
     if (!c) return;
-    if (c === 'pomoc' || c === 'help' || c === '?') return say('kampanie · agenci · chatboty · strony · kontakt · marka\nnoc · dzien · forma 1–5 · puls · napisz <słowo> · filadelfia');
+    if (c === 'pomoc' || c === 'help' || c === '?') return say('kampanie · agenci · chatboty · strony · onas · kontakt · marka\nnoc · dzien · forma 1–5 · puls · napisz <słowo> · filadelfia');
     if (GO[c]) { say('Otwieram: ' + c); window.location.href = GO[c]; return; }
     if (c === 'noc') { setTheme('noc'); return say('Tryb nocny. Wróć poleceniem „dzien”.'); }
     if (c === 'dzien' || c === 'dzień') { setTheme('dzien'); return say('Tryb dzienny.'); }
@@ -626,7 +631,8 @@
   // sylwetki w „O nas”: gotowe współrzędne punktów (media/osoba-*.bin), układane tym samym mechanizmem co napisy
   var people = {}, portraitOn = false, shownKey = null, wantKey = null, swapTimer = 0;
   function fillPerson(pts, ratio) {
-    var n = pts.length / 2, hh = narrow ? 0.8 : 1.0; // połowa wysokości postaci w jednostkach sceny; na telefonie mniejsza, żeby nie wchodziła na tekst
+    // połowa wysokości postaci w jednostkach sceny; na telefonie mniejsza (a na niskim jeszcze mniejsza), żeby nie wchodziła na tekst
+    var n = pts.length / 2, hh = !narrow ? 1.0 : H < 620 ? 0.5 : H < 720 ? 0.62 : 0.8;
     for (var k = 0; k < N; k++) {
       var j = k % n;
       tdata[k * 2] = (pts[j * 2] / 255 * 2 - 1) * hh * ratio + (Math.random() - 0.5) * 0.008;

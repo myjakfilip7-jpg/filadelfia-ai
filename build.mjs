@@ -44,7 +44,7 @@ function shell({ file, title, desc, form, formName, lost, current, body, base, t
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
-  <script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'ProfessionalService', name: 'Filadelfia.ai', url: SITE, email: MAIL, description: 'Agencja AI: kampanie reklamowe AI, agenci i automatyzacje, chatboty, strony i sklepy.', address: { '@type': 'PostalAddress', addressLocality: 'Krynica-Zdrój', addressCountry: 'PL' }, sameAs: ['https://www.youtube.com/@filadroid'] })}</script>
+  <script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'ProfessionalService', name: 'Filadelfia.ai', url: SITE, email: MAIL, description: 'Agencja AI: kampanie reklamowe AI, agenci i automatyzacje, chatboty, strony i sklepy.', address: { '@type': 'PostalAddress', addressLocality: 'Krynica-Zdrój', addressCountry: 'PL' }, sameAs: ['https://www.youtube.com/@filadroid', 'https://www.youtube.com/@bez_litosci'] })}</script>
   <script>try { if (localStorage.getItem('fila-theme') === 'noc') document.documentElement.setAttribute('data-theme', 'noc'); } catch (e) {}</script>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icon-180.png">

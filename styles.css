@@ -140,8 +140,9 @@ img { max-width: 100%; }
 .nav__panel a:hover strong { color: var(--signal); }
 
 /* menu pełnoekranowe (telefon) */
-.menu { position: fixed; inset: 0; z-index: 9; background: var(--bg); padding: 104px var(--edge) 84px; display: flex; flex-direction: column; overflow-y: auto; opacity: 0; visibility: hidden; transition: opacity .3s, visibility .3s; }
-.menu.open { opacity: 1; visibility: visible; }
+.menu { position: fixed; inset: 0; z-index: 9; background: var(--bg); padding: 104px var(--edge) 84px; display: flex; flex-direction: column; overflow-y: auto; opacity: 0; visibility: hidden; transition: opacity .3s, visibility 0s linear .3s; }
+/* przy otwarciu menu jest widoczne od razu (inaczej nie przyjmie fokusu); przy zamknięciu znika po wygaszeniu */
+.menu.open { opacity: 1; visibility: visible; transition: opacity .3s, visibility 0s; }
 .menu > .mono { color: var(--slate); margin: 0 0 10px; }
 .menu > .mono ~ .mono { margin-top: 30px; }
 .menu__big { font-size: clamp(27px, 8vw, 42px); font-weight: 300; font-stretch: 125%; letter-spacing: -.035em; line-height: 1.12; padding: 7px 0; transform: translateY(10px); opacity: 0; transition: transform .5s var(--ease), opacity .5s; }
@@ -163,18 +164,28 @@ main { position: relative; z-index: 1; }
 .facts a { border-bottom: 1px solid var(--ink); transition: color .2s, border-color .2s; }
 .facts a:hover { color: var(--signal); border-color: var(--signal); }
 /* O nas: układ stoi w miejscu (przypięty), a przewijanie zmienia tylko osobę.
-   Sekcja ma wysokość „liczba osób × ekran”; niewidoczne znaczniki co ekran łapią przewijanie. */
-html { scroll-snap-type: y proximity; }
-.about { position: relative; height: calc(var(--n) * 100vh); height: calc(var(--n) * 100svh); }
-.about__stage { position: sticky; top: 0; height: 100vh; height: 100svh; min-height: 0; }
-.about__snap { position: absolute; left: 0; top: calc(var(--i) * 100vh); top: calc(var(--i) * 100svh); width: 1px; height: 100vh; height: 100svh; pointer-events: none; scroll-snap-align: start; }
-.about__slides { display: grid; }
-.about__slide { grid-area: 1 / 1; opacity: 0; visibility: hidden; transform: translateY(14px); transition: opacity .45s, transform .6s var(--ease), visibility .45s; }
-.about__slide.is-active { opacity: 1; visibility: visible; transform: none; transition-delay: .18s; }
+   Sekcja ma wysokość „liczba osób × ekran”; niewidoczne znaczniki co ekran łapią przewijanie.
+   Bez JavaScriptu nic nie jest przypinane: osoby stoją jedna pod drugą. */
+.about__slides { display: grid; gap: clamp(60px, 8vw, 120px); }
+.js { scroll-snap-type: y proximity; }
+.js .about { position: relative; height: calc(var(--n) * 100vh); height: calc(var(--n) * 100svh); }
+.js .about__stage { position: sticky; top: 0; height: 100vh; height: 100svh; min-height: 0; padding-top: clamp(92px, 13vh, 170px); padding-bottom: clamp(62px, 9vh, 130px); }
+.js .about__snap { position: absolute; left: 0; top: calc(var(--i) * 100vh); top: calc(var(--i) * 100svh); width: 1px; height: 100vh; height: 100svh; pointer-events: none; scroll-snap-align: start; }
+.js .about__slides { gap: 0; }
+.js .about__slide { grid-area: 1 / 1; opacity: 0; visibility: hidden; transform: translateY(14px); transition: opacity .45s, transform .6s var(--ease), visibility .45s; }
+.js .about__slide.is-active { opacity: 1; visibility: visible; transform: none; transition-delay: .18s; }
+/* wymiary liczone także od wysokości ekranu: na laptopie 1366 × 768 całość musi zmieścić się między nagłówkiem a odczytami */
+.about__stage .tag { margin-bottom: min(clamp(24px, 2.6vw, 40px), 3.4vh); }
+.about__slide .ask { font-size: min(var(--t-ask), 8.6vh); }
+.about__slide .lead { margin-top: min(clamp(24px, 2.4vw, 40px), 3vh); font-size: min(clamp(17px, .62vw + 11.5px, 23px), 2.5vh); }
+.about__slide .facts { margin-top: min(clamp(30px, 3vw, 48px), 3.6vh); }
+.about__slide .facts div { padding: min(clamp(13px, 1.2vw, 19px), 1.8vh) 0; }
+.about__slide .actions { margin-top: min(clamp(36px, 3.2vw, 56px), 4vh); }
 /* stałe wysokości nagłówka i opisu: wiersze Kto / Kanał / Kontakt nie skaczą między osobami */
-.about__slide .ask { min-height: 2.04em; }
-.about__slide .lead { min-height: 4.65em; }
-.about__dots { display: flex; gap: 8px; margin-top: clamp(28px, 2.6vw, 44px); }
+.js .about__slide .ask { min-height: 2.04em; }
+.js .about__slide .lead { min-height: 4.65em; }
+.about__dots { display: none; gap: 8px; margin-top: min(clamp(28px, 2.6vw, 44px), 3.4vh); }
+.js .about__dots { display: flex; }
 .about__dots button { width: 44px; height: 22px; position: relative; }
 .about__dots button::before { content: ''; position: absolute; left: 0; right: 0; top: 10px; height: 2px; background: var(--line); transition: background .3s; }
 .about__dots button:hover::before { background: var(--slate); }
@@ -476,6 +487,16 @@ h1 { font-size: var(--t-h1); font-weight: 300; font-stretch: 125%; line-height: 
   .about__slide .facts div { padding: 10px 0; }
   .about__slide .actions { margin-top: 20px; }
   .about__dots { margin-top: 18px; }
+  .js .about__stage { padding-top: 40vh; padding-top: 40svh; padding-bottom: 74px; }
+  /* dotyk: linki i przełączniki mają co najmniej 44 px wysokości */
+  .logo { padding: 11px 0; margin-top: -11px; margin-bottom: -11px; }
+  .tag a { display: inline-block; padding: 13px 0; margin: -13px 0; }
+  .end nav { gap: 0; }
+  .end nav a { display: flex; align-items: center; min-height: 44px; }
+  .end__theme { min-height: 44px; margin-top: 18px; }
+  .more { padding: 10px 0; }
+  .brand__tile { font-size: clamp(12px, 4vw, 20px); min-width: 0; gap: 8px; }
+  .brand__tile--wide .mark { width: 1.5em; height: 1.5em; }
   .block--end { min-height: 0; display: block; padding-top: 0; padding-bottom: 64px; }
   .head { max-width: none; }
   .actions { gap: 22px; }
@@ -513,4 +534,18 @@ h1 { font-size: var(--t-h1); font-weight: 300; font-stretch: 125%; line-height: 
   .v-ad__f, .v-flow b, .v-chat i, .v-chat span, .v-web b::after { animation: none; }
   .v-flow b { left: calc(100% - 11px); }
   @view-transition { navigation: none; }
+}
+
+/* ---------- niski telefon: w „O nas” zostaje to, co najważniejsze ---------- */
+@media (max-width: 860px) and (max-height: 720px) {
+  .about__slide .ask { font-size: clamp(24px, 7vw, 30px); }
+  .about__slide .facts { margin-top: 12px; }
+  .about__slide .facts div { padding: 7px 0; }
+  .about__slide .actions { display: none; }
+  .about__dots { margin-top: 12px; }
+}
+
+/* ---------- bardzo niskie okno na komputerze: „O nas” bez opisu, żeby reszta się zmieściła ---------- */
+@media (min-width: 861px) and (max-height: 660px) {
+  .about__slide .lead { display: none; }
 }

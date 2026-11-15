@@ -24,8 +24,8 @@ układają też napisy (strona 404, polecenie `napisz`).
 - `icon-180.png`, `icon-192.png`, `icon-512.png`, `manifest.webmanifest` — ikony na ekran telefonu
 - `sitemap.xml` — mapa strony (generowana przez build z adresu `SITE`)
 - `tools/check.mjs` — kontrola frontendu
-- `media/portret.bin` — 9000 punktów portretu w sekcji „O nas” (pary bajtów x, y)
-- `tools/stipple.js` — zamienia zdjęcie (BMP, jasna postać na ciemnym tle) na te punkty: `node tools/stipple.js x0,y0,x1,y1`
+- `media/portret.bin` — 9000 punktów dwóch sylwetek w sekcji „O nas” (pary bajtów x, y; na przemian lewa i prawa osoba)
+- `tools/stipple.js` — robi te punkty ze zdjęć na przezroczystym tle: `node tools/stipple.js lewa.bmp prawa.bmp media/portret.bin`
 - `media/` — trzy przykładowe kadry reklamowe wygenerowane w Higgsfield (GPT Image 2.6); to przykłady, nie realizacje dla klientów
 
 ## Zmiana treści, stylów i skryptów
@@ -80,4 +80,4 @@ też w podkatalogu.
 - Zmień `SITE` w `build.mjs` na nowy adres (obraz do udostępnień, dane strukturalne).
 - Zweryfikuj treść usług, procesu i pytań (FAQ) — to wersja robocza.
 - Uzupełnij `prywatnosc.html` (pola „do uzupełnienia” w `build.mjs`) i daj treść do sprawdzenia prawnikowi.
-- Podmień adres kontaktowy, jeśli ma być inny niż `business@filadroid.ai`.
+- Sprawdź, czy skrzynka `business@filadelfia.ai` istnieje i odbiera pocztę.

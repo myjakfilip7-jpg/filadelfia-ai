@@ -1,32 +1,46 @@
-// Zdjęcie → punkty. Gęstość punktów rośnie z jasnością (postać jest jasna na ciemnym tle).
+// Zdjęcia osób (BMP 32-bit z przezroczystym tłem) → punkty do sekcji „O nas”.
+// Użycie: node tools/stipple.js lewa.bmp prawa.bmp wynik.bin [podglad.pgm]
+// Odstęp postaci (SPACING) musi być taki sam jak w script.js (fillPortrait).
+// Przygotowanie BMP z PNG:  sips -Z 500 -s format bmp osoba.png --out osoba.bmp
+// Punkty są gęstsze tam, gdzie zdjęcie jest ciemniejsze (włosy, koszulka), a rzadsze na jasnej skórze.
 const fs = require('fs');
-const b = fs.readFileSync('src.bmp');
-const off = b.readUInt32LE(10), W = b.readInt32LE(18), Hraw = b.readInt32LE(22), bpp = b.readUInt16LE(28);
-const H = Math.abs(Hraw), flip = Hraw > 0, row = Math.floor((bpp * W + 31) / 32) * 4, px = bpp / 8;
-const lum = (x, y) => { const yy = flip ? H - 1 - y : y, i = off + yy * row + x * px; return (0.114 * b[i] + 0.587 * b[i + 1] + 0.299 * b[i + 2]) / 255; };
-// kadr: głowa i ramiona
-const [X0, Y0, X1, Y1] = (process.argv[2] || '225,92,535,467').split(',').map(Number);
-const CW = X1 - X0, CH = Y1 - Y0;
-const G = +(process.argv[3] || 0.55), FLOOR = +(process.argv[4] || 0.17), CAP = +(process.argv[5] || 0.62);
-const dens = new Float32Array(CW * CH); let max = 0;
-for (let y = 0; y < CH; y++) for (let x = 0; x < CW; x++) {
-  // lekkie rozmycie 3×3, żeby słoje drewna z tła nie robiły szumu
-  let s = 0, n = 0;
-  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const xx = X0 + x + dx, yy = Y0 + y + dy; if (xx >= 0 && xx < W && yy >= 0 && yy < H) { s += lum(xx, yy); n++; } }
-  let v = Math.max(0, s / n - FLOOR) / (1 - FLOOR);
-  v = Math.min(CAP, Math.pow(v, G)); // koszulka nie może zabrać wszystkich punktów
-  dens[y * CW + x] = v; if (v > max) max = v;
-}
+const [left, right, outFile, previewFile] = process.argv.slice(2);
+const N = 9000, SPACING = 0.9; // środki postaci oddalone o 0,9 szerokości zdjęcia: ramiona lekko się stykają
 let seed = 20261115; const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
-const N = 9000, out = new Uint8Array(N * 2); let k = 0, guard = 0;
-while (k < N && guard++ < 5e7) {
-  const x = rnd() * CW, y = rnd() * CH;
-  if (x / CW > 0.78 && y / CH < 0.14) continue; // plama światła z tła
-  if (rnd() * max < dens[(y | 0) * CW + (x | 0)]) { out[k * 2] = Math.round(x / CW * 255); out[k * 2 + 1] = Math.round(y / CH * 255); k++; }
+
+function load(file) {
+  const b = fs.readFileSync(file), off = b.readUInt32LE(10), w = b.readInt32LE(18), hRaw = b.readInt32LE(22), bpp = b.readUInt16LE(28);
+  if (bpp !== 32) throw new Error(file + ': potrzebny BMP 32-bit (z kanałem alfa)');
+  const h = Math.abs(hRaw), flip = hRaw > 0, dens = new Float32Array(w * h); let max = 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = off + (flip ? h - 1 - y : y) * w * 4 + x * 4, a = b[i + 3] / 255;
+    const lum = (0.114 * b[i] + 0.587 * b[i + 1] + 0.299 * b[i + 2]) / 255;
+    const v = a < 0.5 ? 0 : 0.1 + Math.pow(1 - lum, 1.5);
+    dens[y * w + x] = v; if (v > max) max = v;
+  }
+  return { w, h, dens, max };
 }
-fs.writeFileSync('portret.bin', out);
-// podgląd: czarne punkty na jasnym tle, jak na stronie
-const S = 2, PW = CW * S, PH = CH * S, img = Buffer.alloc(PW * PH, 232);
-for (let i = 0; i < N; i++) { const x = Math.round(out[i * 2] / 255 * (PW - 2)), y = Math.round(out[i * 2 + 1] / 255 * (PH - 2)); for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) img[(y + dy) * PW + x + dx] = 12; }
-fs.writeFileSync('preview.pgm', Buffer.concat([Buffer.from(`P5\n${PW} ${PH}\n255\n`), img]));
-console.log('punkty:', k, 'kadr:', CW + 'x' + CH, 'proporcje:', (CW / CH).toFixed(3));
+function sample(img, count) {
+  const pts = []; let guard = 0;
+  while (pts.length < count && guard++ < 5e7) {
+    const x = rnd() * img.w, y = rnd() * img.h;
+    if (rnd() * img.max < img.dens[(y | 0) * img.w + (x | 0)]) pts.push([x / img.w, y / img.h]);
+  }
+  return pts;
+}
+const A = sample(load(left), N / 2), B = sample(load(right), N / 2);
+const total = 1 + SPACING; // szerokość kadru w „szerokościach zdjęcia”
+// Format: pary bajtów (x, y) w układzie WŁASNEGO zdjęcia; punkty parzyste to lewa osoba, nieparzyste — prawa.
+// Dzięki temu każda postać ma pełną dokładność bajtu, a mniejsza liczba punktów na telefonie nadal pokazuje obie.
+const out = new Uint8Array(N * 2);
+for (let i = 0; i < N / 2; i++) {
+  out[i * 4] = Math.round(A[i][0] * 255); out[i * 4 + 1] = Math.round(A[i][1] * 255);
+  out[i * 4 + 2] = Math.round(B[i][0] * 255); out[i * 4 + 3] = Math.round(B[i][1] * 255);
+}
+fs.writeFileSync(outFile, out);
+if (previewFile) {
+  const PH = 500, PW = Math.round(PH * total), img = Buffer.alloc(PW * PH, 232);
+  for (let i = 0; i < N; i++) { const x = Math.round((out[i * 2] / 255 + (i % 2) * SPACING) / total * (PW - 2)), y = Math.round(out[i * 2 + 1] / 255 * (PH - 2)); img[y * PW + x] = 12; img[y * PW + x + 1] = 12; }
+  fs.writeFileSync(previewFile, Buffer.concat([Buffer.from(`P5\n${PW} ${PH}\n255\n`), img]));
+}
+console.log(`punkty: ${N}, proporcje kadru: ${total.toFixed(2)} : 1`);

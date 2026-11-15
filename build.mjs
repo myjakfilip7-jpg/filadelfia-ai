@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto';
 // bez ręcznego odświeżania. Po edycji styles.css / script.js / panel.* uruchom ponownie `node build.mjs`.
 const v = (file) => `${file}?v=${createHash('sha256').update(readFileSync(new URL(file, import.meta.url))).digest('hex').slice(0, 10)}`;
 
-const MAIL = 'business@filadroid.ai';
+const MAIL = 'business@filadelfia.ai';
 // Adres, pod którym strona jest opublikowana. Zmień przy przejściu na docelową domenę (obraz do udostępnień i dane strukturalne).
 const SITE = 'https://myjakfilip7-jpg.github.io/filadelfia-ai/';
 
@@ -222,6 +222,12 @@ const VIS = {
   strony: `<div class="v-web"><p><i></i><i></i><i></i></p><div><b></b><u></u><u></u><em></em></div></div>`,
 };
 
+// Ci sami właściciele co na filadelfia.io. Sylwetki z punktów: media/portret.bin (lewa, prawa — w tej kolejności).
+const TEAM = [
+  { side: 'Po lewej', name: 'Filip Myjak', skills: 'Automatyzacje, AI, strony i aplikacje', channel: 'Filadroid', youtube: 'https://www.youtube.com/@filadroid' },
+  { side: 'Po prawej', name: 'Dawid Borzęcki', skills: 'Produkcja wideo, strategie, social media', channel: 'Bez litości', youtube: 'https://www.youtube.com/@bez_litosci' },
+];
+
 const FAQ = [
   ['Ile to kosztuje?', 'Zależy od zakresu. Po pierwszej rozmowie dostajesz wycenę z konkretną kwotą, zanim cokolwiek zaczniemy.'],
   ['Od czego zaczynamy?', 'Od jednego procesu albo jednej kampanii. Najpierw powstaje mała, działająca wersja, żebyś zobaczył efekt, zanim zdecydujesz o reszcie.'],
@@ -309,17 +315,19 @@ ${steps([
       <div class="col">
         <p class="tag mono" data-r>O nas</p>
         <h2 class="ask" data-r>Najpierw pokazujemy to publicznie. Potem wdrażamy u&nbsp;Ciebie.</h2>
-        <p class="lead" data-r>Prowadzimy Filadroid, polski kanał na YouTube o praktycznym AI. Krok po kroku pokazujemy tam pracę z Claude, Gemini i NotebookLM oraz generowanie wideo w Higgsfield i Kling. W agencji robimy to samo dla firm.</p>
-        <dl class="facts" data-r>
-          <div><dt class="mono">Kto</dt><dd>Filip, prowadzący Filadroid</dd></div>
-          <div><dt class="mono">Kanał</dt><dd><a href="https://www.youtube.com/@filadroid" target="_blank" rel="noopener">youtube.com/@filadroid</a></dd></div>
-          <div><dt class="mono">Skąd</dt><dd>Krynica-Zdrój, pracujemy zdalnie</dd></div>
-        </dl>
+        <p class="lead" data-r>Filadelfia.ai to dwie osoby. Każdy z nas prowadzi kanał na YouTube, więc to, jak pracujemy, możesz zobaczyć, zanim napiszesz.</p>
+        <ul class="duo" data-r>
+${TEAM.map((m) => `          <li>
+            <p class="mono duo__side">${m.side}</p>
+            <h3>${m.name}</h3>
+            <p class="duo__skills">${m.skills}</p>
+            <a class="more" href="${m.youtube}" target="_blank" rel="noopener">YouTube: ${m.channel} <span aria-hidden="true">↗</span></a>
+          </li>`).join('\n')}
+        </ul>
         <p class="actions" data-r>
-          <a class="pill" href="https://www.youtube.com/@filadroid" target="_blank" rel="noopener">Zobacz kanał</a>
-          <a class="more" href="kontakt.html">Napisz do nas</a>
+          <a class="pill" href="kontakt.html">Napisz do nas</a>
+          <a class="more" href="mailto:${MAIL}">${MAIL}</a>
         </p>
-        <p class="about__note mono" data-r>Portret obok to te same punkty co na reszcie strony</p>
       </div>
     </section>
 

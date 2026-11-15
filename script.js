@@ -599,11 +599,12 @@
   // portret: gotowe współrzędne punktów (media/portret.bin), układane tym samym mechanizmem co napisy
   var portrait = null, portraitOn = false, portraitWanted = false;
   function fillPortrait() {
-    var n = portrait.length / 2, ratio = 0.904, hh = 1.0; // proporcje kadru i połowa wysokości w jednostkach sceny
+    // dwie postacie obok siebie: punkty parzyste to lewa, nieparzyste — prawa (tak zapisuje je tools/stipple.js)
+    var n = portrait.length / 2, SPACING = 0.9, wf = 2 / (1 + SPACING); // szerokość jednej postaci, gdy obie mieszczą się w ±1
     for (var k = 0; k < N; k++) {
-      var j = k % n;
-      tdata[k * 2] = (portrait[j * 2] / 255 * 2 - 1) * hh * ratio + (Math.random() - 0.5) * 0.008;
-      tdata[k * 2 + 1] = -(portrait[j * 2 + 1] / 255 * 2 - 1) * hh + (Math.random() - 0.5) * 0.008;
+      var j = k % n, cx0 = -1 + wf / 2 + (j % 2) * SPACING * wf;
+      tdata[k * 2] = cx0 + (portrait[j * 2] / 255 - 0.5) * wf + (Math.random() - 0.5) * 0.006;
+      tdata[k * 2 + 1] = -(portrait[j * 2 + 1] / 255 - 0.5) * wf + (Math.random() - 0.5) * 0.006;
     }
     gl.bindBuffer(gl.ARRAY_BUFFER, tbuf);
     gl.bufferSubData(gl.ARRAY_BUFFER, 0, tdata);

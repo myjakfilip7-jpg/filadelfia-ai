@@ -23,7 +23,7 @@
   <link rel="apple-touch-icon" href="icon-180.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="preload" href="fonts/mona-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=68e47451eb">
+  <link rel="stylesheet" href="styles.css?v=d79c909cb3">
 </head>
 <body>
   <a class="skip" href="#main">Przejdź do treści</a>
@@ -261,38 +261,46 @@
       </div>
     </section>
 
-    <section class="scene scene--about" id="o-nas" data-portrait="filip" data-ratio="0.904">
-      <div class="col">
-        <p class="tag mono" data-r>O nas · 1 z 2</p>
-        <h2 class="ask" data-r>Najpierw pokazujemy to publicznie. Potem wdrażamy u&nbsp;Ciebie.</h2>
-        <p class="lead" data-r>Filip prowadzi Filadroid, polski kanał na YouTube o praktycznym AI. Krok po kroku pokazuje tam pracę z Claude, Gemini i NotebookLM oraz generowanie wideo w Higgsfield i Kling. W agencji robimy to samo dla firm.</p>
-        <dl class="facts" data-r>
-          <div><dt class="mono">Kto</dt><dd>Filip Myjak</dd></div>
-          <div><dt class="mono">Kanał</dt><dd><a href="https://www.youtube.com/@filadroid" target="_blank" rel="noopener">youtube.com/@filadroid</a></dd></div>
-          <div><dt class="mono">Kontakt</dt><dd><a href="mailto:business@filadelfia.ai">business@filadelfia.ai</a></dd></div>
-        </dl>
-        <p class="actions" data-r>
-          <a class="pill" href="https://www.youtube.com/@filadroid" target="_blank" rel="noopener">Zobacz kanał</a>
-          <a class="more" href="kontakt.html">Napisz do nas</a>
-        </p>
+    <section class="about" id="o-nas" data-people style="--n: 2">
+      <div class="scene scene--about about__stage">
+        <div class="col">
+          <p class="tag mono" data-r>O nas · <span id="aboutN">1</span> z 2</p>
+          <div class="about__slides" data-r>
+            <article class="about__slide is-active" data-portrait="filip" data-ratio="0.904">
+              <h2 class="ask">AI, automatyzacje, strony.</h2>
+              <p class="lead">Filip prowadzi Filadroid, kanał o praktycznym AI. W agencji odpowiada za automatyzacje, agentów AI, strony i aplikacje.</p>
+              <dl class="facts">
+                <div><dt class="mono">Kto</dt><dd>Filip Myjak</dd></div>
+                <div><dt class="mono">Kanał</dt><dd><a href="https://www.youtube.com/@filadroid" target="_blank" rel="noopener">youtube.com/@filadroid</a></dd></div>
+                <div><dt class="mono">Kontakt</dt><dd><a href="mailto:business@filadelfia.ai">business@filadelfia.ai</a></dd></div>
+              </dl>
+              <p class="actions">
+                <a class="pill" href="https://www.youtube.com/@filadroid" target="_blank" rel="noopener">Zobacz kanał</a>
+                <a class="more" href="kontakt.html">Napisz do nas</a>
+              </p>
+            </article>
+            <article class="about__slide" data-portrait="dawid" data-ratio="0.92">
+              <h2 class="ask">Wideo, strategia, social media.</h2>
+              <p class="lead">Dawid prowadzi kanał Bez litości. W agencji odpowiada za produkcję wideo, strategie i social media.</p>
+              <dl class="facts">
+                <div><dt class="mono">Kto</dt><dd>Dawid Borzęcki</dd></div>
+                <div><dt class="mono">Kanał</dt><dd><a href="https://www.youtube.com/@bez_litosci" target="_blank" rel="noopener">youtube.com/@bez_litosci</a></dd></div>
+                <div><dt class="mono">Kontakt</dt><dd><a href="mailto:business@filadelfia.ai">business@filadelfia.ai</a></dd></div>
+              </dl>
+              <p class="actions">
+                <a class="pill" href="https://www.youtube.com/@bez_litosci" target="_blank" rel="noopener">Zobacz kanał</a>
+                <a class="more" href="kontakt.html">Napisz do nas</a>
+              </p>
+            </article>
+          </div>
+          <p class="about__dots" data-r>
+            <button type="button" data-go="0" aria-label="Filip Myjak" aria-current="true"></button>
+            <button type="button" data-go="1" aria-label="Dawid Borzęcki"></button>
+          </p>
+        </div>
       </div>
-    </section>
-
-    <section class="scene scene--about" data-portrait="dawid" data-ratio="0.92">
-      <div class="col">
-        <p class="tag mono" data-r>O nas · 2 z 2</p>
-        <h2 class="ask" data-r>Wideo, strategia, social media.</h2>
-        <p class="lead" data-r>Dawid prowadzi kanał Bez litości. W agencji odpowiada za produkcję wideo, strategie i social media.</p>
-        <dl class="facts" data-r>
-          <div><dt class="mono">Kto</dt><dd>Dawid Borzęcki</dd></div>
-          <div><dt class="mono">Kanał</dt><dd><a href="https://www.youtube.com/@bez_litosci" target="_blank" rel="noopener">youtube.com/@bez_litosci</a></dd></div>
-          <div><dt class="mono">Kontakt</dt><dd><a href="mailto:business@filadelfia.ai">business@filadelfia.ai</a></dd></div>
-        </dl>
-        <p class="actions" data-r>
-          <a class="pill" href="https://www.youtube.com/@bez_litosci" target="_blank" rel="noopener">Zobacz kanał</a>
-          <a class="more" href="kontakt.html">Napisz do nas</a>
-        </p>
-      </div>
+      <i class="about__snap" style="--i: 0" aria-hidden="true"></i>
+      <i class="about__snap" style="--i: 1" aria-hidden="true"></i>
     </section>
 
     <section class="wide wide--faq" id="faq">
@@ -386,6 +394,6 @@
     <form id="cmdForm"><span aria-hidden="true">›</span><input id="cmdIn" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Polecenie" placeholder="pomoc"><button type="button" id="cmdClose" aria-label="Zamknij wiersz poleceń">esc</button></form>
   </div>
 
-  <script src="script.js?v=55ccfd38dc" defer></script>
+  <script src="script.js?v=d36fd2539f" defer></script>
 </body>
 </html>

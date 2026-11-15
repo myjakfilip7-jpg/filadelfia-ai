@@ -162,9 +162,23 @@ main { position: relative; z-index: 1; }
 .facts dd { font-size: var(--t-body); overflow-wrap: anywhere; }
 .facts a { border-bottom: 1px solid var(--ink); transition: color .2s, border-color .2s; }
 .facts a:hover { color: var(--signal); border-color: var(--signal); }
-/* osoby przewijają się skokowo: jedna osoba na ekran */
+/* O nas: układ stoi w miejscu (przypięty), a przewijanie zmienia tylko osobę.
+   Sekcja ma wysokość „liczba osób × ekran”; niewidoczne znaczniki co ekran łapią przewijanie. */
 html { scroll-snap-type: y proximity; }
-.scene--about { scroll-snap-align: start; }
+.about { position: relative; height: calc(var(--n) * 100vh); height: calc(var(--n) * 100svh); }
+.about__stage { position: sticky; top: 0; height: 100vh; height: 100svh; min-height: 0; }
+.about__snap { position: absolute; left: 0; top: calc(var(--i) * 100vh); top: calc(var(--i) * 100svh); width: 1px; height: 100vh; height: 100svh; pointer-events: none; scroll-snap-align: start; }
+.about__slides { display: grid; }
+.about__slide { grid-area: 1 / 1; opacity: 0; visibility: hidden; transform: translateY(14px); transition: opacity .45s, transform .6s var(--ease), visibility .45s; }
+.about__slide.is-active { opacity: 1; visibility: visible; transform: none; transition-delay: .18s; }
+/* stałe wysokości nagłówka i opisu: wiersze Kto / Kanał / Kontakt nie skaczą między osobami */
+.about__slide .ask { min-height: 2.04em; }
+.about__slide .lead { min-height: 4.65em; }
+.about__dots { display: flex; gap: 8px; margin-top: clamp(28px, 2.6vw, 44px); }
+.about__dots button { width: 44px; height: 22px; position: relative; }
+.about__dots button::before { content: ''; position: absolute; left: 0; right: 0; top: 10px; height: 2px; background: var(--line); transition: background .3s; }
+.about__dots button:hover::before { background: var(--slate); }
+.about__dots button[aria-current="true"]::before { background: var(--ink); }
 .scene--contact .ask { font-size: clamp(38px, 6.2vw, 124px); line-height: .96; }
 .block { padding: 0 var(--edge) clamp(96px, 13vw, 170px); }
 .block--end { min-height: 84vh; min-height: 84svh; display: flex; align-items: center; padding-top: 80px; padding-bottom: 80px; }
@@ -455,7 +469,13 @@ h1 { font-size: var(--t-h1); font-weight: 300; font-stretch: 125%; line-height: 
   .scene--page { min-height: 100vh; min-height: 100svh; }
   .scene--form { padding-top: 132px; }
   .scene--contact { align-items: flex-end; padding-bottom: 80px; }
-  .scene--about { align-items: flex-end; padding-top: 52vh; padding-top: 52svh; }
+  .scene--about { align-items: flex-end; padding-top: 40vh; padding-top: 40svh; padding-bottom: 74px; }
+  .about__slide .lead, .about__slide .more { display: none; }
+  .about__slide .ask { font-size: clamp(28px, 8vw, 40px); }
+  .about__slide .facts { margin-top: 18px; }
+  .about__slide .facts div { padding: 10px 0; }
+  .about__slide .actions { margin-top: 20px; }
+  .about__dots { margin-top: 18px; }
   .block--end { min-height: 0; display: block; padding-top: 0; padding-bottom: 64px; }
   .head { max-width: none; }
   .actions { gap: 22px; }

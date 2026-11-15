@@ -66,6 +66,7 @@
   /* ---------- motyw (dzień / noc) ---------- */
   var onTheme = function () {};
   var showText = function () { return false; }; // podmieniane, gdy działa WebGL
+  var personHook = function () {}, aboutSpy = null; // sylwetki w „O nas”: też podmieniane, gdy działa WebGL
   function setTheme(name) {
     if (name === 'noc') root.setAttribute('data-theme', 'noc'); else root.removeAttribute('data-theme');
     write(localStorage, 'fila-theme', name);
@@ -400,6 +401,32 @@
     navSpy();
   }
 
+  /* ---------- O nas: układ stoi, przewijanie zmienia osobę ---------- */
+  var aboutEl = document.querySelector('[data-people]');
+  if (aboutEl) {
+    var aSlides = Array.prototype.slice.call(aboutEl.querySelectorAll('.about__slide'));
+    var aDots = Array.prototype.slice.call(aboutEl.querySelectorAll('.about__dots button'));
+    var aCur = -1, aKey = '', aQueued = false;
+    aboutSpy = function (force) {
+      aQueued = false;
+      var r = aboutEl.getBoundingClientRect(), vh = window.innerHeight;
+      var idx = Math.max(0, Math.min(aSlides.length - 1, Math.round(-r.top / vh)));
+      if (idx !== aCur) {
+        aCur = idx;
+        aSlides.forEach(function (sl, n) { sl.classList.toggle('is-active', n === idx); sl.inert = n !== idx; });
+        aDots.forEach(function (d, n) { if (n === idx) d.setAttribute('aria-current', 'true'); else d.removeAttribute('aria-current'); });
+        $('aboutN').textContent = idx + 1;
+      }
+      // sylwetka tylko wtedy, gdy sekcja zajmuje środek ekranu
+      var key = r.top <= vh * 0.5 && r.bottom >= vh * 0.5 ? aSlides[idx].getAttribute('data-portrait') : '';
+      if (key !== aKey || force) { aKey = key; personHook(key || null, +aSlides[idx].getAttribute('data-ratio') || 1); }
+    };
+    window.addEventListener('scroll', function () { if (!aQueued) { aQueued = true; requestAnimationFrame(function () { aboutSpy(); }); } }, { passive: true });
+    window.addEventListener('resize', function () { aboutSpy(); });
+    aDots.forEach(function (d, n) { d.addEventListener('click', function () { window.scrollTo({ top: aboutEl.getBoundingClientRect().top + window.scrollY + n * window.innerHeight, behavior: reduced ? 'auto' : 'smooth' }); }); });
+    aboutSpy();
+  }
+
   /* ---------- podpis w konsoli ---------- */
   try {
     console.log('%cfiladelfia%c.%cai', 'font: 300 26px Mona Sans, sans-serif; color: #0A0B0D; background: #E8EAED; padding: 10px 0 10px 14px', 'font: 700 26px sans-serif; color: #2B2BFF; background: #E8EAED; padding: 10px 0', 'font: 300 26px Mona Sans, sans-serif; color: #0A0B0D; background: #E8EAED; padding: 10px 14px 10px 0');
@@ -599,7 +626,7 @@
   // sylwetki w „O nas”: gotowe współrzędne punktów (media/osoba-*.bin), układane tym samym mechanizmem co napisy
   var people = {}, portraitOn = false, shownKey = null, wantKey = null, swapTimer = 0;
   function fillPerson(pts, ratio) {
-    var n = pts.length / 2, hh = 1.0; // połowa wysokości postaci w jednostkach sceny
+    var n = pts.length / 2, hh = narrow ? 0.8 : 1.0; // połowa wysokości postaci w jednostkach sceny; na telefonie mniejsza, żeby nie wchodziła na tekst
     for (var k = 0; k < N; k++) {
       var j = k % n;
       tdata[k * 2] = (pts[j * 2] / 255 * 2 - 1) * hh * ratio + (Math.random() - 0.5) * 0.008;
@@ -626,17 +653,8 @@
     // zmiana osoby: najpierw punkty się rozchodzą, potem składają nową sylwetkę
     if (portraitOn && textW > 0.3) { textTarget = 0; shownKey = null; swapTimer = setTimeout(function () { if (wantKey === key) go(); }, 450); } else go();
   }
-  var persons = Array.prototype.slice.call(document.querySelectorAll('[data-portrait]'));
-  if (persons.length && 'IntersectionObserver' in window) {
-    var seenRatio = new Map();
-    var personIO = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) { seenRatio.set(e.target, e.isIntersecting ? e.intersectionRatio : 0); });
-      var best = null, bestR = 0.45;
-      persons.forEach(function (el) { var r = seenRatio.get(el) || 0; if (r > bestR) { bestR = r; best = el; } });
-      if (best) showPerson(best.getAttribute('data-portrait'), +best.getAttribute('data-ratio') || 1); else showPerson(null);
-    }, { threshold: [0, 0.25, 0.45, 0.6, 0.8] });
-    persons.forEach(function (el) { personIO.observe(el); });
-  }
+  personHook = showPerson;
+  if (aboutSpy) aboutSpy(true);
 
   showText = function (str, hold) {
     if (!makeText(str)) return false;
@@ -773,7 +791,7 @@
     gl.uniform1f(U.uPtrOn, ptrOn);
     gl.uniform2f(U.uPtr, cx, cy);
     gl.uniform2f(U.uTilt, (reduced ? -0.22 : tiltX) * flat, (reduced ? -0.3 : tiltY) * flat);
-    gl.uniform2f(U.uShift, narrow ? 0 : 0.5, narrow ? (0.45 * top + 0.62 * end) * (1 - textW) + 0.4 * textW : 0.02);
+    gl.uniform2f(U.uShift, narrow ? 0 : 0.5, narrow ? (0.45 * top + 0.62 * end) * (1 - textW) + (portraitOn ? 0.46 : 0.4) * textW : 0.02);
     gl.uniform1f(U.uAlpha, narrow ? Math.max(0.16 + 0.6 * top + 0.5 * end, 0.85 * textW) : 0.86);
     gl.drawArrays(gl.POINTS, 0, N);
 

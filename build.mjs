@@ -226,8 +226,8 @@ const VIS = {
 // (ratio = szerokość / wysokość kadru, wypisuje ją tools/stipple.js).
 const TEAM = [
   { key: 'filip', ratio: 0.904, name: 'Filip Myjak', youtube: 'https://www.youtube.com/@filadroid',
-    heading: 'Najpierw pokazujemy to publicznie. Potem wdrażamy u&nbsp;Ciebie.',
-    lead: 'Filip prowadzi Filadroid, polski kanał na YouTube o praktycznym AI. Krok po kroku pokazuje tam pracę z Claude, Gemini i NotebookLM oraz generowanie wideo w Higgsfield i Kling. W agencji robimy to samo dla firm.' },
+    heading: 'AI, automatyzacje, strony.',
+    lead: 'Filip prowadzi Filadroid, kanał o praktycznym AI. W agencji odpowiada za automatyzacje, agentów AI, strony i aplikacje.' },
   { key: 'dawid', ratio: 0.92, name: 'Dawid Borzęcki', youtube: 'https://www.youtube.com/@bez_litosci',
     heading: 'Wideo, strategia, social media.',
     lead: 'Dawid prowadzi kanał Bez litości. W agencji odpowiada za produkcję wideo, strategie i social media.' },
@@ -316,22 +316,32 @@ ${steps([
       </div>
     </section>
 
-${TEAM.map((m, n) => `    <section class="scene scene--about"${n === 0 ? ' id="o-nas"' : ''} data-portrait="${m.key}" data-ratio="${m.ratio}">
-      <div class="col">
-        <p class="tag mono" data-r>O nas · ${n + 1} z ${TEAM.length}</p>
-        <h2 class="ask" data-r>${m.heading}</h2>
-        <p class="lead" data-r>${m.lead}</p>
-        <dl class="facts" data-r>
-          <div><dt class="mono">Kto</dt><dd>${m.name}</dd></div>
-          <div><dt class="mono">Kanał</dt><dd><a href="${m.youtube}" target="_blank" rel="noopener">${m.youtube.replace('https://www.', '')}</a></dd></div>
-          <div><dt class="mono">Kontakt</dt><dd><a href="mailto:${MAIL}">${MAIL}</a></dd></div>
-        </dl>
-        <p class="actions" data-r>
-          <a class="pill" href="${m.youtube}" target="_blank" rel="noopener">Zobacz kanał</a>
-          <a class="more" href="kontakt.html">Napisz do nas</a>
-        </p>
+    <section class="about" id="o-nas" data-people style="--n: ${TEAM.length}">
+      <div class="scene scene--about about__stage">
+        <div class="col">
+          <p class="tag mono" data-r>O nas · <span id="aboutN">1</span> z ${TEAM.length}</p>
+          <div class="about__slides" data-r>
+${TEAM.map((m, n) => `            <article class="about__slide${n === 0 ? ' is-active' : ''}" data-portrait="${m.key}" data-ratio="${m.ratio}">
+              <h2 class="ask">${m.heading}</h2>
+              <p class="lead">${m.lead}</p>
+              <dl class="facts">
+                <div><dt class="mono">Kto</dt><dd>${m.name}</dd></div>
+                <div><dt class="mono">Kanał</dt><dd><a href="${m.youtube}" target="_blank" rel="noopener">${m.youtube.replace('https://www.', '')}</a></dd></div>
+                <div><dt class="mono">Kontakt</dt><dd><a href="mailto:${MAIL}">${MAIL}</a></dd></div>
+              </dl>
+              <p class="actions">
+                <a class="pill" href="${m.youtube}" target="_blank" rel="noopener">Zobacz kanał</a>
+                <a class="more" href="kontakt.html">Napisz do nas</a>
+              </p>
+            </article>`).join('\n')}
+          </div>
+          <p class="about__dots" data-r>
+${TEAM.map((m, n) => `            <button type="button" data-go="${n}" aria-label="${m.name}"${n === 0 ? ' aria-current="true"' : ''}></button>`).join('\n')}
+          </p>
+        </div>
       </div>
-    </section>`).join('\n\n')}
+${TEAM.map((m, n) => `      <i class="about__snap" style="--i: ${n}" aria-hidden="true"></i>`).join('\n')}
+    </section>
 
     <section class="wide wide--faq" id="faq">
       <div class="head">

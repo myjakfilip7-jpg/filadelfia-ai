@@ -23,7 +23,7 @@
   <link rel="apple-touch-icon" href="icon-180.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="preload" href="fonts/mona-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=63ae430e29">
+  <link rel="stylesheet" href="styles.css?v=c62b75db5a">
 </head>
 <body data-form="0">
   <a class="skip" href="#main">Przejdź do treści</a>
@@ -110,8 +110,8 @@
       <div class="split">
         <div>
           <p class="tag mono" data-r>Jeden kadr, trzy formaty</p>
-          <h2 class="ask" data-r>Wybierz produkt i format.</h2>
-          <p class="lead" data-r>Ten sam wygenerowany kadr przycinamy pod każde miejsce emisji. Niczego nie trzeba fotografować drugi raz.</p>
+          <h2 class="ask" data-r>Złóż reklamę z jednego kadru.</h2>
+          <p class="lead" data-r>Ten sam wygenerowany kadr przycinamy pod każde miejsce emisji i dokładamy hasło. Kilka wersji do testu powstaje bez nowej sesji.</p>
           <p class="picker__label mono" data-r>Produkt</p>
           <p class="chips" data-r>
             <button type="button" data-img="media/but.jpg" aria-pressed="true">Obuwie</button>
@@ -124,9 +124,17 @@
             <button type="button" data-f="11" data-meta="1:1 · 1080 × 1080 · feed" aria-pressed="false">Kwadrat</button>
             <button type="button" data-f="169" data-meta="16:9 · 1920 × 1080 · YouTube" aria-pressed="false">Poziom</button>
           </p>
+          <p class="picker__label mono" data-r>Hasło do testu</p>
+          <p class="chips" data-r>
+            <button type="button" data-copy="Nowość. Już w sprzedaży." aria-pressed="true">Wersja A</button>
+            <button type="button" data-copy="−20% do niedzieli" aria-pressed="false">Wersja B</button>
+            <button type="button" data-copy="Sprawdź, zanim zniknie" aria-pressed="false">Wersja C</button>
+            <button type="button" data-copy="" aria-pressed="false">Bez napisu</button>
+          </p>
+          <label class="cms__check" data-r><input type="checkbox" data-safe><span>Pokaż strefę bezpieczną dla napisów</span></label>
         </div>
         <div class="formats" data-r>
-          <div class="formats__stage"><div class="formats__frame" data-f="916"><img src="media/but.jpg" alt="Wybrany kadr przycięty do wybranego formatu" decoding="async"></div></div>
+          <div class="formats__stage"><div class="formats__frame" data-f="916"><img src="media/but.jpg" alt="Wybrany kadr przycięty do wybranego formatu" decoding="async"><i class="formats__safe" aria-hidden="true"></i><p class="formats__copy">Nowość. Już w sprzedaży.</p></div></div>
           <p class="formats__meta mono" aria-live="polite">9:16 · 1080 × 1920 · Reels, TikTok</p>
         </div>
       </div>
@@ -247,6 +255,6 @@
     <form id="cmdForm"><span aria-hidden="true">›</span><input id="cmdIn" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Polecenie" placeholder="pomoc"><button type="button" id="cmdClose" aria-label="Zamknij wiersz poleceń">esc</button></form>
   </div>
 
-  <script src="script.js?v=c16ca26e66" defer></script>
+  <script src="script.js?v=1048e3d35c" defer></script>
 </body>
 </html>

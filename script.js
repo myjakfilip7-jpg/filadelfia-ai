@@ -352,56 +352,93 @@
     whenSeen(el, function () { setTimeout(function () { if (!touched) { mode = 'ai'; draw(); } }, reduced ? 0 : 1600); });
   });
 
-  /* ---------- czat-przykład: wybierasz pytanie, bot odpowiada przygotowaną odpowiedzią ---------- */
+  /* ---------- czat-przykład: wybierasz pytanie albo wpisujesz własne; bot odpowiada przygotowaną odpowiedzią i pokazuje źródło ---------- */
   Array.prototype.forEach.call(document.querySelectorAll('[data-chat]'), function (el) {
     var log = el.querySelector('.chatbox__log'), asks = Array.prototype.slice.call(el.querySelectorAll('[data-a]')), reset = el.querySelector('[data-reset]');
+    var form = el.querySelector('.chatbox__form'), field = form && form.q, send = form && form.querySelector('button');
+    var sources = Array.prototype.slice.call(document.querySelectorAll('.sources [data-src]'));
     var first = log.innerHTML, busy = false;
     function say(cls, text) { var p = document.createElement('p'); p.className = cls; p.textContent = text; log.appendChild(p); log.scrollTop = log.scrollHeight; return p; }
-    asks.forEach(function (b) {
-      b.addEventListener('click', function () {
-        if (busy) return;
-        busy = true; b.disabled = true; reset.hidden = false;
-        say('chat__me', b.textContent);
-        var dots = say('chat__bot chat__typing', '···');
-        setTimeout(function () {
-          dots.remove();
-          say('chat__bot', b.getAttribute('data-a'));
-          if (b.getAttribute('data-sys')) say('chat__sys mono', b.getAttribute('data-sys'));
-          busy = false;
-        }, reduced ? 0 : 750);
-      });
+    // bez polskich znaków i wielkich liter, żeby „Ile to KOSZTUJE?” i „cena” trafiały w ten sam temat
+    function norm(t) { return t.toLowerCase().replace(/ł/g, 'l').normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+    function match(q) {
+      var n = norm(q), hit = null;
+      asks.forEach(function (b) { if (!hit && (b.getAttribute('data-k') || '').split(',').some(function (k) { return k && n.indexOf(k) > -1; })) hit = b; });
+      return hit || el.querySelector('[data-fallback]');
+    }
+    function lock(on) { busy = on; if (send) send.disabled = on; }
+    function ask(text, b, typed) {
+      if (busy || !b) return;
+      lock(true); reset.hidden = false; if (!typed) b.disabled = true; // wpisane pytanie nie wyłącza gotowej podpowiedzi
+      say('chat__me', text);
+      var dots = say('chat__bot chat__typing', '···');
+      setTimeout(function () {
+        dots.remove();
+        say('chat__bot', b.getAttribute('data-a'));
+        var src = b.getAttribute('data-src');
+        sources.forEach(function (sp) { if (sp.getAttribute('data-src') === src) { sp.classList.add('is-used'); say('chat__src mono', 'Źródło · ' + sp.textContent); } });
+        if (b.getAttribute('data-sys')) say('chat__sys mono', b.getAttribute('data-sys'));
+        lock(false);
+      }, reduced ? 0 : 750);
+    }
+    asks.forEach(function (b) { b.addEventListener('click', function () { ask(b.textContent, b); }); });
+    if (form) form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var q = field.value.trim();
+      if (!q || busy) return;
+      field.value = '';
+      ask(q, match(q), true);
     });
-    reset.addEventListener('click', function () { log.innerHTML = first; asks.forEach(function (b) { b.disabled = false; }); reset.hidden = true; busy = false; });
+    reset.addEventListener('click', function () {
+      log.innerHTML = first; asks.forEach(function (b) { b.disabled = false; });
+      sources.forEach(function (sp) { sp.classList.remove('is-used'); });
+      reset.hidden = true; lock(false);
+    });
   });
 
-  /* ---------- kadr reklamy: wybór produktu i formatu ---------- */
+  /* ---------- kadr reklamy: produkt, format, hasło i strefa bezpieczna ---------- */
   Array.prototype.forEach.call(document.querySelectorAll('[data-formats]'), function (el) {
-    var frame = el.querySelector('.formats__frame'), img = frame.querySelector('img'), meta = el.querySelector('.formats__meta');
+    var frame = el.querySelector('.formats__frame'), img = frame.querySelector('img'), meta = el.querySelector('.formats__meta'), copy = frame.querySelector('.formats__copy');
     var fBtns = Array.prototype.slice.call(el.querySelectorAll('button[data-f]')), iBtns = Array.prototype.slice.call(el.querySelectorAll('button[data-img]'));
+    var cBtns = Array.prototype.slice.call(el.querySelectorAll('button[data-copy]')), safe = el.querySelector('[data-safe]');
     var cur = 0, auto = 0;
     function press(list, n) { list.forEach(function (b, k) { b.setAttribute('aria-pressed', String(k === n)); }); }
     function setFormat(n) { cur = n; frame.setAttribute('data-f', fBtns[n].getAttribute('data-f')); meta.textContent = fBtns[n].getAttribute('data-meta'); press(fBtns, n); }
     fBtns.forEach(function (b, k) { b.addEventListener('click', function () { clearInterval(auto); setFormat(k); }); });
     iBtns.forEach(function (b, k) { b.addEventListener('click', function () { clearInterval(auto); img.src = b.getAttribute('data-img'); press(iBtns, k); }); });
+    cBtns.forEach(function (b, k) {
+      b.addEventListener('click', function () {
+        var t = b.getAttribute('data-copy');
+        if (t) copy.textContent = t; // przy „Bez napisu” tekst zostaje i tylko gaśnie, żeby nie skakał
+        frame.classList.toggle('is-plain', !t);
+        press(cBtns, k);
+      });
+    });
+    if (safe) safe.addEventListener('change', function () { frame.classList.toggle('is-safe', safe.checked); });
     setFormat(0);
     whenSeen(el, function () {
       // pozostałe kadry pobieramy z wyprzedzeniem, żeby zmiana produktu była natychmiastowa
       iBtns.forEach(function (b) { new Image().src = b.getAttribute('data-img'); });
-      // dopóki nikt nie kliknie, formaty zmieniają się same
+      // dopóki nikt nie kliknie formatu, formaty zmieniają się same
       if (!reduced) auto = setInterval(function () { setFormat((cur + 1) % fBtns.length); }, 2800);
     });
   });
 
-  /* ---------- mini panel treści: pola zmieniają podgląd strony ---------- */
+  /* ---------- mini panel treści: pola, kolor i widok zmieniają podgląd strony ---------- */
   Array.prototype.forEach.call(document.querySelectorAll('[data-cms]'), function (el) {
-    var form = el.querySelector('form'), outs = {};
+    var form = el.querySelector('form'), site = el.querySelector('.site'), saved = el.querySelector('.site__saved'), outs = {}, savedTimer = 0;
+    var colors = Array.prototype.slice.call(el.querySelectorAll('[data-acc]')), views = Array.prototype.slice.call(el.querySelectorAll('[data-view]')).filter(function (b) { return b.tagName === 'BUTTON'; });
     Array.prototype.forEach.call(el.querySelectorAll('[data-out]'), function (o) { outs[o.getAttribute('data-out')] = o; });
+    function press(list, n) { list.forEach(function (b, k) { b.setAttribute('aria-pressed', String(k === n)); }); }
+    function flash() { if (!saved) return; saved.classList.add('is-on'); clearTimeout(savedTimer); savedTimer = setTimeout(function () { saved.classList.remove('is-on'); }, 1400); }
     function sync() {
       ['h', 'p', 'b'].forEach(function (k) { outs[k].textContent = form[k].value.trim() || '…'; });
       outs.hours.hidden = !form.hours.checked;
     }
-    form.addEventListener('input', sync); form.addEventListener('change', sync);
+    form.addEventListener('input', function () { sync(); flash(); }); form.addEventListener('change', sync);
     form.addEventListener('submit', function (e) { e.preventDefault(); });
+    colors.forEach(function (b, k) { b.addEventListener('click', function () { site.style.setProperty('--acc', b.getAttribute('data-acc')); press(colors, k); flash(); }); });
+    views.forEach(function (b, k) { b.addEventListener('click', function () { site.setAttribute('data-view', b.getAttribute('data-view')); press(views, k); }); });
     sync();
   });
 

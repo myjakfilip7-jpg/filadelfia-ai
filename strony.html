@@ -23,7 +23,7 @@
   <link rel="apple-touch-icon" href="icon-180.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="preload" href="fonts/mona-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=63ae430e29">
+  <link rel="stylesheet" href="styles.css?v=c62b75db5a">
 </head>
 <body data-form="1">
   <a class="skip" href="#main">Przejdź do treści</a>
@@ -88,18 +88,28 @@
             <label class="field"><span class="mono">Nagłówek</span><input type="text" name="h" value="Fizjoterapia w centrum miasta" maxlength="48" autocomplete="off"></label>
             <label class="field"><span class="mono">Opis</span><textarea name="p" rows="2" maxlength="150">Pomagamy wrócić do formy po urazach. Wizytę umówisz online w minutę.</textarea></label>
             <label class="field"><span class="mono">Tekst przycisku</span><input type="text" name="b" value="Umów wizytę" maxlength="22" autocomplete="off"></label>
+            <p class="picker__label mono">Kolor przycisku</p>
+            <p class="chips cms__colors">
+              <button type="button" data-acc="#0A0B0D" aria-pressed="true"><i style="--c:#0A0B0D"></i>Grafit</button>
+              <button type="button" data-acc="#2B2BFF" aria-pressed="false"><i style="--c:#2B2BFF"></i>Niebieski</button>
+              <button type="button" data-acc="#0E7A4F" aria-pressed="false"><i style="--c:#0E7A4F"></i>Zielony</button>
+              <button type="button" data-acc="#B5411F" aria-pressed="false"><i style="--c:#B5411F"></i>Ceglasty</button>
+            </p>
             <label class="cms__check"><input type="checkbox" name="hours" checked><span>Pokaż godziny otwarcia</span></label>
           </form>
           <p class="cms__note" data-r>To przykład. Zmiany zostają tylko w Twojej przeglądarce.</p>
         </div>
-        <div class="site" data-r aria-live="polite">
-          <p class="site__bar" aria-hidden="true"><i></i><i></i><i></i><span class="mono">twojafirma.pl</span></p>
+        <div class="preview" data-r>
+          <p class="chips preview__views"><button type="button" data-view="pc" aria-pressed="true">Komputer</button><button type="button" data-view="tel" aria-pressed="false">Telefon</button></p>
+        <div class="site" data-view="pc" aria-live="polite">
+          <p class="site__bar" aria-hidden="true"><i></i><i></i><i></i><span class="mono">twojafirma.pl</span><em class="site__saved mono">Zaktualizowano</em></p>
           <div class="site__body">
             <p class="site__h" data-out="h">Fizjoterapia w centrum miasta</p>
             <p class="site__p" data-out="p">Pomagamy wrócić do formy po urazach. Wizytę umówisz online w minutę.</p>
             <p><span class="site__btn" data-out="b">Umów wizytę</span></p>
             <p class="site__hours mono" data-out="hours">Pon.–pt. 8:00–18:00 · sob. 9:00–14:00</p>
           </div>
+        </div>
         </div>
       </div>
     </section>
@@ -219,6 +229,6 @@
     <form id="cmdForm"><span aria-hidden="true">›</span><input id="cmdIn" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Polecenie" placeholder="pomoc"><button type="button" id="cmdClose" aria-label="Zamknij wiersz poleceń">esc</button></form>
   </div>
 
-  <script src="script.js?v=c16ca26e66" defer></script>
+  <script src="script.js?v=1048e3d35c" defer></script>
 </body>
 </html>

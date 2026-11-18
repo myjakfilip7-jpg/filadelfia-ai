@@ -440,8 +440,8 @@ const kampanie = service(0, {
       <div class="split">
         <div>
           <p class="tag mono" data-r>Jeden kadr, trzy formaty</p>
-          <h2 class="ask" data-r>Wybierz produkt i format.</h2>
-          <p class="lead" data-r>Ten sam wygenerowany kadr przycinamy pod każde miejsce emisji. Niczego nie trzeba fotografować drugi raz.</p>
+          <h2 class="ask" data-r>Złóż reklamę z jednego kadru.</h2>
+          <p class="lead" data-r>Ten sam wygenerowany kadr przycinamy pod każde miejsce emisji i dokładamy hasło. Kilka wersji do testu powstaje bez nowej sesji.</p>
           <p class="picker__label mono" data-r>Produkt</p>
           <p class="chips" data-r>
             <button type="button" data-img="media/but.jpg" aria-pressed="true">Obuwie</button>
@@ -454,9 +454,17 @@ const kampanie = service(0, {
             <button type="button" data-f="11" data-meta="1:1 · 1080 × 1080 · feed" aria-pressed="false">Kwadrat</button>
             <button type="button" data-f="169" data-meta="16:9 · 1920 × 1080 · YouTube" aria-pressed="false">Poziom</button>
           </p>
+          <p class="picker__label mono" data-r>Hasło do testu</p>
+          <p class="chips" data-r>
+            <button type="button" data-copy="Nowość. Już w sprzedaży." aria-pressed="true">Wersja A</button>
+            <button type="button" data-copy="−20% do niedzieli" aria-pressed="false">Wersja B</button>
+            <button type="button" data-copy="Sprawdź, zanim zniknie" aria-pressed="false">Wersja C</button>
+            <button type="button" data-copy="" aria-pressed="false">Bez napisu</button>
+          </p>
+          <label class="cms__check" data-r><input type="checkbox" data-safe><span>Pokaż strefę bezpieczną dla napisów</span></label>
         </div>
         <div class="formats" data-r>
-          <div class="formats__stage"><div class="formats__frame" data-f="916"><img src="media/but.jpg" alt="Wybrany kadr przycięty do wybranego formatu" decoding="async"></div></div>
+          <div class="formats__stage"><div class="formats__frame" data-f="916"><img src="media/but.jpg" alt="Wybrany kadr przycięty do wybranego formatu" decoding="async"><i class="formats__safe" aria-hidden="true"></i><p class="formats__copy">Nowość. Już w sprzedaży.</p></div></div>
           <p class="formats__meta mono" aria-live="polite">9:16 · 1080 × 1920 · Reels, TikTok</p>
         </div>
       </div>
@@ -511,20 +519,25 @@ const chatboty = service(2, {
         <div>
           <p class="tag mono" data-r>Wypróbuj · przykład</p>
           <h2 class="ask" data-r>Zadaj mu pytanie.</h2>
-          <p class="lead" data-r>To przykładowy bot gabinetu. Zna trzy dokumenty i odpowiada tylko na ich podstawie. Odpowiedzi są tu przygotowane z góry: pokazują zachowanie bota, a nie działający model.</p>
-          <p class="picker__label mono" data-r>Co bot wie</p>
-          <p class="sources" data-r><span>Cennik</span><span>Godziny otwarcia</span><span>Regulamin</span></p>
+          <p class="lead" data-r>To przykładowy bot gabinetu. Zna trzy dokumenty i odpowiada tylko na ich podstawie. Wybierz pytanie albo wpisz własne. Odpowiedzi są tu przygotowane z góry: pokazują zachowanie bota, a nie działający model.</p>
+          <p class="picker__label mono" data-r>Co bot wie · zaznacza się użyte źródło</p>
+          <p class="sources" data-r><span data-src="cennik">Cennik</span><span data-src="godziny">Godziny otwarcia</span><span data-src="regulamin">Regulamin</span></p>
         </div>
         <div class="chatbox" data-chat data-r>
           <div class="chatbox__log" aria-live="polite">
             <p class="chat__bot">Dzień dobry, jestem botem gabinetu. W czym mogę pomóc?</p>
           </div>
           <p class="chips chatbox__asks">
-            <button type="button" data-a="Pierwsza wizyta kosztuje 180 zł i trwa 50 minut. Kolejne wizyty to 150 zł. Źródło: cennik.">Ile kosztuje wizyta?</button>
-            <button type="button" data-a="W sobotę gabinet jest otwarty od 9:00 do 14:00. Wolne terminy sprawdzi i potwierdzi recepcja. Źródło: godziny otwarcia.">Czy jest termin w sobotę?</button>
-            <button type="button" data-a="To sprawa dla człowieka. Przekazuję rozmowę do recepcji razem z całą historią. Odpiszą w tym oknie." data-sys="Rozmowa przekazana · recepcja">Chcę złożyć reklamację</button>
-            <button type="button" data-a="Tego nie wiem. Odpowiadam tylko na pytania o gabinet: cennik, godziny i regulamin.">Jaka będzie jutro pogoda?</button>
+            <button type="button" data-src="cennik" data-k="koszt,cen,ile,platn,zaplac,drog" data-a="Pierwsza wizyta kosztuje 180 zł i trwa 50 minut. Kolejne wizyty to 150 zł.">Ile kosztuje wizyta?</button>
+            <button type="button" data-src="godziny" data-k="sobot,termin,godzin,otwar,czynn,kiedy,niedziel" data-a="W sobotę gabinet jest otwarty od 9:00 do 14:00. Wolne terminy sprawdzi i potwierdzi recepcja.">Czy jest termin w sobotę?</button>
+            <button type="button" data-src="regulamin" data-k="odwol,przeloz,rezygn,anul" data-a="Wizytę można odwołać bez opłaty najpóźniej 24 godziny przed terminem. Później gabinet nalicza połowę ceny.">Jak odwołać wizytę?</button>
+            <button type="button" data-k="reklamac,skarg,zwrot,niezadowol,czlowiek,konsultant,recepcj" data-a="To sprawa dla człowieka. Przekazuję rozmowę do recepcji razem z całą historią. Odpiszą w tym oknie." data-sys="Rozmowa przekazana · recepcja">Chcę złożyć reklamację</button>
+            <button type="button" data-fallback data-a="Tego nie wiem. Odpowiadam tylko na pytania o gabinet: cennik, godziny i regulamin.">Jaka będzie jutro pogoda?</button>
           </p>
+          <form class="chatbox__form">
+            <input type="text" name="q" placeholder="Albo wpisz własne pytanie" aria-label="Twoje pytanie do bota" maxlength="120" autocomplete="off" enterkeyhint="send">
+            <button type="submit" aria-label="Wyślij pytanie"><span aria-hidden="true">→</span></button>
+          </form>
           <button class="more chatbox__reset" type="button" data-reset hidden>Zacznij od nowa</button>
         </div>
       </div>
@@ -563,18 +576,28 @@ const strony = service(3, {
             <label class="field"><span class="mono">Nagłówek</span><input type="text" name="h" value="Fizjoterapia w centrum miasta" maxlength="48" autocomplete="off"></label>
             <label class="field"><span class="mono">Opis</span><textarea name="p" rows="2" maxlength="150">Pomagamy wrócić do formy po urazach. Wizytę umówisz online w minutę.</textarea></label>
             <label class="field"><span class="mono">Tekst przycisku</span><input type="text" name="b" value="Umów wizytę" maxlength="22" autocomplete="off"></label>
+            <p class="picker__label mono">Kolor przycisku</p>
+            <p class="chips cms__colors">
+              <button type="button" data-acc="#0A0B0D" aria-pressed="true"><i style="--c:#0A0B0D"></i>Grafit</button>
+              <button type="button" data-acc="#2B2BFF" aria-pressed="false"><i style="--c:#2B2BFF"></i>Niebieski</button>
+              <button type="button" data-acc="#0E7A4F" aria-pressed="false"><i style="--c:#0E7A4F"></i>Zielony</button>
+              <button type="button" data-acc="#B5411F" aria-pressed="false"><i style="--c:#B5411F"></i>Ceglasty</button>
+            </p>
             <label class="cms__check"><input type="checkbox" name="hours" checked><span>Pokaż godziny otwarcia</span></label>
           </form>
           <p class="cms__note" data-r>To przykład. Zmiany zostają tylko w Twojej przeglądarce.</p>
         </div>
-        <div class="site" data-r aria-live="polite">
-          <p class="site__bar" aria-hidden="true"><i></i><i></i><i></i><span class="mono">twojafirma.pl</span></p>
+        <div class="preview" data-r>
+          <p class="chips preview__views"><button type="button" data-view="pc" aria-pressed="true">Komputer</button><button type="button" data-view="tel" aria-pressed="false">Telefon</button></p>
+        <div class="site" data-view="pc" aria-live="polite">
+          <p class="site__bar" aria-hidden="true"><i></i><i></i><i></i><span class="mono">twojafirma.pl</span><em class="site__saved mono">Zaktualizowano</em></p>
           <div class="site__body">
             <p class="site__h" data-out="h">Fizjoterapia w centrum miasta</p>
             <p class="site__p" data-out="p">Pomagamy wrócić do formy po urazach. Wizytę umówisz online w minutę.</p>
             <p><span class="site__btn" data-out="b">Umów wizytę</span></p>
             <p class="site__hours mono" data-out="hours">Pon.–pt. 8:00–18:00 · sob. 9:00–14:00</p>
           </div>
+        </div>
         </div>
       </div>
     </section>

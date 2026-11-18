@@ -23,7 +23,7 @@
   <link rel="apple-touch-icon" href="icon-180.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="preload" href="fonts/mona-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=63ae430e29">
+  <link rel="stylesheet" href="styles.css?v=c62b75db5a">
 </head>
 <body data-form="3">
   <a class="skip" href="#main">Przejdź do treści</a>
@@ -83,20 +83,25 @@
         <div>
           <p class="tag mono" data-r>Wypróbuj · przykład</p>
           <h2 class="ask" data-r>Zadaj mu pytanie.</h2>
-          <p class="lead" data-r>To przykładowy bot gabinetu. Zna trzy dokumenty i odpowiada tylko na ich podstawie. Odpowiedzi są tu przygotowane z góry: pokazują zachowanie bota, a nie działający model.</p>
-          <p class="picker__label mono" data-r>Co bot wie</p>
-          <p class="sources" data-r><span>Cennik</span><span>Godziny otwarcia</span><span>Regulamin</span></p>
+          <p class="lead" data-r>To przykładowy bot gabinetu. Zna trzy dokumenty i odpowiada tylko na ich podstawie. Wybierz pytanie albo wpisz własne. Odpowiedzi są tu przygotowane z góry: pokazują zachowanie bota, a nie działający model.</p>
+          <p class="picker__label mono" data-r>Co bot wie · zaznacza się użyte źródło</p>
+          <p class="sources" data-r><span data-src="cennik">Cennik</span><span data-src="godziny">Godziny otwarcia</span><span data-src="regulamin">Regulamin</span></p>
         </div>
         <div class="chatbox" data-chat data-r>
           <div class="chatbox__log" aria-live="polite">
             <p class="chat__bot">Dzień dobry, jestem botem gabinetu. W czym mogę pomóc?</p>
           </div>
           <p class="chips chatbox__asks">
-            <button type="button" data-a="Pierwsza wizyta kosztuje 180 zł i trwa 50 minut. Kolejne wizyty to 150 zł. Źródło: cennik.">Ile kosztuje wizyta?</button>
-            <button type="button" data-a="W sobotę gabinet jest otwarty od 9:00 do 14:00. Wolne terminy sprawdzi i potwierdzi recepcja. Źródło: godziny otwarcia.">Czy jest termin w sobotę?</button>
-            <button type="button" data-a="To sprawa dla człowieka. Przekazuję rozmowę do recepcji razem z całą historią. Odpiszą w tym oknie." data-sys="Rozmowa przekazana · recepcja">Chcę złożyć reklamację</button>
-            <button type="button" data-a="Tego nie wiem. Odpowiadam tylko na pytania o gabinet: cennik, godziny i regulamin.">Jaka będzie jutro pogoda?</button>
+            <button type="button" data-src="cennik" data-k="koszt,cen,ile,platn,zaplac,drog" data-a="Pierwsza wizyta kosztuje 180 zł i trwa 50 minut. Kolejne wizyty to 150 zł.">Ile kosztuje wizyta?</button>
+            <button type="button" data-src="godziny" data-k="sobot,termin,godzin,otwar,czynn,kiedy,niedziel" data-a="W sobotę gabinet jest otwarty od 9:00 do 14:00. Wolne terminy sprawdzi i potwierdzi recepcja.">Czy jest termin w sobotę?</button>
+            <button type="button" data-src="regulamin" data-k="odwol,przeloz,rezygn,anul" data-a="Wizytę można odwołać bez opłaty najpóźniej 24 godziny przed terminem. Później gabinet nalicza połowę ceny.">Jak odwołać wizytę?</button>
+            <button type="button" data-k="reklamac,skarg,zwrot,niezadowol,czlowiek,konsultant,recepcj" data-a="To sprawa dla człowieka. Przekazuję rozmowę do recepcji razem z całą historią. Odpiszą w tym oknie." data-sys="Rozmowa przekazana · recepcja">Chcę złożyć reklamację</button>
+            <button type="button" data-fallback data-a="Tego nie wiem. Odpowiadam tylko na pytania o gabinet: cennik, godziny i regulamin.">Jaka będzie jutro pogoda?</button>
           </p>
+          <form class="chatbox__form">
+            <input type="text" name="q" placeholder="Albo wpisz własne pytanie" aria-label="Twoje pytanie do bota" maxlength="120" autocomplete="off" enterkeyhint="send">
+            <button type="submit" aria-label="Wyślij pytanie"><span aria-hidden="true">→</span></button>
+          </form>
           <button class="more chatbox__reset" type="button" data-reset hidden>Zacznij od nowa</button>
         </div>
       </div>
@@ -217,6 +222,6 @@
     <form id="cmdForm"><span aria-hidden="true">›</span><input id="cmdIn" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Polecenie" placeholder="pomoc"><button type="button" id="cmdClose" aria-label="Zamknij wiersz poleceń">esc</button></form>
   </div>
 
-  <script src="script.js?v=c16ca26e66" defer></script>
+  <script src="script.js?v=1048e3d35c" defer></script>
 </body>
 </html>

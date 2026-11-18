@@ -652,10 +652,11 @@
     return true;
   }
   // sylwetki w „O nas”: gotowe współrzędne punktów (media/osoba-*.bin), układane tym samym mechanizmem co napisy
-  var people = {}, portraitOn = false, shownKey = null, wantKey = null, swapTimer = 0;
+  var people = {}, shownRatio = 1, portraitOn = false, shownKey = null, wantKey = null, swapTimer = 0;
+  function personSize() { return !narrow ? 1.0 : H < 620 ? 0.5 : H < 720 ? 0.62 : 0.8; }
   function fillPerson(pts, ratio) {
     // połowa wysokości postaci w jednostkach sceny; na telefonie mniejsza (a na niskim jeszcze mniejsza), żeby nie wchodziła na tekst
-    var n = pts.length / 2, hh = !narrow ? 1.0 : H < 620 ? 0.5 : H < 720 ? 0.62 : 0.8;
+    var n = pts.length / 2, hh = personSize();
     for (var k = 0; k < N; k++) {
       var j = k % n;
       tdata[k * 2] = (pts[j * 2] / 255 * 2 - 1) * hh * ratio + (Math.random() - 0.5) * 0.008;
@@ -678,7 +679,7 @@
     }
     if (!people[key] || shownKey === key) return;
     clearTimeout(textTimer); clearTimeout(swapTimer);
-    var go = function () { fillPerson(people[key], ratio); textTarget = 1; portraitOn = true; portraitShown = true; shownKey = key; shownScene = -1; needs = true; };
+    var go = function () { shownRatio = ratio; fillPerson(people[key], ratio); textTarget = 1; portraitOn = true; portraitShown = true; shownKey = key; shownScene = -1; needs = true; };
     // zmiana osoby: najpierw punkty się rozchodzą, potem składają nową sylwetkę
     if (portraitOn && textW > 0.3) { textTarget = 0; shownKey = null; swapTimer = setTimeout(function () { if (wantKey === key) go(); }, 450); } else go();
   }
@@ -715,7 +716,8 @@
     W = canvas.clientWidth; H = canvas.clientHeight;
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
     gl.viewport(0, 0, canvas.width, canvas.height);
-    narrow = W < 860;
+    // wąski ekran = forma nad tekstem; telefon poziomo liczy się jak szeroki (ten sam warunek co w styles.css)
+    narrow = W < 860 && !(H <= 520 && W / H >= 1.3);
     var aspect = W / H;
     gl.uniform1f(U.uAspect, aspect);
     gl.uniform1f(U.uDpr, dpr);
@@ -755,7 +757,13 @@
     lastY = y;
     retarget();
   }, { passive: true });
-  window.addEventListener('resize', function () { resize(); retarget(); });
+  window.addEventListener('resize', function () {
+    var was = personSize();
+    resize(); retarget();
+    // obrót telefonu albo zmiana okna: sylwetka ma inny rozmiar w każdym układzie, więc trzeba ją ułożyć od nowa
+    // (ale nie przy samym chowaniu się paska adresu, gdy rozmiar zostaje ten sam)
+    if (portraitOn && shownKey && people[shownKey] && was !== personSize()) fillPerson(people[shownKey], shownRatio);
+  });
   // najechanie na usługę pokazuje jej formę
   Array.prototype.forEach.call(document.querySelectorAll('[data-hover-form]'), function (el) {
     el.addEventListener('pointerenter', function (e) { if (e.pointerType === 'touch') return; hoverForm = +el.getAttribute('data-hover-form'); retarget(); });

@@ -15,6 +15,11 @@
   root.classList.add('js');
   // Serwer z backendem dopisuje do strony znacznik; kopia statyczna (np. GitHub Pages) go nie ma i nie wysyła żadnych żądań do API.
   var HAS_API = !!document.querySelector('meta[name="fila-api"]');
+  // Prywatność opisuje formularz w dwóch wersjach: z backendem zgłoszenie trafia na serwer, bez niego do programu pocztowego.
+  if (HAS_API) {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-z-api]'), function (el) { el.hidden = false; });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-bez-api]'), function (el) { el.hidden = true; });
+  }
   // anonimowa odsłona: sama ścieżka i adres strony odsyłającej, bez plików cookie
   if (HAS_API && navigator.sendBeacon) {
     try { navigator.sendBeacon('/api/odslona', JSON.stringify({ sciezka: body.hasAttribute('data-lost') ? '/404' : location.pathname, ref: document.referrer })); } catch (e) {}

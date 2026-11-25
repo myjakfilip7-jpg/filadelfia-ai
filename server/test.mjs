@@ -57,6 +57,27 @@ try {
   check('server/server.mjs niedostępny', (await get('/server/server.mjs')).status === 404);
   check('.git niedostępny', (await get('/.git/config')).status === 404);
   check('wyjście poza katalog zablokowane', (await get('/..%2f..%2fetc/passwd')).status === 404);
+  { // osobny zakres nazw
+  // obejścia filtra, które działały na Windows i macOS: inna wielkość liter, ukośnik wsteczny, kropka na końcu nazwy
+  for (const p of ['/SERVER/server.mjs', '/Server/data/z.json', '/Build.mjs', '/README.MD', '/%5Cserver%5Cserver.mjs', '/media%5C..%5Cserver%5Cserver.mjs', '/media%5C..%5Cserver%5C.env', '/server./server.mjs', '/build.mjs.', '/build.mjs::$DATA', '/TOOLS/check.mjs']) {
+    check(`niedostępne: ${p}`, (await get(p)).status === 404);
+  }
+  const css = await get('/styles.css?v=abc', { headers: { 'accept-encoding': 'gzip' } });
+  check('style: kompresja gzip i długa pamięć podręczna', css.headers.get('content-encoding') === 'gzip' && /immutable/.test(css.headers.get('cache-control') || '') && (await css.text()).includes('{'));
+  const plain = await get('/styles.css', { headers: { 'accept-encoding': 'identity' } });
+  check('style bez kompresji, gdy przeglądarka jej nie chce', !plain.headers.get('content-encoding') && (await plain.text()).includes('{'));
+  const home = await get('/', { headers: { 'accept-encoding': 'gzip' } });
+  check('strona: gzip, zawsze sprawdzana na świeżo, ze znacznikiem API', home.headers.get('content-encoding') === 'gzip' && home.headers.get('cache-control') === 'no-cache' && (await home.text()).includes('name="fila-api"'));
+  const head = await get('/', { method: 'HEAD' });
+  check('HEAD bez treści', head.status === 200 && (await head.text()) === '');
+  check('robots.txt dostępny', (await get('/robots.txt')).status === 200);
+  const raw = (body, headers = {}) => get('/api/zgloszenia', { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body });
+  check('treść „null” → 400, nie 500', (await raw('null')).status === 400);
+  check('treść-lista → 400', (await raw('[1]')).status === 400);
+  const trap = JSON.stringify({ www: 'x' }); // pole-pułapka: sprawdzamy samo źródło, nic się nie zapisuje
+  check('źródło 127.0.0.1 na tym samym porcie przyjęte', (await raw(trap, { origin: `http://127.0.0.1:${appPort}` })).status === 200);
+  check('źródło z innego portu odrzucone', (await raw(trap, { origin: `http://localhost:${appPort + 1}` })).status === 403);
+  }
 
   // bez logowania
   check('api/me bez sesji → 401', (await get('/api/me')).status === 401);

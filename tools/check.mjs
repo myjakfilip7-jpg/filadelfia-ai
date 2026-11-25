@@ -62,6 +62,8 @@ const fonts = readdirSync(path.join(ROOT, 'fonts')).reduce((a, f) => a + readFil
 check(`fonty: ${fonts.toFixed(0)} KB (limit 200)`, fonts < 200);
 for (const f of readdirSync(path.join(ROOT, 'media'))) { const size = readFileSync(path.join(ROOT, 'media', f)).length / 1024; check(`media/${f}: ${size.toFixed(0)} KB (limit 250)`, size < 250); }
 check('mapa strony i manifest istnieją', existsSync(path.join(ROOT, 'sitemap.xml')) && existsSync(path.join(ROOT, 'manifest.webmanifest')) && existsSync(path.join(ROOT, 'icon-180.png')));
+check('robots.txt istnieje i nie blokuje całej strony', existsSync(path.join(ROOT, 'robots.txt')) && !/^Disallow:\s*\/\s*$/m.test(read('robots.txt')));
+check('każda strona poza 404 i panelem ma adres kanoniczny', pages.filter((f) => !['404.html', 'panel.html'].includes(f)).every((f) => /<link rel="canonical" href="https:\/\/[^"]+">/.test(read(f))));
 check('w stylach nie ma warstw „wersja N”', !/===== wersja/.test(read('styles.css')));
 
 console.log(`\n${passed} ok, ${failed} błędów`);

@@ -18,7 +18,7 @@ try {
   rmSync(out, { recursive: true, force: true }); rmSync(zip, { force: true }); mkdirSync(out, { recursive: true });
   // bez panelu i backendu: wymagają własnego serwera Node, którego na hostingu współdzielonym nie ma
   const files = ['index.html', 'kampanie.html', 'automatyzacje.html', 'chatboty.html', 'strony.html', 'kontakt.html', 'prywatnosc.html', 'marka.html', '404.html',
-    'styles.css', 'script.js', 'favicon.svg', 'og.png', 'icon-180.png', 'icon-192.png', 'icon-512.png', 'manifest.webmanifest', 'sitemap.xml'];
+    'styles.css', 'script.js', 'favicon.svg', 'og.png', 'icon-180.png', 'icon-192.png', 'icon-512.png', 'manifest.webmanifest', 'sitemap.xml', 'robots.txt'];
   for (const f of files) cpSync(path.join(ROOT, f), path.join(out, f));
   for (const d of ['fonts', 'media']) cpSync(path.join(ROOT, d), path.join(out, d), { recursive: true });
   writeFileSync(path.join(out, '.htaccess'), `# Filadelfia.ai — ustawienia dla serwera Apache / LiteSpeed (Hostinger)

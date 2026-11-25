@@ -18,7 +18,7 @@ build({ SITE: site });
 try {
   rmSync(out, { recursive: true, force: true }); rmSync(zip, { force: true }); mkdirSync(path.join(out, 'server'), { recursive: true });
   const files = ['index.html', 'kampanie.html', 'automatyzacje.html', 'chatboty.html', 'strony.html', 'kontakt.html', 'prywatnosc.html', 'marka.html', '404.html',
-    'panel.html', 'panel.js', 'panel.css', 'theme.js', 'styles.css', 'script.js', 'favicon.svg', 'og.png', 'icon-180.png', 'icon-192.png', 'icon-512.png', 'manifest.webmanifest', 'sitemap.xml'];
+    'panel.html', 'panel.js', 'panel.css', 'theme.js', 'styles.css', 'script.js', 'favicon.svg', 'og.png', 'icon-180.png', 'icon-192.png', 'icon-512.png', 'manifest.webmanifest', 'sitemap.xml', 'robots.txt'];
   for (const f of files) cpSync(path.join(ROOT, f), path.join(out, f));
   for (const d of ['fonts', 'media']) cpSync(path.join(ROOT, d), path.join(out, d), { recursive: true });
   cpSync(path.join(ROOT, 'server/server.mjs'), path.join(out, 'server/server.mjs'));

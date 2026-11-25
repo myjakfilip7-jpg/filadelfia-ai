@@ -1,12 +1,15 @@
 // Backend Filadelfia.ai — logowanie przez GitHub, role, panel, zgłoszenia z formularza, anonimowy licznik odsłon.
 // Bez zależności: `node server/server.mjs`. Konfiguracja w server/.env (wzór: .env.example).
 import http from 'node:http';
-import { readFile, writeFile, rename, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, rename, mkdir, stat } from 'node:fs/promises';
+import { gzip as gzipCb } from 'node:zlib';
+import { promisify } from 'node:util';
 import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
+const gzip = promisify(gzipCb);
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..'); // katalog ze stroną
 try { process.loadEnvFile(path.join(HERE, '.env')); } catch { /* brak .env: zostają zmienne środowiska */ }
@@ -18,8 +21,17 @@ const ORIGIN = new URL(BASE_URL).origin;
 const SECURE = BASE_URL.startsWith('https://');
 // Za proxy hostingu (TRUST_PROXY=1) adres gościa jest w nagłówku; bez tej zmiennej liczy się adres połączenia.
 // Nagłówek może podać sam klient, więc włączaj to tylko tam, gdzie serwer nie jest dostępny z pominięciem proxy.
-const TRUST_PROXY = env.TRUST_PROXY === '1';
-const clientIp = (req) => (TRUST_PROXY && String(req.headers['x-forwarded-for'] || '').split(',')[0].trim().slice(0, 64)) || req.socket.remoteAddress || '?';
+// Wartość to liczba zaufanych proxy przed serwerem (zwykle 1). Każde proxy dopisuje adres na końcu nagłówka,
+// więc liczymy od końca: początek listy może wpisać sam klient i nie wolno mu ufać.
+const TRUST_PROXY = Math.max(0, Math.min(5, Number.parseInt(env.TRUST_PROXY || '0', 10) || 0));
+function clientIp(req) {
+  if (TRUST_PROXY) {
+    const chain = String(req.headers['x-forwarded-for'] || '').split(',').map((s) => s.trim()).filter(Boolean);
+    const ip = chain[chain.length - TRUST_PROXY] || chain[0];
+    if (ip) return ip.slice(0, 64);
+  }
+  return req.socket.remoteAddress || '?';
+}
 const SECRET = env.SESSION_SECRET || '';
 const CLIENT_ID = env.GITHUB_CLIENT_ID || '';
 const CLIENT_SECRET = env.GITHUB_CLIENT_SECRET || '';
@@ -105,12 +117,29 @@ function readJson(req, limit = 20000) {
     // po przekroczeniu limitu przestajemy zbierać dane, ale pozwalamy klientowi dostać odpowiedź 413;
     // dopiero przy naprawdę dużym strumieniu zrywamy połączenie
     req.on('data', (c) => { size += c.length; if (size > limit) { chunks.length = 0; reject(new Error('za-duze')); if (size > 1e6) req.destroy(); } else chunks.push(c); });
-    req.on('end', () => { try { resolve(JSON.parse(Buffer.concat(chunks).toString() || '{}')); } catch { reject(new Error('zly-json')); } });
+    req.on('end', () => {
+      try {
+        const v = JSON.parse(Buffer.concat(chunks).toString() || '{}');
+        // treść musi być obiektem: null, liczba albo lista nie mają pól, których szukają trasy
+        if (!v || typeof v !== 'object' || Array.isArray(v)) return reject(new Error('zly-json'));
+        resolve(v);
+      } catch { reject(new Error('zly-json')); }
+    });
     req.on('error', reject);
   });
 }
 // żądania zmieniające dane muszą przyjść z naszej strony (ochrona przed CSRF)
-const sameOrigin = (req) => !req.headers.origin || req.headers.origin === ORIGIN;
+// Nasza strona to BASE_URL, ten sam adres z „www.” albo bez, adresy z ALLOWED_ORIGINS (po przecinku),
+// a lokalnie także localhost na porcie, na którym serwer faktycznie słucha.
+const ORIGINS = new Set([ORIGIN]);
+{
+  const u = new URL(BASE_URL);
+  const local = ['localhost', '127.0.0.1', '[::1]'].includes(u.hostname);
+  if (local) for (const h of ['localhost', '127.0.0.1', '[::1]']) ORIGINS.add(`http://${h}:${PORT}`);
+  else { const twin = new URL(BASE_URL); twin.hostname = u.hostname.startsWith('www.') ? u.hostname.slice(4) : 'www.' + u.hostname; ORIGINS.add(twin.origin); }
+  for (const o of (env.ALLOWED_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean)) { try { ORIGINS.add(new URL(o).origin); } catch { console.error('ALLOWED_ORIGINS: pomijam błędny adres', o); } }
+}
+const sameOrigin = (req) => !req.headers.origin || ORIGINS.has(req.headers.origin);
 
 /* ---------- zgłoszenia: plik JSON, zapisy po kolei ---------- */
 const TOPICS = { kampanie: 'Kampanie reklamowe AI', automatyzacje: 'Agenci i automatyzacje', chatboty: 'Chatboty AI', strony: 'Strony, aplikacje, sklepy', inne: 'Jeszcze nie wiem' };
@@ -218,25 +247,66 @@ function stats(days) {
 // panel nie ma skryptów ani stylów w treści strony, więc może mieć ścisłą politykę: tylko własne pliki i awatar z GitHuba
 const PANEL_CSP = "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; connect-src 'self'; img-src 'self' https://avatars.githubusercontent.com; form-action 'self'; base-uri 'none'; frame-ancestors 'none'";
 const API_MARK = '<meta name="fila-api" content="1">';
-const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.woff2': 'font/woff2', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.xml': 'application/xml; charset=utf-8' };
-async function serveStatic(res, pathname) {
+const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.woff2': 'font/woff2', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.xml': 'application/xml; charset=utf-8', '.txt': 'text/plain; charset=utf-8' };
+const HIDDEN_DIRS = ['server', 'tools', 'paczka', 'node_modules'];
+const HIDDEN_FILES = ['build.mjs', 'readme.md', 'package.json', 'package-lock.json'];
+// Ścieżka z adresu → ścieżka pliku względem ROOT albo null, gdy pliku nie wolno wydać.
+// Porównujemy małymi literami i odrzucamy znaki, które Windows i macOS czytają inaczej niż Linux
+// (ukośnik wsteczny, dwukropek, kropka albo spacja na końcu nazwy) — inaczej filtr dałoby się obejść.
+function publicPath(pathname) {
   let rel;
-  try { rel = decodeURIComponent(pathname); } catch { return send(res, 400, 'Bad request'); }
+  try { rel = decodeURIComponent(pathname); } catch { return null; }
+  if (/[\\:\u0000-\u001F]/.test(rel)) return null;
   if (rel.endsWith('/')) rel += 'index.html';
-  const file = path.join(ROOT, rel);
-  const inside = file.startsWith(ROOT + path.sep);
-  const hidden = rel.split('/').some((seg) => seg.startsWith('.')) || rel.startsWith('/server/') || rel.startsWith('/tools/') || rel === '/build.mjs' || rel === '/README.md' || rel === '/package.json';
-  if (inside && !hidden) {
+  const segs = rel.split('/').filter(Boolean);
+  if (!segs.length) return null;
+  for (const seg of segs) if (seg.startsWith('.') || /[. ]$/.test(seg)) return null;
+  const low = segs.map((s) => s.toLowerCase());
+  if (HIDDEN_DIRS.includes(low[0]) || (low.length === 1 && HIDDEN_FILES.includes(low[0]))) return null;
+  return segs.join('/');
+}
+const COMPRESSIBLE = new Set(['.html', '.css', '.js', '.mjs', '.svg', '.json', '.webmanifest', '.xml', '.txt']);
+const zipped = new Map(); // gotowe wersje gzip plików, które się nie zmieniają między żądaniami
+async function serveStatic(req, res, url) {
+  const rel = publicPath(url.pathname);
+  const file = rel && path.join(ROOT, rel);
+  if (file && file.startsWith(ROOT + path.sep)) {
     try {
-      let data = await readFile(file);
-      const extra = rel === '/panel.html' ? { 'Cache-Control': 'no-store', 'Content-Security-Policy': PANEL_CSP } : {};
-      // strony podawane przez ten serwer dostają znacznik, po którym skrypt wie, że może korzystać z API
-      if (rel.endsWith('.html') && rel !== '/panel.html') data = data.toString().replace('</head>', API_MARK + '</head>');
-      return send(res, 200, data, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream', ...extra });
+      const ext = path.extname(file).toLowerCase(), isPanel = rel === 'panel.html', isHtml = ext === '.html';
+      const info = await stat(file);
+      if (!info.isFile()) throw new Error('nie-plik');
+      const headers = { 'Content-Type': TYPES[ext] || 'application/octet-stream' };
+      // strony zawsze sprawdzane na świeżo; pliki z ?v=skrót nigdy się nie zmieniają; reszta na jeden dzień
+      if (isPanel) { headers['Cache-Control'] = 'no-store'; headers['Content-Security-Policy'] = PANEL_CSP; }
+      else if (isHtml) headers['Cache-Control'] = 'no-cache';
+      else headers['Cache-Control'] = url.searchParams.has('v') ? 'public, max-age=31536000, immutable' : 'public, max-age=86400';
+      let data;
+      if (COMPRESSIBLE.has(ext)) {
+        headers.Vary = 'Accept-Encoding';
+        const key = `${rel}:${info.mtimeMs}:${info.size}`;
+        if (/\bgzip\b/.test(String(req.headers['accept-encoding'] || ''))) {
+          data = zipped.get(key);
+          if (!data) {
+            let raw = await readFile(file);
+            // strony podawane przez ten serwer dostają znacznik, po którym skrypt wie, że może korzystać z API
+            if (isHtml && !isPanel) raw = Buffer.from(raw.toString().replace('</head>', API_MARK + '</head>'));
+            data = await gzip(raw);
+            if (zipped.size > 200) zipped.clear();
+            zipped.set(key, data);
+          }
+          headers['Content-Encoding'] = 'gzip';
+        }
+      }
+      if (!data) {
+        data = await readFile(file);
+        if (isHtml && !isPanel) data = Buffer.from(data.toString().replace('</head>', API_MARK + '</head>'));
+      }
+      headers['Content-Length'] = data.length;
+      return send(res, 200, req.method === 'HEAD' ? '' : data, headers);
     } catch { /* niżej 404 */ }
   }
   const notFound = (await readFile(path.join(ROOT, '404.html'), 'utf8').catch(() => 'Nie znaleziono')).replace('</head>', API_MARK + '</head>');
-  send(res, 404, notFound, { 'Content-Type': 'text/html; charset=utf-8' });
+  send(res, 404, req.method === 'HEAD' ? '' : notFound, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
 }
 
 /* ---------- trasy ---------- */
@@ -259,7 +329,8 @@ async function handle(req, res) {
     if (!configured) return fail('konfiguracja');
     if (url.searchParams.get('error')) return fail('odmowa');
     const saved = open(cookies(req).fila_state), state = url.searchParams.get('state') || '', code = url.searchParams.get('code') || '';
-    if (!saved || !code || saved.state.length !== state.length || !timingSafeEqual(Buffer.from(saved.state), Buffer.from(state))) return fail('stan');
+    const stateA = Buffer.from(String(saved?.state || '')), stateB = Buffer.from(state);
+    if (!saved || !code || stateA.length !== stateB.length || !timingSafeEqual(stateA, stateB)) return fail('stan');
     try {
       const tokenRes = await fetch(`${GH_WEB}/login/oauth/access_token`, {
         method: 'POST',
@@ -416,7 +487,7 @@ async function handle(req, res) {
 
   if (p.startsWith('/api/') || p.startsWith('/auth/')) return json(res, 404, { blad: 'nie-ma' });
   if (m !== 'GET' && m !== 'HEAD') return send(res, 405, 'Method not allowed');
-  return serveStatic(res, p);
+  return serveStatic(req, res, url);
 }
 
 people = await users.load();

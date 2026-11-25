@@ -97,8 +97,12 @@ oraz `DATA_FILE` ze ścieżką poza katalogiem aplikacji, żeby zgłoszenia prze
 
 ## Przed przejściem na docelową domenę
 
-- Usuń `<meta name="robots" content="noindex, nofollow">` w `build.mjs`.
-- Zmień `SITE` w `build.mjs` na nowy adres (obraz do udostępnień, dane strukturalne).
+- Zbuduj strony z włączonym indeksowaniem pod nowy adres: `INDEKSUJ=1 SITE=https://domena/ node build.mjs`
+  (w PowerShell: `$env:INDEKSUJ='1'; $env:SITE='https://domena/'; node build.mjs`). Bez `INDEKSUJ=1` strony mają
+  `noindex`, a `robots.txt` nie podaje mapy strony. Te same zmienne działają z `tools/paczka.mjs` i `tools/paczka-node.mjs`.
+- Docelowo zmień domyślny `SITE` w `build.mjs` (adres kanoniczny, obraz do udostępnień, dane strukturalne, mapa strony).
+- Z backendem za proxy ustaw `TRUST_PROXY` na liczbę proxy przed serwerem (zwykle `1`); gdy strona działa pod kilkoma
+  adresami, dopisz je w `ALLOWED_ORIGINS` (wariant z „www.” jest dozwolony automatycznie).
 - Zweryfikuj treść usług, procesu i pytań (FAQ) — to wersja robocza.
 - Uzupełnij `prywatnosc.html` (pola „do uzupełnienia” w `build.mjs`) i daj treść do sprawdzenia prawnikowi.
 - Sprawdź, czy skrzynka `business@filadelfia.ai` istnieje i odbiera pocztę.

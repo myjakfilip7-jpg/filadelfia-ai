@@ -10,6 +10,10 @@ const v = (file) => `${file}?v=${createHash('sha256').update(readFileSync(new UR
 const MAIL = 'business@filadelfia.ai';
 // Adres, pod którym strona jest opublikowana. Zmień przy przejściu na docelową domenę (obraz do udostępnień i dane strukturalne).
 const SITE = process.env.SITE || 'https://myjakfilip7-jpg.github.io/filadelfia-ai/'; // paczka na inny adres: SITE=https://domena/ node build.mjs
+// Wyszukiwarki: domyślnie strona jest wyłączona z indeksowania (adres tymczasowy). Build pod docelową domenę:
+//   INDEKSUJ=1 SITE=https://domena/ node build.mjs
+const INDEX = process.env.INDEKSUJ === '1';
+const HOSTING = /\.github\.io$/.test(new URL(SITE).hostname) ? 'GitHub Pages' : null; // inny hosting: nazwa do uzupełnienia w Prywatności
 
 const mark = (size = 22) => `<svg class="mark" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9.6" stroke-dasharray="46.3 14" transform="rotate(-38 12 12)"/><circle cx="12" cy="12" r="5.5" stroke-dasharray="21.5 13.06" transform="rotate(148 12 12)"/></g><circle class="mark__p" cx="12" cy="12" r="2.1"/></svg>`;
 const word = `<span class="word">filadelfia<span class="word__dot">.</span>ai</span>`;
@@ -32,9 +36,11 @@ function shell({ file, title, desc, form, formName, lost, current, body, base, t
   <script>document.write('<base href="' + (/\\.github\\.io$/.test(location.hostname) ? '/' + location.pathname.split('/')[1] + '/' : '/') + '">');</script>` : ''}
   <title>${title}</title>
   <meta name="description" content="${desc}">
-  <!-- Domena tymczasowa: bez indeksowania. Usuń tę linię (w build.mjs) przy przejściu na docelową domenę. -->
+${INDEX && !lost ? '' : `  <!-- Bez indeksowania: adres tymczasowy albo strona błędu. Build pod docelową domenę: INDEKSUJ=1 SITE=https://domena/ node build.mjs -->
   <meta name="robots" content="noindex, nofollow">
-  <meta name="theme-color" content="#E8EAED">
+`}${lost ? '' : `  <link rel="canonical" href="${SITE}${file === 'index.html' ? '' : file}">
+  <meta property="og:url" content="${SITE}${file === 'index.html' ? '' : file}">
+`}  <meta name="theme-color" content="#E8EAED">
   <meta property="og:title" content="${title}">
   <meta property="og:description" content="${desc}">
   <meta property="og:type" content="website">
@@ -711,8 +717,8 @@ const legal = `    <section class="scene scene--hero scene--page">
           <li data-r><h2>Pliki cookie i śledzenie</h2><p>Strona nie zapisuje plików cookie i nie ma pikseli reklamowych ani zewnętrznej analityki.</p></li>
           <li data-r><h2>Licznik odsłon</h2><p>Liczymy, ile razy otwarto każdą podstronę i z jakiej strony przyszli odwiedzający. Zapisujemy tylko sumy na dzień. Nie zapisujemy adresu IP ani niczego, co pozwala rozpoznać osobę, a jeśli przeglądarka wysyła prośbę „nie śledź”, wizyta nie jest liczona.</p></li>
           <li data-r><h2>Co zostaje w Twojej przeglądarce</h2><p>Wybór trybu dziennego lub nocnego oraz informacja, że animacja wejścia już się odtworzyła. Te dane nie opuszczają Twojego urządzenia.</p></li>
-          <li data-r><h2>Formularz kontaktowy</h2><p>Formularz niczego nie wysyła na nasz serwer. Składa wiadomość i otwiera Twój program pocztowy; to, co wyślesz, trafia do nas jak zwykły e-mail. Używamy tych danych tylko po to, żeby odpowiedzieć. ${TODO('jak długo przechowujemy korespondencję')}</p></li>
-          <li data-r><h2>Usługi zewnętrzne</h2><p>Strona jest hostowana na GitHub Pages, które widzi Twój adres IP, tak jak każdy serwer, z którym łączy się przeglądarka. Kroje pisma i wszystkie pozostałe pliki ładują się z tego samego adresu; strona nie łączy się z żadną inną usługą.</p></li>
+          <li data-r><h2>Formularz kontaktowy</h2><p data-bez-api>Formularz niczego nie wysyła na nasz serwer. Składa wiadomość i otwiera Twój program pocztowy; to, co wyślesz, trafia do nas jak zwykły e-mail. Używamy tych danych tylko po to, żeby odpowiedzieć. ${TODO('jak długo przechowujemy korespondencję')}</p><p data-z-api hidden>Formularz wysyła wiadomość na nasz serwer. Zapisujemy to, co wpiszesz: temat, imię, firmę lub stronę, kontakt i treść wiadomości, razem z datą wysłania. Używamy tych danych tylko po to, żeby odpowiedzieć; widzą je wyłącznie zalogowane osoby z naszego zespołu. Adresu IP nie zapisujemy: serwer pamięta go przez kilka minut, żeby ograniczyć liczbę zgłoszeń z jednego adresu. ${TODO('jak długo przechowujemy zgłoszenia')}</p></li>
+          <li data-r><h2>Usługi zewnętrzne</h2><p>Strona jest hostowana ${HOSTING ? `na ${HOSTING}, które widzi` : `u dostawcy ${TODO('nazwa firmy hostingowej')}, który widzi`} Twój adres IP, tak jak każdy serwer, z którym łączy się przeglądarka. Kroje pisma i wszystkie pozostałe pliki ładują się z tego samego adresu; strona nie łączy się z żadną inną usługą.</p></li>
           <li data-r><h2>Twoje prawa</h2><p>Możesz poprosić o wgląd w swoje dane, ich poprawienie lub usunięcie, pisząc na adres powyżej. Masz też prawo złożyć skargę do Prezesa Urzędu Ochrony Danych Osobowych.</p></li>
         </ul>
       </div>
@@ -845,5 +851,7 @@ writeFileSync(new URL('panel.html', import.meta.url), panelPage);
 // mapa strony (bez panelu i 404) i manifest
 const listed = pages.filter((p) => !p.base).map((p) => `  <url><loc>${SITE}${p.file === 'index.html' ? '' : p.file}</loc></url>`).join('\n');
 writeFileSync(new URL('sitemap.xml', import.meta.url), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${listed}\n</urlset>\n`);
+// robots.txt: nie blokujemy robotów także przy wyłączonym indeksowaniu — muszą móc przeczytać znacznik noindex na stronach
+writeFileSync(new URL('robots.txt', import.meta.url), `User-agent: *\nAllow: /\nDisallow: /panel.html\nDisallow: /api/\nDisallow: /auth/\n${INDEX ? `\nSitemap: ${SITE}sitemap.xml\n` : ''}`);
 writeFileSync(new URL('manifest.webmanifest', import.meta.url), JSON.stringify({ name: 'Filadelfia.ai', short_name: 'Filadelfia', lang: 'pl', start_url: './', display: 'browser', background_color: '#E8EAED', theme_color: '#E8EAED', icons: [{ src: 'icon-192.png', sizes: '192x192', type: 'image/png' }, { src: 'icon-512.png', sizes: '512x512', type: 'image/png' }] }, null, 2) + '\n');
 console.log('Zbudowano: ' + pages.map((p) => p.file).join(', '));

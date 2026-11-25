@@ -283,11 +283,11 @@
   /* ---------- manifest: słowa zapalają się przy przewijaniu; kroki: aktywny ten na środku ---------- */
   var fills = Array.prototype.map.call(document.querySelectorAll('.fill'), function (el) {
     var words = el.textContent.trim().split(/\s+/);
-    el.setAttribute('aria-label', words.join(' '));
+    // słowa zostają zwykłym tekstem: czytnik ekranu czyta je jak zdanie (aria-label na akapicie bywa pomijany)
     el.textContent = '';
     var spans = words.map(function (wd, n) {
       var sp = document.createElement('span');
-      sp.textContent = wd; sp.setAttribute('aria-hidden', 'true');
+      sp.textContent = wd;
       el.appendChild(sp);
       if (n < words.length - 1) el.appendChild(document.createTextNode(' '));
       return sp;
@@ -753,6 +753,7 @@
 
   /* ---------- rozmiar i kadr ---------- */
   var W = 0, H = 0, dpr = 1, narrow = false;
+  var formTag = document.querySelector('.scene--form .tag');
   function resize() {
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     W = canvas.clientWidth; H = canvas.clientHeight;
@@ -870,8 +871,19 @@
     gl.uniform1f(U.uPtrOn, ptrOn);
     gl.uniform2f(U.uPtr, cx, cy);
     gl.uniform2f(U.uTilt, (reduced ? -0.22 : tiltX) * flat, (reduced ? -0.3 : tiltY) * flat);
-    gl.uniform2f(U.uShift, narrow ? 0 : 0.5, narrow ? (0.45 * top + 0.62 * end) * (1 - textW) + (portraitOn ? 0.46 : 0.4) * textW : 0.02);
-    gl.uniform1f(U.uAlpha, narrow ? Math.max(0.16 + 0.6 * top + 0.5 * end, 0.85 * textW) : 0.86);
+    var sx = narrow ? 0 : 0.5;
+    var sy = narrow ? (0.45 * top + 0.62 * end) * (1 - textW) + (portraitOn ? 0.46 : 0.4) * textW : 0.02;
+    // za tekstem obiekt jest ledwie widoczny, żeby nie utrudniał czytania
+    var al = narrow ? Math.max(0.1 + 0.66 * top + 0.56 * end, 0.85 * textW) : 0.86;
+    if (narrow && formTag) {
+      // strona z formularzem nie ma nad nagłówkiem miejsca na obiekt: punkt stoi w wolnym polu obok etykiety i przewija się razem z nią
+      var fr = formTag.getBoundingClientRect();
+      sx = 0.62 * (1 - textW);
+      sy = (1 - 2 * (fr.top + fr.height / 2) / H) * (1 - textW) + 0.4 * textW;
+      al = Math.max(0.8, 0.85 * textW);
+    }
+    gl.uniform2f(U.uShift, sx, sy);
+    gl.uniform1f(U.uAlpha, al);
     gl.drawArrays(gl.POINTS, 0, N);
 
     label(mix);

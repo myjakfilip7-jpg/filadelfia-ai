@@ -55,7 +55,11 @@ python3 -m http.server 4173
 
 ## Ukryte rzeczy
 
-- `/` (albo dotknięcie nazwy formacji na dole) otwiera wiersz poleceń; `pomoc` pokazuje listę
+- `/`, `Ctrl+K` (albo dotknięcie nazwy formacji na dole) otwiera wiersz poleceń; `pomoc` pokazuje listę poleceń do kliknięcia
+- wiersz poleceń ma dziennik, historię (`↑` `↓`), dopełnianie (`Tab`), podpowiedź „czy chodziło o…” i zostaje otwarty po przejściu
+  na inną stronę poleceniem; `skroty` wypisuje skróty, `status` stan strony, `zegar` pokazuje czas punktami
+- `sekrety` — licznik 10 niespodzianek (pierwsze litery jako podpowiedź); lista jest w `EGGS` w `script.js`
+- kod Konami (`↑ ↑ ↓ ↓ ← → ← → B A`) poza polem tekstowym: punkty przechodzą przez wszystkie formy
 - `noc` / `dzien` — tryb nocny, zapamiętywany w przeglądarce
 - `forma 1–5`, `puls`, `filadelfia`, `napisz <słowo>` (punkty układają się w napis)
 - kursor odpycha punkty; najechanie na usługę pokazuje jej formę

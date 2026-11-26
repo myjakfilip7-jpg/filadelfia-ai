@@ -91,6 +91,8 @@
   function barState() {
     var y = window.scrollY, open = menu && menu.classList.contains('open');
     bar.classList.toggle('is-stuck', y > 24 && !open);
+    var room = root.scrollHeight - window.innerHeight;
+    bar.style.setProperty('--p', room > window.innerHeight * 0.6 ? Math.min(1, Math.max(0, y / room)).toFixed(4) : '0');
     if (Math.abs(y - barY) > 6) { bar.classList.toggle('is-hidden', y > barY && y > 520 && !open && !bar.contains(document.activeElement)); barY = y; }
   }
   if (bar) { window.addEventListener('scroll', barState, { passive: true }); }
@@ -149,59 +151,310 @@
     else { pin = n; lost = false; mixTarget = n; }
   }
 
-  /* ---------- wiersz poleceń ---------- */
-  var cmd = $('cmd'), cmdIn = $('cmdIn'), cmdOut = $('cmdOut');
+  /* ---------- wiersz poleceń: dziennik, historia, podpowiedzi, niespodzianki ---------- */
+  var cmd = $('cmd'), cmdIn = $('cmdIn'), cmdOut = $('cmdOut'), cmdGhost = $('cmdGhost'), hudBtn = $('hudBtn');
+  var forceForm = function () { return false; }; // podmieniane, gdy działa WebGL: chwilowo wymusza formację
   var GO = {
     start: './', uslugi: './#uslugi', proces: './#proces', zasady: './#zasady',
     kampanie: 'kampanie.html', higgsfield: 'kampanie.html', reklamy: 'kampanie.html',
     agenci: 'automatyzacje.html', automatyzacje: 'automatyzacje.html',
     chatboty: 'chatboty.html', chatbot: 'chatboty.html',
     strony: 'strony.html', sklepy: 'strony.html', aplikacje: 'strony.html',
-    kontakt: 'kontakt.html', marka: 'marka.html', onas: './#o-nas', 'o-nas': './#o-nas', pytania: './#faq', prywatnosc: 'prywatnosc.html'
+    kontakt: 'kontakt.html', marka: 'marka.html', onas: './#o-nas', 'o-nas': './#o-nas', pytania: './#faq', faq: './#faq', prywatnosc: 'prywatnosc.html'
   };
-  function say(text) { cmdOut.textContent = text; }
-  function openCmd() {
-    if (!cmd) return;
-    cmd.hidden = false;
-    say('Wpisz „pomoc”.');
-    cmdIn.value = '';
-    cmdIn.focus();
+  var PAGES = ['kampanie', 'agenci', 'chatboty', 'strony', 'onas', 'proces', 'zasady', 'pytania', 'kontakt', 'marka'];
+  var ALIAS = {
+    help: 'pomoc', '?': 'pomoc', clear: 'wyczysc', cls: 'wyczysc', exit: 'zamknij', quit: 'zamknij', q: 'zamknij',
+    date: 'data', time: 'czas', godzina: 'czas', theme: 'motyw', history: 'historia', random: 'losuj', top: 'gora', bottom: 'dol',
+    hello: 'czesc', hi: 'czesc', hej: 'czesc', siema: 'czesc', coffee: 'kawa', email: 'mail', 'e-mail': 'mail',
+    cena: 'cennik', ile: 'cennik', koszt: 'cennik', who: 'kto', autor: 'kto', zespol: 'kto', love: 'filadelfia', milosc: 'filadelfia',
+    1337: 'hack', hacker: 'hack', impreza: 'disco', party: 'disco', secrets: 'sekrety', eggs: 'sekrety', shortcuts: 'skroty', fps: 'status', punkty: 'status'
+  };
+  var plain = function (s) { s = s.toLowerCase(); return (s.normalize ? s.normalize('NFD').replace(/[̀-ͯ]/g, '') : s).replace(/ł/g, 'l'); };
+  var timeFmt = new Intl.DateTimeFormat('pl-PL', { timeZone: 'Europe/Warsaw', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  var mailLink = document.querySelector('a[href^="mailto:"]');
+  var MAIL = mailLink ? mailLink.getAttribute('href').replace(/^mailto:/, '').split('?')[0] : 'business@filadelfia.ai';
+
+  // dziennik: kolejne wiersze zamiast jednego komunikatu; najstarsze znikają
+  function addLine(cls) {
+    var d = document.createElement('div');
+    d.className = cls;
+    cmdOut.appendChild(d);
+    while (cmdOut.children.length > 60) cmdOut.removeChild(cmdOut.firstChild);
+    return d;
   }
-  function closeCmd() { if (cmd) cmd.hidden = true; }
-  function run(raw) {
-    var text = raw.trim().toLowerCase().replace(/^\//, '');
-    var parts = text.split(/\s+/), c = parts[0];
-    if (!c) return;
-    if (c === 'pomoc' || c === 'help' || c === '?') return say('kampanie · agenci · chatboty · strony · onas · kontakt · marka\nnoc · dzien · forma 1–5 · puls · napisz <słowo> · filadelfia');
-    if (GO[c]) { say('Otwieram: ' + c); window.location.href = GO[c]; return; }
-    if (c === 'noc') { setTheme('noc'); return say('Tryb nocny. Wróć poleceniem „dzien”.'); }
-    if (c === 'dzien' || c === 'dzień') { setTheme('dzien'); return say('Tryb dzienny.'); }
-    if (c === 'forma') {
+  function toEnd() { cmdOut.scrollTop = cmdOut.scrollHeight; }
+  function say(text) { if (!cmdOut) return; addLine('cmd__line').textContent = text; toEnd(); }
+  // polecenia do kliknięcia: wygodne na telefonie; „…” na końcu oznacza, że polecenie czeka na dopisanie słowa
+  function chips(list, label) {
+    var d = addLine('cmd__line cmd__chips');
+    if (label) { var l = document.createElement('span'); l.className = 'cmd__label'; l.textContent = label; d.appendChild(l); }
+    list.forEach(function (c) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'cmd__chip'; b.textContent = c;
+      d.appendChild(b);
+    });
+    toEnd();
+  }
+
+  // komunikat nad dolnym paskiem: dla zdarzeń poza wierszem poleceń
+  var toastEl = null, toastTimer = 0;
+  function toast(text) {
+    if (!toastEl) { toastEl = document.createElement('p'); toastEl.className = 'toast mono'; toastEl.setAttribute('role', 'status'); body.appendChild(toastEl); void toastEl.offsetWidth; }
+    toastEl.textContent = text;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('on'); }, 3400);
+  }
+
+  // niespodzianki: lista znalezionych zostaje w przeglądarce
+  var EGGS = ['sudo', 'kawa', '42', 'rm', 'disco', 'konami', 'krynica', 'matrix', 'filadelfia', 'hack'];
+  var eggs = (read(localStorage, 'fila-eggs') || '').split(',').filter(function (k, n, all) { return EGGS.indexOf(k) >= 0 && all.indexOf(k) === n; });
+  function egg(k) {
+    if (eggs.indexOf(k) >= 0) return;
+    eggs.push(k);
+    write(localStorage, 'fila-eggs', eggs.join(','));
+    if (eggs.length === EGGS.length) setTimeout(function () { say('Komplet: ' + EGGS.length + '/' + EGGS.length + '. Znasz tę stronę lepiej niż my.'); showText('brawo', 5000); pulse = 1; }, 1200);
+    else say('Niespodzianka ' + eggs.length + '/' + EGGS.length + '. Lista: sekrety');
+  }
+
+  var discoTimer = 0, clockTimer = 0;
+  function disco() {
+    if (reduced || forceForm(0) === false) return false;
+    clearInterval(discoTimer);
+    var n = 0;
+    discoTimer = setInterval(function () {
+      n++;
+      if (n > 14) { clearInterval(discoTimer); forceForm(null); return; }
+      forceForm(n % NAMES.length); pulse = 0.7;
+    }, 380);
+    return true;
+  }
+  function pointClock() {
+    clearInterval(clockTimer);
+    var n = 0, now = function () { return timeFmt.format(new Date()); };
+    if (!showText(now(), 2600)) return false;
+    if (!reduced) clockTimer = setInterval(function () { n++; if (n > 9) { clearInterval(clockTimer); return; } showText(now(), 2600); }, 1000);
+    return true;
+  }
+
+  // historia poleceń: strzałki w górę i w dół; zostaje do zamknięcia karty
+  var hist = [], histAt = 0, draft = '';
+  try { hist = JSON.parse(read(sessionStorage, 'fila-cmd') || '[]'); if (!Array.isArray(hist)) hist = []; } catch (e) { hist = []; }
+  histAt = hist.length;
+  function remember(raw) {
+    if (hist[hist.length - 1] !== raw) hist.push(raw);
+    if (hist.length > 30) hist = hist.slice(-30);
+    histAt = hist.length;
+    write(sessionStorage, 'fila-cmd', JSON.stringify(hist));
+  }
+
+  var CMD = {
+    pomoc: function () {
+      chips(PAGES, 'strony');
+      chips(['noc', 'dzien', 'forma …', 'losuj', 'puls'], 'wygląd');
+      chips(['napisz …', 'zegar', 'czas', 'kto', 'mail'], 'punkty');
+      chips(['historia', 'wyczysc', 'skroty', 'status', 'sekrety'], 'terminal');
+    },
+    skroty: function () { say('/ albo Ctrl+K — otwórz   ·   Esc — zamknij\n↑ ↓ — historia   ·   Tab — dopełnij   ·   Ctrl+L — wyczyść'); },
+    wyczysc: function () { cmdOut.textContent = ''; },
+    zamknij: function () { closeCmd(); },
+    historia: function () { say(hist.length > 1 ? hist.slice(0, -1).slice(-12).join('\n') : 'Historia jest pusta.'); },
+    noc: function () { setTheme('noc'); say('Tryb nocny. Wróć poleceniem „dzien”.'); },
+    dzien: function () { setTheme('dzien'); say('Tryb dzienny.'); },
+    motyw: function () { var night = root.getAttribute('data-theme') === 'noc'; setTheme(night ? 'dzien' : 'noc'); say(night ? 'Tryb dzienny.' : 'Tryb nocny.'); },
+    forma: function (parts) {
       var n = parseInt(parts[1], 10);
       if (!(n >= 1 && n <= 5)) return say('Podaj numer od 1 do 5, np. „forma 3”.');
       setForm(n - 1);
-      return say(n + '/5 ' + NAMES[n - 1]);
-    }
-    if (c === 'puls') { pulse = 1; return say('Puls.'); }
-    if (c === 'napisz') {
-      var word = raw.trim().replace(/^\/?\S+\s*/, '').slice(0, 14);
+      say(n + '/5 ' + NAMES[n - 1]);
+    },
+    losuj: function () {
+      var n = Math.floor(Math.random() * NAMES.length);
+      if (n === Math.round(mixTarget)) n = (n + 1) % NAMES.length;
+      setForm(n);
+      say((n + 1) + '/5 ' + NAMES[n]);
+    },
+    puls: function () { pulse = 1; say('Puls.'); },
+    napisz: function (parts, rest) {
+      var word = rest.slice(0, 14);
       if (!word) return say('Podaj słowo, np. „napisz cześć”.');
-      return say(showText(word, 7000) ? 'Punkty piszą: ' + word : 'Tutaj nie mogę rysować.');
+      say(showText(word, 7000) ? 'Punkty piszą: ' + word : 'Tutaj nie mogę rysować.');
+    },
+    zegar: function () { say(pointClock() ? 'Punkty pokazują czas w Krynicy-Zdroju.' : 'Tutaj nie mogę rysować. Jest ' + timeFmt.format(new Date()) + '.'); },
+    czas: function () { say('W Krynicy-Zdroju jest ' + timeFmt.format(new Date()) + '.'); },
+    data: function () { say(new Intl.DateTimeFormat('pl-PL', { timeZone: 'Europe/Warsaw', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date())); },
+    status: function () {
+      var i = Math.round(mixTarget);
+      say('forma ' + (i + 1) + '/5 ' + NAMES[i] + '   ·   motyw ' + (root.getAttribute('data-theme') === 'noc' ? 'noc' : 'dzień') + (hudStats && hudStats.textContent ? hudStats.textContent.replace(/ · /g, '   ·   ') : '') + '\nstrona ' + location.pathname);
+    },
+    kto: function () { say('Filip Myjak — AI, automatyzacje, strony.\nDawid Borzęcki — wideo, strategia, social media.'); chips(['onas', 'kontakt']); },
+    mail: function () {
+      if (!navigator.clipboard) return say(MAIL);
+      navigator.clipboard.writeText(MAIL).then(function () { say('Skopiowano: ' + MAIL); }, function () { say(MAIL); });
+    },
+    cennik: function () { say('Zależy od zakresu, a zaczynamy od jednego obszaru. Odpowiedź jest w pytaniach: „Ile to kosztuje?”.'); chips(['pytania', 'kontakt']); },
+    gora: function () { window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' }); say('Na górę.'); },
+    dol: function () { window.scrollTo({ top: root.scrollHeight, behavior: reduced ? 'auto' : 'smooth' }); say('Na dół.'); },
+    czesc: function () { say('Cześć. Wpisz „pomoc” albo od razu „kontakt”.'); },
+    echo: function (parts, rest) { say(rest || '…'); },
+    ping: function () { say('pong'); },
+    whoami: function () { say('gość. Miło, że zaglądasz pod maskę.'); },
+    pwd: function () { say(location.pathname); },
+    ls: function () { chips(PAGES.concat(['prywatnosc', 'start'])); },
+    sekrety: function () {
+      say('Niespodzianki: ' + eggs.length + '/' + EGGS.length + (eggs.length ? '' : '. Podpowiedź: pierwsze litery.'));
+      say(EGGS.map(function (k) { return eggs.indexOf(k) >= 0 ? k : k.charAt(0) + new Array(k.length).join('·'); }).join('   '));
+    },
+    // --- niespodzianki ---
+    sudo: function () { say('Brak uprawnień. I dobrze: człowiek ma tu ostatnie słowo.'); egg('sudo'); },
+    kawa: function () { showText('kawa', 5000); say('Parzę. To jedyna rzecz, której AI za Ciebie nie wypije.'); egg('kawa'); },
+    42: function () { showText('42', 5000); say('Odpowiedź się zgadza. Gorzej z pytaniem.'); egg('42'); },
+    rm: function () { say('Spokojnie. Tu niczego nie da się usunąć.'); pulse = 1; egg('rm'); },
+    disco: function () { say(disco() ? 'Punkty tańczą.' : 'Ruch jest ograniczony albo nie mam czym rysować.'); egg('disco'); },
+    krynica: function () { showText('Krynica', 6000); say('49.4217° N 20.9594° E. Stąd pracujemy.'); egg('krynica'); },
+    matrix: function () { showText('2B2BFF', 6000); say('Czerwona czy niebieska? U nas jest tylko jedna: #2B2BFF.'); egg('matrix'); },
+    filadelfia: function () { showText('♥', 5000); say('φιλαδέλφεια — braterska miłość. Stąd nazwa.'); egg('filadelfia'); },
+    hack: function () { say('Dostęp przyznany.'); setTimeout(function () { say('Żartuję. Kod i tak jest otwarty: zajrzyj w źródło strony.'); }, 900); egg('hack'); }
+  };
+  var NAMES_ALL = PAGES.concat(Object.keys(CMD), Object.keys(GO));
+
+  // odległość edycyjna: „czy chodziło o…”
+  function dist(a, b) {
+    var row = [], i, j, prev, tmp;
+    for (j = 0; j <= b.length; j++) row[j] = j;
+    for (i = 1; i <= a.length; i++) {
+      prev = row[0]; row[0] = i;
+      for (j = 1; j <= b.length; j++) { tmp = row[j]; row[j] = Math.min(row[j] + 1, row[j - 1] + 1, prev + (a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1)); prev = tmp; }
     }
-    if (c === 'filadelfia') return say('φιλαδέλφεια — braterska miłość. Stąd nazwa.');
-    if (c === 'fps' || c === 'punkty') return say(hudStats && hudStats.textContent ? hudStats.textContent.replace(/^ · /, '') : 'Brak odczytu.');
-    say('Nie znam polecenia „' + c + '”. Wpisz „pomoc”.');
+    return row[b.length];
+  }
+  function go(c) {
+    say('Otwieram: ' + c);
+    write(sessionStorage, 'fila-cmd-open', '1'); // wiersz poleceń wraca na następnej stronie
+    window.location.href = GO[c];
+  }
+  function run(raw) {
+    raw = raw.trim();
+    var text = plain(raw).replace(/^\//, '');
+    var parts = text.split(/\s+/), c = parts[0], rest = raw.replace(/^\/?\S+\s*/, '');
+    if (!c) return;
+    if (ALIAS[c]) c = ALIAS[c];
+    if (c === 'cd' || c === 'idz' || c === 'cat' || c === 'otworz' || c === 'open') {
+      c = (parts[1] || '').replace(/^[.\/]+/, '').replace(/\.html$/, '');
+      if (!c || c === '~') c = 'start';
+      if (!GO[c]) return say('Nie znam takiej strony. Lista: ls');
+    }
+    if (GO[c]) return go(c);
+    if (Object.prototype.hasOwnProperty.call(CMD, c)) return CMD[c](parts, rest);
+    var best = null, bestD = 3;
+    NAMES_ALL.forEach(function (n) { var d = dist(c, n); if (d < bestD) { bestD = d; best = n; } });
+    say('Nie znam polecenia „' + c + '”.' + (best ? ' Czy chodziło o:' : ' Wpisz „pomoc”.'));
+    if (best) chips([best, 'pomoc']);
+  }
+  function exec(raw) {
+    raw = raw.trim();
+    if (!raw) return;
+    addLine('cmd__line cmd__echo').textContent = raw;
+    remember(raw);
+    run(raw);
+    toEnd();
+  }
+
+  // podpowiedź za kursorem: Tab dopełnia
+  function hint() {
+    var v = plain(cmdIn.value);
+    if (!v || /\s/.test(v)) return '';
+    for (var i = 0; i < NAMES_ALL.length; i++) {
+      var n = NAMES_ALL[i];
+      if (EGGS.indexOf(n) >= 0 && eggs.indexOf(n) < 0) continue; // nieodkrytych niespodzianek nie podpowiadamy
+      if (n.length > v.length && n.indexOf(v) === 0) return n;
+    }
+    return '';
+  }
+  function ghost() {
+    if (!cmdGhost) return;
+    var h = hint();
+    cmdGhost.textContent = '';
+    if (!h) return;
+    var typed = document.createElement('i'), tail = document.createElement('span');
+    typed.textContent = cmdIn.value; tail.textContent = h.slice(cmdIn.value.length);
+    cmdGhost.appendChild(typed); cmdGhost.appendChild(tail);
+  }
+  function setIn(v) { cmdIn.value = v; ghost(); try { cmdIn.setSelectionRange(v.length, v.length); } catch (e) {} }
+
+  function openCmd(quiet) {
+    if (!cmd) return;
+    var was = cmd.hidden;
+    cmd.hidden = false;
+    if (hudBtn) hudBtn.setAttribute('aria-expanded', 'true');
+    if (was && !cmdOut.children.length) {
+      var h = new Date().getHours();
+      say((h < 5 ? 'Późno już.' : h < 12 ? 'Dzień dobry.' : h < 18 ? 'Cześć.' : 'Dobry wieczór.') + ' Wpisz polecenie albo wybierz:');
+      chips(['pomoc', 'kontakt', root.getAttribute('data-theme') === 'noc' ? 'dzien' : 'noc', 'sekrety']);
+    }
+    setIn('');
+    toEnd();
+    if (!quiet) cmdIn.focus({ preventScroll: true });
+  }
+  function closeCmd() {
+    if (!cmd || cmd.hidden) return;
+    var inside = cmd.contains(document.activeElement);
+    cmd.hidden = true;
+    write(sessionStorage, 'fila-cmd-open', '');
+    if (hudBtn) { hudBtn.setAttribute('aria-expanded', 'false'); if (inside) hudBtn.focus({ preventScroll: true }); }
   }
   if (cmd) {
-    $('cmdForm').addEventListener('submit', function (e) { e.preventDefault(); run(cmdIn.value); cmdIn.value = ''; });
+    $('cmdForm').addEventListener('submit', function (e) { e.preventDefault(); var v = cmdIn.value; setIn(''); exec(v); });
     $('cmdClose').addEventListener('click', closeCmd);
-    $('hudBtn').addEventListener('click', function () { if (cmd.hidden) openCmd(); else closeCmd(); });
+    hudBtn.addEventListener('click', function () { if (cmd.hidden) openCmd(); else closeCmd(); });
+    cmdIn.addEventListener('input', ghost);
+    cmdIn.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        if (!hist.length) return;
+        e.preventDefault();
+        if (histAt === hist.length) draft = cmdIn.value;
+        histAt = Math.max(0, Math.min(hist.length, histAt + (e.key === 'ArrowUp' ? -1 : 1)));
+        setIn(histAt === hist.length ? draft : hist[histAt]);
+      } else if (e.key === 'Tab' && !e.shiftKey) {
+        var h = hint();
+        if (h) { e.preventDefault(); setIn(h); }
+      } else if ((e.key === 'l' || e.key === 'L') && e.ctrlKey) { e.preventDefault(); cmdOut.textContent = ''; }
+    });
+    cmdOut.addEventListener('click', function (e) {
+      var b = e.target.closest && e.target.closest('.cmd__chip');
+      if (!b) return;
+      var t = b.textContent;
+      if (/ …$/.test(t)) { setIn(t.replace(/…$/, '')); cmdIn.focus({ preventScroll: true }); }
+      else { exec(t); if (!window.matchMedia('(pointer: coarse)').matches) cmdIn.focus({ preventScroll: true }); }
+    });
+    // przejście na inną stronę poleceniem: wiersz poleceń zostaje otwarty (na telefonie bez wysuwania klawiatury)
+    if (read(sessionStorage, 'fila-cmd-open') === '1') {
+      openCmd(window.matchMedia('(pointer: coarse)').matches);
+      say('Jesteś tutaj: ' + (location.pathname.split('/').pop() || 'start') + (location.hash || ''));
+    }
   }
+
+  // kod Konami: ↑ ↑ ↓ ↓ ← → ← → B A
+  var KONAMI = ['arrowup', 'arrowup', 'arrowdown', 'arrowdown', 'arrowleft', 'arrowright', 'arrowleft', 'arrowright', 'b', 'a'], konamiAt = 0;
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') { closeCmd(); if (menu && menu.classList.contains('open')) setMenu(false); return; }
-    if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return;
-    var t = e.target;
-    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+    if ((e.key === 'k' || e.key === 'K') && (e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey && cmd) {
+      e.preventDefault();
+      if (cmd.hidden) openCmd(); else closeCmd();
+      return;
+    }
+    var t = e.target, typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
+    if (!typing && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      var k = String(e.key).toLowerCase();
+      konamiAt = k === KONAMI[konamiAt] ? konamiAt + 1 : (k === KONAMI[0] ? 1 : 0);
+      if (konamiAt === KONAMI.length) {
+        konamiAt = 0;
+        toast(disco() ? 'Kod Konami · punkty tańczą' : 'Kod Konami');
+        egg('konami');
+      }
+    }
+    if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey || typing) return;
     e.preventDefault();
     openCmd();
   });
@@ -775,6 +1028,7 @@
   var tiltX = 0, tiltY = 0, ptrX = 0, ptrY = 0;
   var ptrOn = 0, ptrSeen = 0, cx = 0, cy = 0, cxT = 0, cyT = 0, lastY = window.scrollY, hoverForm = null;
   function retarget() { mixTarget = hoverForm !== null ? hoverForm : scrollMix(); needs = true; }
+  forceForm = function (n) { hoverForm = n; retarget(); return true; };
   var t0 = performance.now(), last = t0;
   var frames = 0, fpsAt = t0, visible = true;
   // pierwsze wejście składa formę powoli; kolejne podstrony — szybciej

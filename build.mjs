@@ -131,13 +131,14 @@ ${SERVICES.map((sv) => `        <a href="${sv.file}">${sv.short}</a>`).join('\n'
   </footer>
 
   <aside class="hud mono">
-    <button class="hud__form" type="button" id="hudBtn" aria-label="Otwórz wiersz poleceń"><span class="hud__dot"></span><span id="hudIndex">${lost ? '0/5' : (form != null ? form + 1 : 1) + '/5'}</span> <span id="hudName">${formName}</span></button>
+    <button class="hud__form" type="button" id="hudBtn" aria-label="Wiersz poleceń" aria-controls="cmd" aria-expanded="false"><span class="hud__dot"></span><span id="hudIndex">${lost ? '0/5' : (form != null ? form + 1 : 1) + '/5'}</span> <span id="hudName">${formName}</span><span class="hud__tap" aria-hidden="true">›_</span></button>
     <p class="hud__data" aria-hidden="true">49.4217° N 20.9594° E<span id="hudStats"></span> · <span class="hud__key">/</span> polecenia</p>
   </aside>
 
-  <div class="cmd" id="cmd" hidden>
-    <p class="cmd__out" id="cmdOut" role="status"></p>
-    <form id="cmdForm"><span aria-hidden="true">›</span><input id="cmdIn" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Polecenie" placeholder="pomoc"><button type="button" id="cmdClose" aria-label="Zamknij wiersz poleceń">esc</button></form>
+  <div class="cmd" id="cmd" role="dialog" aria-label="Wiersz poleceń" hidden>
+    <div class="cmd__bar"><span>filadelfia.ai · terminal</span><button type="button" id="cmdClose" aria-label="Zamknij wiersz poleceń">esc</button></div>
+    <div class="cmd__out" id="cmdOut" role="log" aria-live="polite"></div>
+    <form id="cmdForm"><span aria-hidden="true">›</span><span class="cmd__field"><span class="cmd__ghost" id="cmdGhost" aria-hidden="true"></span><input id="cmdIn" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" aria-label="Polecenie" placeholder="pomoc"></span><button type="submit" class="cmd__run" aria-label="Wykonaj polecenie">↵</button></form>
   </div>
 
   <script src="${v('script.js')}" defer></script>${scripts.map((src) => `\n  <script src="${v(src)}" defer></script>`).join('')}
@@ -716,7 +717,7 @@ const legal = `    <section class="scene scene--hero scene--page">
           <li data-r><h2>Kto odpowiada za dane</h2><p>${TODO('nazwa firmy, adres, NIP')}. Kontakt: <a href="mailto:${MAIL}">${MAIL}</a>.</p></li>
           <li data-r><h2>Pliki cookie i śledzenie</h2><p>Strona nie zapisuje plików cookie i nie ma pikseli reklamowych ani zewnętrznej analityki.</p></li>
           <li data-r><h2>Licznik odsłon</h2><p>Liczymy, ile razy otwarto każdą podstronę i z jakiej strony przyszli odwiedzający. Zapisujemy tylko sumy na dzień. Nie zapisujemy adresu IP ani niczego, co pozwala rozpoznać osobę, a jeśli przeglądarka wysyła prośbę „nie śledź”, wizyta nie jest liczona.</p></li>
-          <li data-r><h2>Co zostaje w Twojej przeglądarce</h2><p>Wybór trybu dziennego lub nocnego oraz informacja, że animacja wejścia już się odtworzyła. Te dane nie opuszczają Twojego urządzenia.</p></li>
+          <li data-r><h2>Co zostaje w Twojej przeglądarce</h2><p>Wybór trybu dziennego lub nocnego, informacja, że animacja wejścia już się odtworzyła, oraz — jeśli używasz wiersza poleceń — ostatnie wpisane polecenia i lista znalezionych niespodzianek. Te dane nie opuszczają Twojego urządzenia.</p></li>
           <li data-r><h2>Formularz kontaktowy</h2><p data-bez-api>Formularz niczego nie wysyła na nasz serwer. Składa wiadomość i otwiera Twój program pocztowy; to, co wyślesz, trafia do nas jak zwykły e-mail. Używamy tych danych tylko po to, żeby odpowiedzieć. ${TODO('jak długo przechowujemy korespondencję')}</p><p data-z-api hidden>Formularz wysyła wiadomość na nasz serwer. Zapisujemy to, co wpiszesz: temat, imię, firmę lub stronę, kontakt i treść wiadomości, razem z datą wysłania. Używamy tych danych tylko po to, żeby odpowiedzieć; widzą je wyłącznie zalogowane osoby z naszego zespołu. Adresu IP nie zapisujemy: serwer pamięta go przez kilka minut, żeby ograniczyć liczbę zgłoszeń z jednego adresu. ${TODO('jak długo przechowujemy zgłoszenia')}</p></li>
           <li data-r><h2>Usługi zewnętrzne</h2><p>Strona jest hostowana ${HOSTING ? `na ${HOSTING}, które widzi` : `u dostawcy ${TODO('nazwa firmy hostingowej')}, który widzi`} Twój adres IP, tak jak każdy serwer, z którym łączy się przeglądarka. Kroje pisma i wszystkie pozostałe pliki ładują się z tego samego adresu; strona nie łączy się z żadną inną usługą.</p></li>
           <li data-r><h2>Twoje prawa</h2><p>Możesz poprosić o wgląd w swoje dane, ich poprawienie lub usunięcie, pisząc na adres powyżej. Masz też prawo złożyć skargę do Prezesa Urzędu Ochrony Danych Osobowych.</p></li>
